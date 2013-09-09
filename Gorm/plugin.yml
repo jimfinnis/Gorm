@@ -1,0 +1,30 @@
+name: Gorm
+main: org.pale.gorm.GormPlugin
+version: 0.0
+commands:
+  build:
+    description: Build the next room
+    usage: /build
+    permission: Gorm.build
+    permission-message: You don't have permission
+  startgorm:
+    description: Start Gorming!
+    usage: /startgorm
+    permission: Gorm.build
+    permission-message: You don't have permission
+  stopgorm:
+    description: Stop Gorming!
+    usage: /stopgorm
+    permission: Gorm.build
+    permission-message: You don't have permission
+  razegorm:
+    description: Flatten and demolish
+    usage: /razegorm
+    permission: Gorm.build
+    permission-message: You don't have permission
+  test:
+    description: Oh, you know. This and that.
+    usage: /test
+    permission: Gorm.build
+    permission-message: You don't have permission
+    

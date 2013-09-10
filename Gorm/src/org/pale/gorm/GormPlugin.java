@@ -95,12 +95,8 @@ public final class GormPlugin extends JavaPlugin {
 		}
 		
 		float f = loc.getYaw();
-		if(f<0)f+=360;
-		IntVector.Direction dir;;
-		if (f > 45 && f <= 135) dir = IntVector.Direction.WEST;
-		else if (f > 135 && f <= 225) dir = IntVector.Direction.SOUTH;
-		else if (f > 225 && f <= 315) dir = IntVector.Direction.EAST;
-		else dir = IntVector.Direction.NORTH;
+		IntVector.Direction dir = IntVector.yawToDir(f);
+		
 		IntVector pos = new IntVector(p.getTargetBlock(null,100).getLocation());
 		GormPlugin.log("Direction : "+dir.toString()+" from yaw "+Float.toString(f));
 		Turtle t = new Turtle(Castle.getInstance(),pos,dir);

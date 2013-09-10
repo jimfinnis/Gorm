@@ -24,7 +24,7 @@ public class Turtle {
 	int cur = 0;
 	private String string;
 
-	private int mode = 0;
+	private int mode = CHECKWRITE;
 	private boolean aborted;
 	private int loopPoint = -1;
 
@@ -40,7 +40,11 @@ public class Turtle {
 	static final int LEFT = 4; // following will try left turn first
 	static final int RANDOM = 8; // following will try either left or right
 									// (overrides LEFT)
-	static final int HUGEDGE = 16;	// we must always keep a wall to our left or right, and follow them round
+	static final int HUGEDGE = 16; // we must always keep a wall to our left or
+									// right, and follow them round
+	static final int WRITEONMOVE = 32; // write at end of every move
+	static final int CHECKWRITE = 64; // abort if write would cause overwrite of non-air block (on by default)
+	static final int BACKSTAIRS = 128; // write stairs as facing away from us
 
 	char getNext() {
 		if (cur >= string.length())
@@ -68,7 +72,8 @@ public class Turtle {
 				if (loopPoint >= 0) {
 					cur = loopPoint;
 					c = getNext();
-				}else return;
+				} else
+					return;
 			}
 			if (aborted)
 				return;
@@ -82,8 +87,10 @@ public class Turtle {
 			pos = pos.add(dir);
 			if (isModeFlag(FOLLOW))
 				follow();
-			else if (isModeFlag(HUGEDGE))
+			if (isModeFlag(HUGEDGE))
 				hugEdge();
+			if (isModeFlag(WRITEONMOVE))
+				write();
 			break;
 		case 'r': // turn right
 			dir = dir.rotate(1);
@@ -93,22 +100,24 @@ public class Turtle {
 			break;
 		case 'u':// go down
 			pos = pos.add(0, 1, 0);
+			if (isModeFlag(WRITEONMOVE))
+				write();
 			break;
 		case 'd':// go up
 			pos = pos.add(0, -1, 0);
+			if (isModeFlag(WRITEONMOVE))
+				write();
 			break;
 		case 'w': // write the material to the current block - but abort if we
 					// are going to overwrite!
-			if (isEmpty(0, 0, 0))
-				write();
-			else
-				abort();
+			write();
 			break;
 		case '+':// set mode
 			mode |= getNextMode();
 			break;
 		case '-':// clear mode
 			mode &= ~getNextMode();
+			break;
 		case 'm':
 			setMaterial(getNext());
 			break;
@@ -130,6 +139,12 @@ public class Turtle {
 			return RANDOM;
 		case 'h':
 			return HUGEDGE;
+		case 'w':
+			return WRITEONMOVE;
+		case 'c':
+			return CHECKWRITE;
+		case 'S':
+			return BACKSTAIRS;
 		}
 		return 0;
 	}
@@ -148,6 +163,9 @@ public class Turtle {
 			break;
 		case 's':
 			mat = Material.SMOOTH_STAIRS;
+			break;
+		case 'L':
+			mat = Material.LAPIS_BLOCK; // for fun
 			break;
 		default:
 		case 'a':
@@ -192,12 +210,12 @@ public class Turtle {
 			}
 		}
 	}
-	
+
 	/**
 	 * If the left and right of this square are both empty, turn to follow the
 	 * wall around. This follow mode allows us to follow outside edges.
 	 */
-	private void hugEdge(){
+	private void hugEdge() {
 		if (isEmpty(-1, 0, 0) && isEmpty(1, 0, 0)) { // left and right are empty
 														// - attempt OUTER
 														// FOLLOW
@@ -337,14 +355,19 @@ public class Turtle {
 	}
 
 	private void write() {
-		Block b = get();
-		b.setType(mat);
+		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
+			Block b = get();
+			b.setType(mat);
 
-		if (Castle.isStairs(mat)) { // if we're writing stairs, they are facing
-									// upwards away from us
-			Stairs s = new Stairs(mat);
-			s.setFacingDirection(dir.toBlockFace());
-			b.setData(s.getData());
-		}
+			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
+										// facing
+										// upwards away from us
+				Stairs s = new Stairs(mat);
+				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
+				s.setFacingDirection(d.toBlockFace());
+				b.setData(s.getData());
+			}
+		}else
+			abort();
 	}
 }

@@ -109,8 +109,7 @@ public final class GormPlugin extends JavaPlugin {
 		if(c==null){
 			p.sendMessage("no castle!");
 		} else {
-			p.sendMessage("processing "+x.toString());
-			c.postProcessExit(x);
+			// nowt
 		}
 	}
 

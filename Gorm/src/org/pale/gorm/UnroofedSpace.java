@@ -18,7 +18,7 @@ public class UnroofedSpace extends Room {
 		e = new Extent(extent);
 		e.miny = (e.miny+e.maxy)/2;
 		e.maxy = e.miny;
-		c.fill(e, Material.SMOOTH_BRICK, 3);
+		c.checkFill(e, Material.SMOOTH_BRICK, 3);
 		
 		e =extent.expand(-1, Extent.ALL);
 		e.maxy++;

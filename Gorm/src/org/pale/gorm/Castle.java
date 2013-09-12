@@ -67,7 +67,7 @@ public class Castle {
 	}
 
 	/**
-	 * returns true if e intersects any room at all
+	 * returns true if e intersects any room or exit at all
 	 * 
 	 * @param e
 	 * @return
@@ -77,8 +77,7 @@ public class Castle {
 			if (x.getExtent().intersects(e))
 				return true;
 		}
-
-		return false;
+		return overlapsExit(e);
 	}
 
 	/**
@@ -107,6 +106,32 @@ public class Castle {
 	 * @param data
 	 */
 
+	public void checkFill(Extent e, Material mat, int data) {
+		GormPlugin.log("filling " + e.toString());
+		int t = 0;
+		for (int x = e.minx; x <= e.maxx; x++) {
+			for (int y = e.miny; y <= e.maxy; y++) {
+				for (int z = e.minz; z <= e.maxz; z++) {
+					Block b = world.getBlockAt(x, y, z);
+					if (canOverwrite(b)) {
+						b.setType(mat);
+						b.setData((byte) data);
+						t++;
+					}
+				}
+			}
+		}
+		GormPlugin.log("blocks filled: " + Integer.toString(t));
+	}
+
+	/**
+	 * Fill an extent with a material and data DOES NOT CHECK that the stuff
+	 * we're writing will overwrite anything
+	 * 
+	 * @param e
+	 * @param mat
+	 * @param data
+	 */
 	public void fill(Extent e, Material mat, int data) {
 		GormPlugin.log("filling " + e.toString());
 		int t = 0;
@@ -116,11 +141,26 @@ public class Castle {
 					Block b = world.getBlockAt(x, y, z);
 					b.setType(mat);
 					b.setData((byte) data);
-					t++;
 				}
 			}
 		}
 		GormPlugin.log("blocks filled: " + Integer.toString(t));
+	}
+
+	/**
+	 * We should use this when we might overwrite a room or exit, to prevent
+	 * that.
+	 * 
+	 * @param b
+	 * @return
+	 */
+	private boolean canOverwrite(Block b) {
+		Material m = b.getType();
+		if (isStairs(m))
+			return false;
+		if (m == Material.SMOOTH_BRICK || m == Material.WOOD)
+			return false;
+		return true;
 	}
 
 	public void fillBrickWithCracksAndMoss(Extent e) {
@@ -132,9 +172,11 @@ public class Castle {
 			for (int y = e.miny; y <= e.maxy; y++) {
 				for (int z = e.minz; z <= e.maxz; z++) {
 					Block b = world.getBlockAt(x, y, z);
-					b.setType(Material.SMOOTH_BRICK);
-					b.setData((byte) dataVals[r.nextInt(dataVals.length)]);
-					t++;
+					if (canOverwrite(b)) {
+						b.setType(Material.SMOOTH_BRICK);
+						b.setData((byte) dataVals[r.nextInt(dataVals.length)]);
+						t++;
+					}
 				}
 			}
 		}
@@ -191,36 +233,19 @@ public class Castle {
 	}
 
 	/**
-	 * Returns true if an exit is near an existing exit
+	 * Returns true if an extent overlaps an exit
 	 * 
 	 * @param exit
 	 * @return
 	 */
-	public boolean isNearExistingExit(Extent exit) {
-		exit = exit.expand(1, Extent.ALL);
+	public boolean overlapsExit(Extent x) {
 		for (Extent e : exits) {
-			if (exit.intersects(e))
+			if (x.intersects(e))
 				return true;
 		}
 		return false;
 	}
 
-	/**
-	 * A version of getHighestBlockAt that works only within an extent
-	 * 
-	 * @param e
-	 * @param x
-	 * @param z
-	 * @return
-	 */
-	private Block getHighestBlockInExtent(Extent e, int x, int z) {
-		for (int y = e.maxy; y >= e.miny; y--) {
-			Block b = world.getBlockAt(x, y, z);
-			if (!b.isEmpty())
-				return b;
-		}
-		return null;
-	}
 
 	private void setStairs(int x, int y, int z, BlockFace dir) {
 		Block b = world.getBlockAt(x, y, z);
@@ -236,141 +261,70 @@ public class Castle {
 				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS);
 	}
 
-	/**
-	 * If there is a step on the ground here, try to put stairs on it.
-	 * 
-	 * @param e
-	 */
-	public void postProcessExit1(Extent e) {
-		// scan south->north first.
-		for (int x = e.minx; x <= e.maxx; x++) {
-			int prevh = -1000;
+	public void postProcessExit(Extent e, IntVector.Direction d) {
+		IntVector v = d.vec;
+
+		e = e.growDirection(d, 100); // stretch out the extent for scanning
+										// purposes
+		e.miny -= 100;
+
+		if (v.x == 0) {
+			// north/south case
+			// for each x..
+			for (int x = e.minx; x <= e.maxx; x++) {
+				// keep building steps down until we hit floor. First get the
+				// initial height.
+				int z = (e.maxz + e.minz) / 2; // we start in the middle of the
+												// exit, in the gap itself
+				int y = e.getHeightWithin(x, z);
+				GormPlugin.log(String.format("%d,%d in %s has height %d", x, z,
+						e.toString(), y));
+				for (;;) {
+					z += v.z; // move one step out the exit
+					int y2 = e.getHeightWithin(x, z); // get that height
+					GormPlugin.log(String.format("%d,%d in %s has height %d",
+							x, z, e.toString(), y2));
+					// if it is lower than where we were, build it up with
+					// stairs
+					if (y2 != Extent.BADHEIGHT && y2 < y) {
+						// get the direction
+						IntVector dir = new IntVector(-v.x, 0, -v.z);
+						// make stair data and set the material
+						setStairs(x, y, z, dir.toBlockFace());
+						y--; // and go down one
+					} else
+						break; // otherwise get out of the loop
+				}
+			}
+		} else {                //THIS CODE IS THE SAME AS ABOVE apart from the direction. Yes, it's bad.
+			// east/west case 
+			// for each z..
 			for (int z = e.minz; z <= e.maxz; z++) {
-				Block b = getHighestBlockInExtent(e, x, z);
-				if (b != null) {
-					int h = b.getY();
-
-					if (!isStairs(b.getType()) && prevh > -1000) {
-						if (h - prevh == 1) { // we have gone UP - build up the
-												// previous block to match me
-							setStairs(x, h, z - 1, BlockFace.SOUTH);
-							prevh = -1000;
-						} else if (h - prevh == -1) { // we have gone DOWN -
-														// build this block up
-														// to match prevh
-							setStairs(x, h + 1, z, BlockFace.NORTH);
-							prevh = -1000;
-						}
-					}
-					prevh = h;
+				// keep building steps down until we hit floor. First get the
+				// initial height.
+				int x = (e.maxx + e.minx) / 2; // we start in the middle of the
+												// exit, in the gap itself
+				int y = e.getHeightWithin(x, z);
+				GormPlugin.log(String.format("%d,%d in %s has height %d", x, z,
+						e.toString(), y));
+				for (;;) {
+					x += v.x; // move one step out the exit
+					int y2 = e.getHeightWithin(x, z); // get that height
+					GormPlugin.log(String.format("%d,%d in %s has height %d",
+							x, z, e.toString(), y2));
+					// if it is lower than where we were, build it up with
+					// stairs
+					if (y2 != Extent.BADHEIGHT && y2 < y) {
+						// get the direction
+						IntVector dir = new IntVector(-v.x, 0, -v.z);
+						// make stair data and set the material
+						setStairs(x, y, z, dir.toBlockFace());
+						y--; // and go down one
+					} else
+						break; // otherwise get out of the loop
 				}
 			}
 		}
-	}
-
-	/**
-	 * Here, we try to ensure that the exit has stairs to cover it.
-	 * 
-	 * @param e
-	 *            an extent, containing the 'floor zone' of the exit.
-	 */
-	public void postProcessExit(Extent e) {
-
-		// look for blocks where the surrounding blocks are higher by >1. If you
-		// find one, build it up. Keep doing that until we can't do it any more
-
-		for (int i = 0; i < 100; i++) { // for safety we try 100 times only
-			boolean builtUp = false;
-			for (int x = e.minx; x <= e.maxx; x++) {
-				for (int z = e.minz; z <= e.maxz; z++) {
-					builtUp = buildUpLowBlock(e, x, z);
-				}
-			}
-			if (!builtUp)
-				break;
-		}
-
-		// then, try to build steps which go from a block 1 below to a block 1
-		// higher.
-
-		for (int i = 0; i < 100; i++) { // for safety we try 100 times only
-			boolean builtUp = false;
-			for (int x = e.minx; x <= e.maxx; x++) {
-				for (int z = e.minz; z <= e.maxz; z++) {
-					builtUp = singleStepUpBlock(e, x, z);
-				}
-			}
-			if (!builtUp)
-				break;
-		}
-	}
-
-	/**
-	 * If this block has a block next to it which is one higher, build a step up
-	 * on top of it
-	 * 
-	 * @param c
-	 * @param e
-	 * @param x
-	 * @param z
-	 * @return
-	 */
-	private boolean singleStepUpBlock(Extent e, int x, int z) {
-		int y = e.getHeightWithin(x, z);
-		for (int dx = -1; dx <= 1; dx++) {
-			for (int dz = -1; dz <= 1; dz++) {
-				if (dx == 0 || dz == 0) {
-					int y2 = e.getHeightWithin(x + dx, z + dz);
-					// don't make stairs which step up to stairs at the same
-					// level
-					Material m = world.getBlockAt(dx + x, y2, dz + z).getType();
-					if (m != Material.SMOOTH_STAIRS
-							&& m != Material.COBBLESTONE_STAIRS
-							&& m != Material.WOOD_STAIRS
-							&& m != Material.BIRCH_WOOD_STAIRS) {
-						if ((y2 - y) == 1) { // place stairs!
-							Block b = world.getBlockAt(x, y + 1, z);
-							// get the direction
-							IntVector dir = new IntVector(dx, 0, dz);
-							// make stair data and set the material
-							Stairs stair = new Stairs(Material.SMOOTH_STAIRS);
-							stair.setFacingDirection(dir.toBlockFace());
-							b.setType(stair.getItemType());
-							b.setData(stair.getData());
-							return true;
-						}
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * If this block is more than 1 block lower than any of its neighbours,
-	 * build it up.
-	 * 
-	 * @param x
-	 * @param z
-	 */
-	private boolean buildUpLowBlock(Extent e, int x, int z) {
-		int y = e.getHeightWithin(x, z);
-		for (int dx = -1; dx <= 1; dx++) {
-			for (int dz = -1; dz <= 1; dz++) {
-				if (dx == 0 || dz == 0) {
-					int y2 = e.getHeightWithin(x + dx, z + dz);
-					if ((y2 - y) > 1) { // built it up!
-						Block b = world.getBlockAt(x, y + 1, z);
-						b.setType(Material.DIAMOND_BLOCK); // with diamond for
-															// now
-															// so I can see it
-															// work!
-						return true;
-					}
-				}
-			}
-		}
-		return false;
 	}
 
 	public void raze() {

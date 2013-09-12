@@ -75,6 +75,8 @@ public class Room {
 		lightWalls();
 		floorLights();
 		underfill();
+		roof();
+		
 		makeExit(true);
 		makeExit(false);
 		makeExit(true);
@@ -83,8 +85,14 @@ public class Room {
 		makeExit(false);
 	}
 
+	private void roof() {
+		//todo
+	}
+
+	/**
+	 * Lights around the walls if we need them
+	 */
 	void lightWalls() {
-		// first some wall lights
 		int y = extent.miny + 5;
 		if (y >= extent.maxy)
 			y = extent.maxy - 1;
@@ -102,6 +110,9 @@ public class Room {
 		}
 	}
 
+	/**
+	 * Lights on the floor if needed
+	 */
 	void floorLights() {
 		World w = Castle.getInstance().getWorld();
 		int y = extent.miny + 2;
@@ -170,12 +181,10 @@ public class Room {
 		Castle c = Castle.getInstance();
 		Random rnd = new Random();
 	
-// SNARK only trying exits in the orientations which fail.
-//		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH,
-//				IntVector.Direction.EAST, IntVector.Direction.WEST};
-		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH};
-				//IntVector.Direction.EAST, IntVector.Direction.WEST};
-		
+		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH,
+				IntVector.Direction.EAST, IntVector.Direction.WEST};
+
+		// this is the 'inside' of the room.
 		Extent innerSpace = extent.expand(-1, Extent.ALL);
 		
 		for(int tries=0;tries<20;tries++){  
@@ -193,7 +202,7 @@ public class Room {
 			GormPlugin.log("wall direction="+dir.toString()+", wall vector="+wallNormal.toString());
 			IntVector walkVector = wallNormal.rotate(rnd.nextInt(2)*2+1); // 1 turn or 3
 			// make the exit, actually embedded in the centre of the wall 
-			Extent baseExit = new Extent(dir,rnd.nextInt(3)+1,rnd.nextInt(2)+3);
+			Extent baseExit = new Extent(dir,rnd.nextInt(3)+1,rnd.nextInt(2)+3,0);
 			baseExit = baseExit.addvec(wallCentre);
 			// check along the wall until it runs out
 			for(int i=0;i<100;i++){
@@ -203,10 +212,11 @@ public class Room {
 				Extent exit = baseExit.addvec(v);
 				GormPlugin.log(" testing exit at "+exit.toString());
 				// make sure it's not near an exit already
-				if(c.isNearExistingExit(exit)){
+				if(c.overlapsExit(exit.expand(1, Extent.ALL))){
 					GormPlugin.log("  aborting, is near exit");
 					continue;
 				}
+
 				// find the exit's 'shadow' on this side of the wall
 				Extent e1 = exit.subvec(wallNormal);
 				// if that's NOT entirely inside the inner extent, we've run out of wall
@@ -220,10 +230,7 @@ public class Room {
 					// if it's good, use it
 					c.fill(exit, Material.AIR, 0);
 					c.addExit(exit);
-					e2 = new Extent(exit);
-					e2.miny-=5;
-					e2.maxy-=2;
-					c.postProcessExit(e2);
+					c.postProcessExit(exit,dir);
 					return;
 				}
 			}

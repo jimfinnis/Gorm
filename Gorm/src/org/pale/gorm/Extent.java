@@ -279,9 +279,11 @@ public class Extent {
 		return maxheight;
 	}
 	
+	static final int BADHEIGHT = -1000;
+	
 	/**
 	 * Find the height of a square within this extent, ignoring any blocks above the extent.
-	 * Assumes a completely empty column to be miny-100; ditto blocks outside the xz of the extent
+	 * Assumes a completely empty column to be -1000; ditto blocks outside the xz of the extent
 	 * @param x
 	 * @param z
 	 * @return
@@ -289,12 +291,12 @@ public class Extent {
 	public int getHeightWithin(int x, int z){
 		World w = Castle.getInstance().getWorld();
 		if(x<minx || x>maxx || z<minz || z>maxz)
-			return miny-100;
+			return BADHEIGHT;
 		for(int y=maxy;y>=miny;y--){
 			if(!w.getBlockAt(x, y, z).isEmpty())
 				return y;
 		}
-		return miny-100;
+		return BADHEIGHT;
 	}
 
 	/**
@@ -330,11 +332,11 @@ public class Extent {
 
 	/**
 	 * Generate an extent for an extent of given width and height, normal facing
-	 * in the given direction, with a depth of 3
+	 * in the given direction, with a given depth on each side (so '1' gives a depth of 3.)
 	 * 
 	 */
 
-	public Extent(IntVector.Direction d, int w, int h) {
+	public Extent(IntVector.Direction d, int w, int h,int depth) {
 		miny = 0;
 		maxy = h - 1;
 		switch (d) {
@@ -344,13 +346,13 @@ public class Extent {
 			maxx = minx + w -1;
 			miny = 0;
 			maxy = h - 1;
-			minz = -1;
-			maxz = 1;
+			minz = -depth;
+			maxz = depth;
 			break;
 		case EAST:
 		case WEST:
-			minx = -1;
-			maxx = 1;
+			minx = -depth;
+			maxx = depth;
 			miny = 0;
 			maxy = h - 1;
 			minz = -w / 2;
@@ -360,8 +362,8 @@ public class Extent {
 		case DOWN:
 			minx = -w / 2;
 			maxx = minx + w -1;
-			miny = -1;
-			maxy = 1;
+			miny = -depth;
+			maxy = depth;
 			minz = -w / 2;
 			maxz = minx + w -1;
 		}
@@ -376,5 +378,27 @@ public class Extent {
 	public boolean inside(Extent e1) {
 		return e1.minx >= minx && e1.maxx <= maxx && e1.miny >= miny
 				&& e1.maxy <= maxy && e1.minz >= minz && e1.maxz <= maxz;
+	}
+	
+	/**
+	 * grow the extent along the given direction by the given number of steps each way
+	 */
+	public Extent growDirection(IntVector.Direction d, int n){
+		Extent e = new Extent(this);
+		switch(d){
+		case EAST:
+		case WEST:
+			e.minx -= n;e.maxx+=n;
+			break;
+		case NORTH:
+		case SOUTH:
+			e.minz -= n;e.maxz+=n;
+			break;
+		case UP:
+		case DOWN:
+			e.miny -= n;e.maxy+=n;
+			break;
+		}
+		return e;
 	}
 }

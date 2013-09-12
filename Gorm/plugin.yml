@@ -27,4 +27,14 @@ commands:
     usage: /test
     permission: Gorm.build
     permission-message: You don't have permission
+  gt:
+    description: Run the gorm turtle
+    usage: /test [string]
+    permission: Gorm.build
+    permission-message: You don't have permission
+  flatten:
+    description: Crush the land!
+    usage: /flatten
+    permission: Gorm.build
+    permission-message: You don't have permission
     

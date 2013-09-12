@@ -71,7 +71,7 @@ public class IntVector {
 	}
 
 	/**
-	 * Rotate clockwise in XZ plane
+	 * Rotate clockwise in XZ plane, given that Z points south.
 	 * 
 	 * @param turns
 	 *            of 90 degs clockwise
@@ -87,22 +87,26 @@ public class IntVector {
 			v = new IntVector(this);
 			break;
 		case 1:
-			v = new IntVector(z, y, -x);
+			v = new IntVector(-z, y, x);
 			break;
 		case 2:
 			v = new IntVector(-x, y, -z);
 			break;
 		case 3:
-			v = new IntVector(-z, y, x);
+			v = new IntVector(z, y, -x);
 			break;
 		}
 		return v;
 	}
 
 	/**
-	 * rotate a vector to the orientation indicated by the zaxis passed in:
-	 * (0,0,1) would require no rotation, (1,0,0) a 90deg clockwise, and so on.
+	 * rotate a vector to the orientation indicated by the zaxis passed in.
+	 * OK, that's clear as mud. What I mean is, generate a rotation such that
+	 * the zaxis passed in would be rotated to (0,0,1). 
+	 * Note that this produces a rotational system where z axis -ve is IN FRONT of you.
+	 * This is a consequence of the z axis pointing south in the world.
 	 * No good for up and down vectors.
+	 * 
 	 * 
 	 * @param zaxis
 	 * @return
@@ -114,9 +118,9 @@ public class IntVector {
 		else if (zaxis.x > 0)
 			return rotate(1);
 		else if (zaxis.z < 0)
-			return rotate(2);
-		else if (zaxis.z > 0)
 			return rotate(0);
+		else if (zaxis.z > 0)
+			return rotate(2);
 		else
 			throw new RuntimeException("bad vector in rotateToSpace: "
 					+ zaxis.toString());
@@ -134,6 +138,18 @@ public class IntVector {
 		else if (f > 135 && f <= 225) return IntVector.Direction.NORTH;
 		else if (f > 225 && f <= 315) return IntVector.Direction.EAST;
 		else return IntVector.Direction.SOUTH;
+	}
+
+	/**
+	 * Overriding equals correctly is really revolting.
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null)return false;
+		if(obj == this)return true;
+		if(!(obj instanceof IntVector))return false;
+		IntVector v = (IntVector)obj;
+		return v.x == x && v.y == y && v.z == z;
 	}
 
 	/**

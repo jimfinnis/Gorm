@@ -27,6 +27,12 @@ public class Turtle {
 	private int mode = CHECKWRITE;
 	private boolean aborted;
 	private int loopPoint = -1;
+	/**
+	 * Stack of values for the internal maths/condition system
+	 */
+	private boolean status; // status variable for conditions
+	private boolean lastMoveCausedTurn; // true if the last follow we did caused
+										// a turn
 
 	private boolean isModeFlag(int f) {
 		return (mode & f) != 0;
@@ -43,7 +49,8 @@ public class Turtle {
 	static final int HUGEDGE = 16; // we must always keep a wall to our left or
 									// right, and follow them round
 	static final int WRITEONMOVE = 32; // write at end of every move
-	static final int CHECKWRITE = 64; // abort if write would cause overwrite of non-air block (on by default)
+	static final int CHECKWRITE = 64; // abort if write would cause overwrite of
+										// non-air block (on by default)
 	static final int BACKSTAIRS = 128; // write stairs as facing away from us
 
 	char getNext() {
@@ -56,8 +63,8 @@ public class Turtle {
 		}
 	}
 
-	public Turtle(Castle c, IntVector initpos, IntVector.Direction initdir) {
-		world = c.getWorld();
+	public Turtle(World  w, IntVector initpos, IntVector.Direction initdir) {
+		world = w;
 		dir = initdir.vec;
 		pos = initpos;
 	}
@@ -66,6 +73,7 @@ public class Turtle {
 		char c;
 		string = s;
 		aborted = false;
+		dumpMap();
 		for (;;) {
 			c = getNext();
 			if (c == 0) {
@@ -81,16 +89,38 @@ public class Turtle {
 		}
 	}
 
+	private void moveForwards() {
+		pos = pos.add(dir);
+		IntVector tmpDir = dir;
+		if (isModeFlag(FOLLOW))
+			follow();
+		if (isModeFlag(HUGEDGE))
+			hugEdge();
+		if (isModeFlag(WRITEONMOVE))
+			write();
+		lastMoveCausedTurn = !tmpDir.equals(dir);
+
+	}
+
 	private void execute(char c) {
 		switch (c) {
 		case 'f': // forward
-			pos = pos.add(dir);
-			if (isModeFlag(FOLLOW))
-				follow();
-			if (isModeFlag(HUGEDGE))
-				hugEdge();
-			if (isModeFlag(WRITEONMOVE))
-				write();
+			moveForwards();
+			break;
+		case 'L': // move right (caps to distinguish from rotating!)
+			dir = dir.rotate(3);
+			moveForwards();
+			dir = dir.rotate(1);
+			break;
+		case 'R':// move left (caps to distinguish from rotating!)
+			dir = dir.rotate(1);
+			moveForwards();
+			dir = dir.rotate(3);
+			break;
+		case 'B': // move backwards
+			dir = dir.rotate(2);
+			moveForwards();
+			dir = dir.rotate(2);
 			break;
 		case 'r': // turn right
 			dir = dir.rotate(1);
@@ -124,6 +154,24 @@ public class Turtle {
 		case ':': // mark the repeat point - we loop back here until we abort
 			loopPoint = cur;
 			break;
+		case '?': // condition - set the flag 
+			checkCondition(getNext());
+			break;
+		case '(': // if flag is false, jump forwards to ')'
+			if(!status){
+				while(getNext()!=')');
+			}
+		}
+	}
+
+	private void checkCondition(char c) {
+		switch (c) {
+		case 't':
+			status = lastMoveCausedTurn;
+			break;
+		default:
+			throw new RuntimeException("unknown condition "
+					+ Character.toString(c));
 		}
 	}
 
@@ -195,7 +243,7 @@ public class Turtle {
 	private void follow() {
 		GormPlugin.log("following: dir " + dir.toString());
 
-		if (!isEmpty(0, 0, 1)) { // ahead is full, we're going to hit a wall -
+		if (!isEmpty(0, 0, -1)) { // ahead is full, we're going to hit a wall -
 									// attempt INNER FOLLOW
 			if (tryLeftFirst()) {
 				// attempt follow left first
@@ -242,7 +290,7 @@ public class Turtle {
 	 * @return
 	 */
 	private boolean followOuterLeft() {
-		if (isEmpty(-1, 0, -1)) { // if the spot behind and to the left isn't a
+		if (isEmpty(-1, 0, 1)) { // if the spot behind and to the left isn't a
 									// wall, fail
 			GormPlugin.log("follow left failed");
 			return false;
@@ -260,7 +308,7 @@ public class Turtle {
 	 * @return
 	 */
 	private boolean followOuterRight() {
-		if (isEmpty(1, 0, -1)) { // if the spot behind and to the right isn't a
+		if (isEmpty(1, 0, 1)) { // if the spot behind and to the right isn't a
 									// wall, fail
 			GormPlugin.log("follow right failed");
 			return false;
@@ -333,7 +381,7 @@ public class Turtle {
 	 * empty.
 	 */
 	private void dumpMap() {
-		for (int z = 2; z >= -2; z--) {
+		for (int z = -2; z <= 2; z++) {
 			String foo = String.format("%3d", z);
 			for (int x = -2; x <= 2; x++) {
 				IntVector v = new IntVector(x, 0, z).rotateToSpace(dir);
@@ -367,7 +415,7 @@ public class Turtle {
 				s.setFacingDirection(d.toBlockFace());
 				b.setData(s.getData());
 			}
-		}else
+		} else
 			abort();
 	}
 }

@@ -231,8 +231,7 @@ public class Castle {
 	}
 
 	static boolean isStairs(Material m) {
-		return (m == Material.COBBLESTONE_STAIRS
-				|| m == Material.WOOD_STAIRS
+		return (m == Material.COBBLESTONE_STAIRS || m == Material.WOOD_STAIRS
 				|| m == Material.BIRCH_WOOD_STAIRS
 				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS);
 	}
@@ -269,14 +268,116 @@ public class Castle {
 		}
 	}
 
+	/**
+	 * Here, we try to ensure that the exit has stairs to cover it.
+	 * 
+	 * @param e
+	 *            an extent, containing the 'floor zone' of the exit.
+	 */
 	public void postProcessExit(Extent e) {
+
+		// look for blocks where the surrounding blocks are higher by >1. If you
+		// find one, build it up. Keep doing that until we can't do it any more
+
+		for (int i = 0; i < 100; i++) { // for safety we try 100 times only
+			boolean builtUp = false;
+			for (int x = e.minx; x <= e.maxx; x++) {
+				for (int z = e.minz; z <= e.maxz; z++) {
+					builtUp = buildUpLowBlock(e, x, z);
+				}
+			}
+			if (!builtUp)
+				break;
+		}
+
+		// then, try to build steps which go from a block 1 below to a block 1
+		// higher.
+
+		for (int i = 0; i < 100; i++) { // for safety we try 100 times only
+			boolean builtUp = false;
+			for (int x = e.minx; x <= e.maxx; x++) {
+				for (int z = e.minz; z <= e.maxz; z++) {
+					builtUp = singleStepUpBlock(e, x, z);
+				}
+			}
+			if (!builtUp)
+				break;
+		}
+	}
+
+	/**
+	 * If this block has a block next to it which is one higher, build a step up
+	 * on top of it
+	 * 
+	 * @param c
+	 * @param e
+	 * @param x
+	 * @param z
+	 * @return
+	 */
+	private boolean singleStepUpBlock(Extent e, int x, int z) {
+		int y = e.getHeightWithin(x, z);
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dz = -1; dz <= 1; dz++) {
+				if (dx == 0 || dz == 0) {
+					int y2 = e.getHeightWithin(x + dx, z + dz);
+					// don't make stairs which step up to stairs at the same
+					// level
+					Material m = world.getBlockAt(dx + x, y2, dz + z).getType();
+					if (m != Material.SMOOTH_STAIRS
+							&& m != Material.COBBLESTONE_STAIRS
+							&& m != Material.WOOD_STAIRS
+							&& m != Material.BIRCH_WOOD_STAIRS) {
+						if ((y2 - y) == 1) { // place stairs!
+							Block b = world.getBlockAt(x, y + 1, z);
+							// get the direction
+							IntVector dir = new IntVector(dx, 0, dz);
+							// make stair data and set the material
+							Stairs stair = new Stairs(Material.SMOOTH_STAIRS);
+							stair.setFacingDirection(dir.toBlockFace());
+							b.setType(stair.getItemType());
+							b.setData(stair.getData());
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * If this block is more than 1 block lower than any of its neighbours,
+	 * build it up.
+	 * 
+	 * @param x
+	 * @param z
+	 */
+	private boolean buildUpLowBlock(Extent e, int x, int z) {
+		int y = e.getHeightWithin(x, z);
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dz = -1; dz <= 1; dz++) {
+				if (dx == 0 || dz == 0) {
+					int y2 = e.getHeightWithin(x + dx, z + dz);
+					if ((y2 - y) > 1) { // built it up!
+						Block b = world.getBlockAt(x, y + 1, z);
+						b.setType(Material.DIAMOND_BLOCK); // with diamond for
+															// now
+															// so I can see it
+															// work!
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	public void raze() {
 		for (Room r : rooms) {
 			fill(r.getExtent(), Material.AIR, 0);
-			fill(r.getExtent().getWall(IntVector.Direction.DOWN), Material.GRASS,
-					0);
+			fill(r.getExtent().getWall(IntVector.Direction.DOWN),
+					Material.GRASS, 0);
 		}
 		rooms.clear();
 

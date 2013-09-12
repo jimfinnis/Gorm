@@ -20,8 +20,7 @@ public class Extent {
 
 	@Override
 	public String toString() {
-		return String.format("[%d %d %d] - [%d %d %d]", minx, miny, minz, maxx,
-				maxy, maxz);
+		return String.format("[%d - %d, %d - %d, %d - %d]",minx,maxx,miny,maxy,minz,maxz);
 	}
 
 	public Extent() {
@@ -279,6 +278,24 @@ public class Extent {
 
 		return maxheight;
 	}
+	
+	/**
+	 * Find the height of a square within this extent, ignoring any blocks above the extent.
+	 * Assumes a completely empty column to be miny-100; ditto blocks outside the xz of the extent
+	 * @param x
+	 * @param z
+	 * @return
+	 */
+	public int getHeightWithin(int x, int z){
+		World w = Castle.getInstance().getWorld();
+		if(x<minx || x>maxx || z<minz || z>maxz)
+			return miny-100;
+		for(int y=maxy;y>=miny;y--){
+			if(!w.getBlockAt(x, y, z).isEmpty())
+				return y;
+		}
+		return miny-100;
+	}
 
 	/**
 	 * Returns a new extent which is a single block thick, representing one of
@@ -290,10 +307,10 @@ public class Extent {
 		Extent e = new Extent(this);
 		switch (d) {
 		case NORTH:
-			e.minz = e.maxz;
+			e.maxz = e.minz; // remember NORTH is direction of decreasing Z
 			break;
 		case SOUTH:
-			e.maxz = e.minz;
+			e.minz = e.maxz;
 			break;
 		case EAST:
 			e.minx = e.maxx;

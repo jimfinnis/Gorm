@@ -169,28 +169,32 @@ public class Room {
 	public void makeExit(boolean outside) {
 		Castle c = Castle.getInstance();
 		Random rnd = new Random();
-		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH,
-				IntVector.Direction.EAST, IntVector.Direction.WEST};
+	
+// SNARK only trying exits in the orientations which fail.
+//		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH,
+//				IntVector.Direction.EAST, IntVector.Direction.WEST};
+		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH};
+				//IntVector.Direction.EAST, IntVector.Direction.WEST};
 		
 		Extent innerSpace = extent.expand(-1, Extent.ALL);
 		
 		for(int tries=0;tries<20;tries++){  
 			GormPlugin.log("try  "+Integer.toString(tries));
 			// pick a wall
-			IntVector.Direction dir = dirs[rnd.nextInt(4)];
+			IntVector.Direction dir = dirs[rnd.nextInt(dirs.length)];
 			Extent wall = extent.getWall(dir);
-			GormPlugin.log("  wall = "+wall.toString());
 			// find the centre of the wall, next to the floor
 			IntVector wallCentre = wall.getCentre();
-			GormPlugin.log("  wall centre = "+wallCentre.toString());
 			wallCentre.y = innerSpace.miny;
 			// pick which side of the centre we're going to walk down and
 			//  get a vector 
+
 			IntVector wallNormal = dir.vec.scale(2); // multiply by 2 so that the 'shadows' of the exit are shifted out enough
+			GormPlugin.log("wall direction="+dir.toString()+", wall vector="+wallNormal.toString());
 			IntVector walkVector = wallNormal.rotate(rnd.nextInt(2)*2+1); // 1 turn or 3
 			// make the exit, actually embedded in the centre of the wall 
-			Extent baseExit = new Extent(dir,rnd.nextInt(3)+1,rnd.nextInt(2)+3).addvec(wallCentre);
-			GormPlugin.log("  initial wall extent = "+baseExit.toString());
+			Extent baseExit = new Extent(dir,rnd.nextInt(3)+1,rnd.nextInt(2)+3);
+			baseExit = baseExit.addvec(wallCentre);
 			// check along the wall until it runs out
 			for(int i=0;i<100;i++){
 				// get a vector to put the exit at
@@ -207,7 +211,7 @@ public class Room {
 				Extent e1 = exit.subvec(wallNormal);
 				// if that's NOT entirely inside the inner extent, we've run out of wall
 				if(!innerSpace.inside(e1)){
-					GormPlugin.log("  aborting, run out of wall");					
+					GormPlugin.log("  aborting, run out of wall");	
 					break;
 				}
 				// and get the shadow on the far side

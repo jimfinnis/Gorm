@@ -54,6 +54,21 @@ public class Extent {
 		maxz = minz + zsize;
 		isset = true;
 	}
+	
+	/**
+	 * Construct a single-block extent
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public Extent(int x,int y,int z){
+		minx = x;
+		maxx = x;
+		miny = y;
+		maxy = y;
+		minz = z;
+		maxz = z;
+	}
 
 	/**
 	 * copy constructor
@@ -69,6 +84,16 @@ public class Extent {
 		maxz = e.maxz;
 		isset = e.isset;
 
+	}
+	
+	public int xsize(){
+		return (maxx-minx)+1;
+	}
+	public int ysize(){
+		return (maxy-miny)+1;
+	}
+	public int zsize(){
+		return (maxz-minz)+1;
 	}
 
 	private void add( int x, int y, int z) {
@@ -401,4 +426,5 @@ public class Extent {
 		}
 		return e;
 	}
+
 }

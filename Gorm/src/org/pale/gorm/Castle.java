@@ -21,7 +21,7 @@ public class Castle {
 	private static Castle instance;
 	private Extent allRoomsExtent = new Extent();
 	private World world;
-	private Random r = new Random();
+	public Random r = new Random();
 
 	private List<Extent> exits = new LinkedList<Extent>();
 
@@ -156,9 +156,13 @@ public class Castle {
 	 */
 	private boolean canOverwrite(Block b) {
 		Material m = b.getType();
-		if (isStairs(m))
+		// materials walls can be made of
+		if (m == Material.SMOOTH_BRICK || m == Material.WOOD || m == Material.BRICK ||
+				m == Material.LAPIS_BLOCK || m==Material.GOLD_BLOCK)
 			return false;
-		if (m == Material.SMOOTH_BRICK || m == Material.WOOD)
+		
+		// check for 'inside' air which we can't overwrite
+		if (m==Material.AIR && b.getData()==1) 
 			return false;
 		return true;
 	}

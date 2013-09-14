@@ -125,6 +125,7 @@ public final class GormPlugin extends JavaPlugin {
 				while(y>=pos.y){
 					Block b = w.getBlockAt(x, y, z);
 					b.setType(Material.AIR);
+					b.setData((byte) 0);
 					y--;
 				}
 			}

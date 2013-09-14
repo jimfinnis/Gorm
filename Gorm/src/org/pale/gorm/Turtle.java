@@ -20,11 +20,11 @@ public class Turtle {
 	private IntVector dir;
 	private Material mat = Material.SMOOTH_BRICK;
 	private Random r = new Random();
+	private int mode = CHECKWRITE;
 
 	int cur = 0;
 	private String string;
 
-	private int mode = CHECKWRITE;
 	private boolean aborted;
 	private int loopPoint = -1;
 	/**
@@ -34,24 +34,32 @@ public class Turtle {
 	private boolean lastMoveCausedTurn; // true if the last follow we did caused
 										// a turn
 
-	private boolean isModeFlag(int f) {
+	public boolean isModeFlag(int f) {
 		return (mode & f) != 0;
+	}
+	
+	public void setModeFlag(int f){
+		mode |= f;
+	}
+	
+	public void clrModeFlag(int f){
+		mode &= ~f;
 	}
 
 	// flags
-	static final int FOLLOW = 1; // follow walls if we hit them
-	static final int SUPPORTFOLLOW = 2; // edge following on (build direction
+	public static final int FOLLOW = 1; // follow walls if we hit them
+	public static final int SUPPORTFOLLOW = 2; // edge following on (build direction
 										// will turn to ensure support under
 										// built blocks)
-	static final int LEFT = 4; // following will try left turn first
-	static final int RANDOM = 8; // following will try either left or right
+	public static final int LEFT = 4; // following will try left turn first
+	public static final int RANDOM = 8; // following will try either left or right
 									// (overrides LEFT)
-	static final int HUGEDGE = 16; // we must always keep a wall to our left or
+	public static final int HUGEDGE = 16; // we must always keep a wall to our left or
 									// right, and follow them round
-	static final int WRITEONMOVE = 32; // write at end of every move
-	static final int CHECKWRITE = 64; // abort if write would cause overwrite of
+	public static final int WRITEONMOVE = 32; // write at end of every move
+	public static final int CHECKWRITE = 64; // abort if write would cause overwrite of
 										// non-air block (on by default)
-	static final int BACKSTAIRS = 128; // write stairs as facing away from us
+	public static final int BACKSTAIRS = 128; // write stairs as facing away from us
 
 	char getNext() {
 		if (cur >= string.length())
@@ -67,6 +75,18 @@ public class Turtle {
 		world = w;
 		dir = initdir.vec;
 		pos = initpos;
+	}
+	
+	/**
+	 * Clone a turtle - useful for effectively doing a save/restore!
+	 * @param t
+	 */
+	public Turtle(Turtle t){
+		world = t.world;
+		dir = t.dir;
+		pos = t.pos;
+		mat = t.mat;
+		mode = t.mode;
 	}
 
 	public void run(String s) {
@@ -89,37 +109,107 @@ public class Turtle {
 		}
 	}
 
-	private void moveForwards() {
+	public void forwards() {
 		pos = pos.add(dir);
 		IntVector tmpDir = dir;
 		if (isModeFlag(FOLLOW))
 			follow();
 		if (isModeFlag(HUGEDGE))
 			hugEdge();
+		if (isModeFlag(SUPPORTFOLLOW))
+			supportFollow();
 		if (isModeFlag(WRITEONMOVE))
 			write();
 		lastMoveCausedTurn = !tmpDir.equals(dir);
+	}
+	
+	/**
+	 * Move, not turn. Follow rules will not apply.
+	 */
+	public void right(){
+		pos = pos.add(dir.rotate(1));
+	}
+	/**
+	 * Move, not turn. Follow rules will not apply.
+	 */
+	public void left(){
+		pos = pos.add(dir.rotate(3));
+		
+	}
+	
+	public void moveAbsolute(IntVector v){
+		pos = v;
+	}
+	
+	public IntVector getPos(){
+		return pos;
+	}
+	
+	public void rotate(int turns){
+		dir.rotate(turns);
+	}
+
+	public void setMaterial(Material m){
+		mat= m;
+	}
+
+	public Block get() {
+		return world.getBlockAt(pos.x, pos.y, pos.z);
+	}
+
+	public void write() {
+		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
+			Block b = get();
+			b.setType(mat);
+
+			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
+										// facing
+										// upwards away from us
+				Stairs s = new Stairs(mat);
+				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
+				s.setFacingDirection(d.toBlockFace());
+				b.setData(s.getData());
+			} else
+				b.setData((byte) 0);
+		} else
+			abort();
+	}
+	
+	public Material getMaterial(){
+		return mat;
+	}
+	
+	public void up(){
+		pos = pos.add(0, 1, 0);
+		if (isModeFlag(WRITEONMOVE))
+			write();
+	}
+	
+	public void down(){
+		pos = pos.add(0, -1, 0);
+		if (isModeFlag(WRITEONMOVE))
+			write();
 
 	}
 
 	private void execute(char c) {
 		switch (c) {
 		case 'f': // forward
-			moveForwards();
+			forwards();
 			break;
 		case 'L': // move right (caps to distinguish from rotating!)
 			dir = dir.rotate(3);
-			moveForwards();
+			forwards();
 			dir = dir.rotate(1);
 			break;
 		case 'R':// move left (caps to distinguish from rotating!)
 			dir = dir.rotate(1);
-			moveForwards();
+			forwards();
 			dir = dir.rotate(3);
 			break;
 		case 'B': // move backwards
 			dir = dir.rotate(2);
-			moveForwards();
+			forwards();
 			dir = dir.rotate(2);
 			break;
 		case 'r': // turn right
@@ -129,14 +219,10 @@ public class Turtle {
 			dir = dir.rotate(3);
 			break;
 		case 'u':// go down
-			pos = pos.add(0, 1, 0);
-			if (isModeFlag(WRITEONMOVE))
-				write();
+			up();
 			break;
 		case 'd':// go up
-			pos = pos.add(0, -1, 0);
-			if (isModeFlag(WRITEONMOVE))
-				write();
+			down();
 			break;
 		case 'w': // write the material to the current block - but abort if we
 					// are going to overwrite!
@@ -196,7 +282,7 @@ public class Turtle {
 		}
 		return 0;
 	}
-
+	
 	private void setMaterial(char next) {
 
 		switch (next) {
@@ -347,8 +433,24 @@ public class Turtle {
 			dumpMap();
 			return false;
 		}
-
 	}
+	
+	/**
+	 * If the step in front will take us onto an unsupported block, we need to turn.
+	 * By default we'll go clockwise.
+	 */
+	private void supportFollow() {
+		if(isEmpty(0,-1,-1)){
+			if(!isEmpty(1,-1,0))
+				dir = dir.rotate(1);
+			else if(!isEmpty(-1,-1,0))
+				dir = dir.rotate(3);
+			else
+				abort();
+		}
+		
+	}
+
 
 	/**
 	 * Look at the block relative to the turtle - in turtle space - and tell
@@ -358,7 +460,7 @@ public class Turtle {
 	 * @param z
 	 * @return
 	 */
-	private boolean isEmpty(int x, int y, int z) {
+	public boolean isEmpty(int x, int y, int z) {
 		IntVector v = new IntVector(x, y, z).rotateToSpace(dir);
 		IntVector p = pos.add(v);
 		Block b = world.getBlockAt(p.x, p.y, p.z);
@@ -398,24 +500,4 @@ public class Turtle {
 		}
 	}
 
-	private Block get() {
-		return world.getBlockAt(pos.x, pos.y, pos.z);
-	}
-
-	private void write() {
-		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
-			Block b = get();
-			b.setType(mat);
-
-			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
-										// facing
-										// upwards away from us
-				Stairs s = new Stairs(mat);
-				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
-				s.setFacingDirection(d.toBlockFace());
-				b.setData(s.getData());
-			}
-		} else
-			abort();
-	}
 }

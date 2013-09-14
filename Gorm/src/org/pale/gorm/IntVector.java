@@ -18,18 +18,18 @@ public class IntVector {
 			vec = new IntVector(x, y, z);
 		}
 
-		final IntVector vec;
+		public final IntVector vec;
 	}
 
 	public int x, y, z;
 
-	IntVector(int x, int y, int z) {
+	public IntVector(int x, int y, int z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 
-	IntVector(IntVector v) {
+	public IntVector(IntVector v) {
 		this.x = v.x;
 		this.y = v.y;
 		this.z = v.z;
@@ -41,27 +41,27 @@ public class IntVector {
 		z = loc.getBlockZ();
 	}
 
-	IntVector add(int x, int y, int z) {
+	public IntVector add(int x, int y, int z) {
 		return new IntVector(this.x + x, this.y + y, this.z + z);
 	}
 
-	IntVector add(IntVector v) {
+	public IntVector add(IntVector v) {
 		return add(v.x, v.y, v.z);
 	}
 
-	IntVector subtract(int x, int y, int z) {
+	public IntVector subtract(int x, int y, int z) {
 		return new IntVector(this.x - x, this.y - y, this.z - z);
 	}
 
-	IntVector subtract(IntVector v) {
+	public IntVector subtract(IntVector v) {
 		return subtract(v.x, v.y, v.z);
 	}
 
-	IntVector negate() {
+	public IntVector negate() {
 		return new IntVector(-x, -y, -z);
 	}
 
-	IntVector scale(int d) {
+	public IntVector scale(int d) {
 		return new IntVector(x * d, y * d, z * d);
 	}
 
@@ -77,7 +77,7 @@ public class IntVector {
 	 *            of 90 degs clockwise
 	 * @return
 	 */
-	IntVector rotate(int turns) {
+	public IntVector rotate(int turns) {
 		IntVector v;
 		//GormPlugin.log("rotating "+Integer.toString(turns));
 
@@ -111,7 +111,7 @@ public class IntVector {
 	 * @param zaxis
 	 * @return
 	 */
-	IntVector rotateToSpace(IntVector zaxis) {
+	public IntVector rotateToSpace(IntVector zaxis) {
 		//GormPlugin.log("zaxisvector"+zaxis.toString());
 		if (zaxis.x < 0)
 			return rotate(3);

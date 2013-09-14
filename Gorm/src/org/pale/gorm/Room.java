@@ -5,6 +5,7 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.pale.gorm.roomutils.PitchedRoofBuilder;
 
 /**
  * A room or corridor in the castle
@@ -70,13 +71,14 @@ public class Room {
 
 		// basic room for now
 		c.fillBrickWithCracksAndMoss(extent);
-		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 0);
+
+		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
 
 		lightWalls();
 		floorLights();
 		underfill();
-		roof();
-		
+		new PitchedRoofBuilder().buildRoof(extent);
+
 		makeExit(true);
 		makeExit(false);
 		makeExit(true);
@@ -85,9 +87,6 @@ public class Room {
 		makeExit(false);
 	}
 
-	private void roof() {
-		//todo
-	}
 
 	/**
 	 * Lights around the walls if we need them
@@ -121,10 +120,13 @@ public class Room {
 			for (int z = extent.minz + 3; z < extent.maxz - 3; z += 5) {
 				Block b = w.getBlockAt(x, y, z);
 				if (b.getLightLevel() < 7) {
+					b.setData((byte)0);
 					b.setType(Material.FENCE);
 					b = w.getBlockAt(x, y - 1, z);
+					b.setData((byte)0);
 					b.setType(Material.FENCE);
 					b = w.getBlockAt(x, y + 1, z);
+					b.setData((byte)0);
 					b.setType(Material.TORCH);
 				}
 			}
@@ -135,9 +137,14 @@ public class Room {
 	 * Fill voids under the room in some way
 	 */
 	void underfill() {
-		World w = Castle.getInstance().getWorld();
-		for (int x = extent.minx; x <= extent.maxx; x++) {
-			for (int z = extent.minz; z <= extent.maxz; z++) {
+		Castle c = Castle.getInstance();
+		World w = c.getWorld();
+
+		int dx = extent.xsize() < 8 ? extent.xsize() - 1 : 4;
+		int dz = extent.zsize() < 8 ? extent.zsize() - 1 : 4;
+
+		for (int x = extent.minx; x <= extent.maxx; x += dx) {
+			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
 					Block b = w.getBlockAt(x, y, z);
 					if (b.isEmpty()) {
@@ -153,6 +160,7 @@ public class Room {
 
 	void addLight(int x, int y, int z) {
 		Block b = Castle.getInstance().getWorld().getBlockAt(x, y, z);
+		b.setData((byte) 0);
 		b.setType(Material.TORCH);
 	}
 
@@ -174,21 +182,23 @@ public class Room {
 
 	}
 
-	/** Try to create an exit from this room into another one (if outside is false) or to the outside 
-	 * (if it is true) Does not create vertical exits!
+	/**
+	 * Try to create an exit from this room into another one (if outside is
+	 * false) or to the outside (if it is true) Does not create vertical exits!
 	 */
 	public void makeExit(boolean outside) {
 		Castle c = Castle.getInstance();
 		Random rnd = new Random();
-	
-		IntVector.Direction[] dirs = {IntVector.Direction.NORTH,IntVector.Direction.SOUTH,
-				IntVector.Direction.EAST, IntVector.Direction.WEST};
+
+		IntVector.Direction[] dirs = { IntVector.Direction.NORTH,
+				IntVector.Direction.SOUTH, IntVector.Direction.EAST,
+				IntVector.Direction.WEST };
 
 		// this is the 'inside' of the room.
 		Extent innerSpace = extent.expand(-1, Extent.ALL);
-		
-		for(int tries=0;tries<20;tries++){  
-			GormPlugin.log("try  "+Integer.toString(tries));
+
+		for (int tries = 0; tries < 20; tries++) {
+			GormPlugin.log("try  " + Integer.toString(tries));
 			// pick a wall
 			IntVector.Direction dir = dirs[rnd.nextInt(dirs.length)];
 			Extent wall = extent.getWall(dir);
@@ -196,55 +206,65 @@ public class Room {
 			IntVector wallCentre = wall.getCentre();
 			wallCentre.y = innerSpace.miny;
 			// pick which side of the centre we're going to walk down and
-			//  get a vector 
+			// get a vector
 
-			IntVector wallNormal = dir.vec.scale(2); // multiply by 2 so that the 'shadows' of the exit are shifted out enough
-			GormPlugin.log("wall direction="+dir.toString()+", wall vector="+wallNormal.toString());
-			IntVector walkVector = wallNormal.rotate(rnd.nextInt(2)*2+1); // 1 turn or 3
-			// make the exit, actually embedded in the centre of the wall 
-			Extent baseExit = new Extent(dir,rnd.nextInt(3)+1,rnd.nextInt(2)+3,0);
+			IntVector wallNormal = dir.vec.scale(2); // multiply by 2 so that
+														// the 'shadows' of the
+														// exit are shifted out
+														// enough
+			GormPlugin.log("wall direction=" + dir.toString()
+					+ ", wall vector=" + wallNormal.toString());
+			IntVector walkVector = wallNormal.rotate(rnd.nextInt(2) * 2 + 1); // 1
+																				// turn
+																				// or
+																				// 3
+			// make the exit, actually embedded in the centre of the wall
+			Extent baseExit = new Extent(dir, rnd.nextInt(3) + 1,
+					rnd.nextInt(2) + 3, 0);
 			baseExit = baseExit.addvec(wallCentre);
 			// check along the wall until it runs out
-			for(int i=0;i<100;i++){
+			for (int i = 0; i < 100; i++) {
 				// get a vector to put the exit at
 				IntVector v = walkVector.scale(i);
 				// make the exit, at that position
 				Extent exit = baseExit.addvec(v);
-				GormPlugin.log(" testing exit at "+exit.toString());
+				GormPlugin.log(" testing exit at " + exit.toString());
 				// make sure it's not near an exit already
-				if(c.overlapsExit(exit.expand(1, Extent.ALL))){
+				if (c.overlapsExit(exit.expand(1, Extent.ALL))) {
 					GormPlugin.log("  aborting, is near exit");
 					continue;
 				}
 
 				// find the exit's 'shadow' on this side of the wall
 				Extent e1 = exit.subvec(wallNormal);
-				// if that's NOT entirely inside the inner extent, we've run out of wall
-				if(!innerSpace.inside(e1)){
-					GormPlugin.log("  aborting, run out of wall");	
+				// if that's NOT entirely inside the inner extent, we've run out
+				// of wall
+				if (!innerSpace.inside(e1)) {
+					GormPlugin.log("  aborting, run out of wall");
 					break;
 				}
 				// and get the shadow on the far side
 				Extent e2 = exit.addvec(wallNormal);
-				if(testExitDestination(outside,e2)){
+				if (testExitDestination(outside, e2)) {
 					// if it's good, use it
-					c.fill(exit, Material.AIR, 0);
+					c.fill(exit, Material.AIR, 1); // special 'inside' air
 					c.addExit(exit);
-					c.postProcessExit(exit,dir);
+					c.postProcessExit(exit, dir);
 					return;
 				}
 			}
-			
+
 		}
-		
+
 	}
 
 	private boolean testExitDestination(boolean outside, Extent e) {
 		Castle c = Castle.getInstance();
 		boolean isInRoom = c.intersects(e);
-		if(outside == isInRoom) // look at the truth table :)
+		if (outside == isInRoom) // look at the truth table :)
 			return false;
-		return !e.intersectsWorld(); // if it passed that, it'll be OK provided it doesn't intersect the world
+		return !e.intersectsWorld(); // if it passed that, it'll be OK provided
+										// it doesn't intersect the world
 	}
 
 }

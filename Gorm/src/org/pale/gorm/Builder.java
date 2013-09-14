@@ -91,7 +91,7 @@ public class Builder {
 				rnd.nextInt(10)+5);
 		e.miny = r.getExtent().miny; // make floors align
 		if(rnd.nextFloat()<0.1)
-			e=e.setHeight(rnd.nextInt(20)+15);
+			e=e.setHeight(rnd.nextInt(10)+15);
 		else
 			e=e.setHeight(rnd.nextInt(3)+10);
 
@@ -118,7 +118,7 @@ public class Builder {
 		for (int[] slide : slides) {
 			Extent moved = e.addvec(slide[0],slide[1],slide[2]);
 			for (int i = 0; i < 100; i++) {
-				GormPlugin.log("sliding...");
+				//GormPlugin.log("sliding...");
 
 				// also try a limited yslide
 				for (int yslide = 0; yslide<=maxyslide; yslide++) {

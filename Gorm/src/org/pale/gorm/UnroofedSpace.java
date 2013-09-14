@@ -22,7 +22,7 @@ public class UnroofedSpace extends Room {
 		
 		e =extent.expand(-1, Extent.ALL);
 		e.maxy++;
-		c.fill(e,Material.AIR,0);
+		c.fill(e,Material.AIR,1); // fill with 'inside' air
 		
 		lightWalls();
 		floorLights();

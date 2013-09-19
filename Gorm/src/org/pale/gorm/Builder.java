@@ -13,7 +13,7 @@ import org.bukkit.World;
  */
 public class Builder {
 	private Castle castle;
-	
+
 	static Random rnd = new Random();
 
 	Builder(World w) {
@@ -40,9 +40,8 @@ public class Builder {
 			// set around some other room, and slide it around until it fits
 			Room r = createAndFitRoom();
 			if (r != null) {
-				castle.addRoom(r);
 				r.render();
-				r.makeExit(true);
+				castle.addRoom(r);
 
 				GormPlugin.log("room created and added!");
 			} else {
@@ -67,7 +66,10 @@ public class Builder {
 			for (Room r : castle.getRooms()) {
 				if (rnd.nextDouble() < qqq) {
 					Room newRoom = createRoom(r);
-					if (moveRoomUntilFit(newRoom,3+tries,r)) { // more laxity in y-slide each time
+					if (moveRoomUntilFit(newRoom, 3 + tries, r)) { // more
+																	// laxity in
+																	// y-slide
+																	// each time
 						return newRoom;
 					}
 				}
@@ -85,22 +87,21 @@ public class Builder {
 	 */
 	private Room createRoom(Room r) {
 		GormPlugin.log("creating room around: " + r.getExtent().toString());
-		Extent e = new Extent(r.getExtent().getCentre(), 
-				rnd.nextInt(10)+5, 
-				1,  // the y setting here is unused
-				rnd.nextInt(10)+5);
+		Extent e = new Extent(r.getExtent().getCentre(), rnd.nextInt(10) + 5,
+				1, // the y setting here is unused
+				rnd.nextInt(10) + 5);
 		e.miny = r.getExtent().miny; // make floors align
-		if(rnd.nextFloat()<0.1)
-			e=e.setHeight(rnd.nextInt(10)+15);
+		if (rnd.nextFloat() < 0.1)
+			e = e.setHeight(rnd.nextInt(10) + 20);
 		else
-			e=e.setHeight(rnd.nextInt(3)+10);
+			e = e.setHeight(rnd.nextInt(3) + 15);
 
 		GormPlugin.log("new room has extent: " + e.toString());
 		return new Room(Room.RoomType.ROOM, e);
 
 	}
 
-	private boolean moveRoomUntilFit(Room r,int maxyslide,Room parentRoom) {
+	private boolean moveRoomUntilFit(Room r, int maxyslide, Room parentRoom) {
 		Extent start = new Extent(r.getExtent());
 
 		// we have to shrink the room by 1 so that walls are in common - 'start'
@@ -116,17 +117,18 @@ public class Builder {
 		shuffle(slides);
 
 		for (int[] slide : slides) {
-			Extent moved = e.addvec(slide[0],slide[1],slide[2]);
+			Extent moved = e.addvec(slide[0], slide[1], slide[2]);
 			for (int i = 0; i < 100; i++) {
-				//GormPlugin.log("sliding...");
+				// GormPlugin.log("sliding...");
 
 				// also try a limited yslide
-				for (int yslide = 0; yslide<=maxyslide; yslide++) {
-					// slide up, then down
-					if(tryMove(r,moved,yslide,parentRoom))return true;
-					if(tryMove(r,moved,-yslide,parentRoom))return true;
+				for (int yslide = 0; yslide <= maxyslide; yslide++) {
+					if (tryMove(r, moved, -yslide, parentRoom))
+						return true;
+					if (tryMove(r, moved, yslide, parentRoom))
+						return true;
 				}
-				moved = moved.addvec(slide[0],slide[1],slide[2]);
+				moved = moved.addvec(slide[0], slide[1], slide[2]);
 			}
 		}
 		return false;
@@ -135,23 +137,22 @@ public class Builder {
 
 	/**
 	 * Test out moving a room to a given position, with a bit of y added too.
+	 * 
 	 * @param r
 	 * @param moved
 	 * @param yslide
 	 * @return
 	 */
-	private boolean tryMove(Room r, Extent moved, int yslide,Room parentRoom) {
-		Extent e = moved.addvec(0,yslide,0);
-		if (!castle.intersects(e) &&  // we're not intersecting with existing castle bits
-				!e.intersectsWorld() &&  // and we're not intersecting with dirt/rock etc.
-				e.getMaxHeightAboveWorld()<3 && // and we're on the ground (ish)
-				parentRoom.intersects(e.expand(1,Extent.ALL)) // and we still intersect with the parent room
-				) {
-			// that'll do!
-			r.setExtent(e.expand(1, Extent.ALL));
-			GormPlugin.log("room moved to: "
-					+ r.getExtent().toString());
-			return true;
+	private boolean tryMove(Room r, Extent moved, int yslide, Room parentRoom) {
+		Extent e = moved.addvec(0, yslide, 0);
+		Extent eOuter = e.expand(1, Extent.ALL);
+		if (!castle.intersects(e) && !e.intersectsWorld()) {
+			if (e.getMinHeightAboveWorld() < 3 && parentRoom.intersects(eOuter)) {
+				// that'll do!
+				r.setExtent(eOuter);
+				GormPlugin.log("room moved to: " + r.getExtent().toString());
+				return true;
+			}
 		}
 		return false;
 	}

@@ -2,6 +2,7 @@ package org.pale.gorm;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 
 /**
  * A class to hold a bounding box, or extent or a room or the entire castle
@@ -22,7 +23,20 @@ public class Extent {
 	public String toString() {
 		return String.format("[%d - %d, %d - %d, %d - %d]",minx,maxx,miny,maxy,minz,maxz);
 	}
+	
+	public Extent(int x1,int y1,int z1,int x2,int y2,int z2){
+		minx = x1;
+		miny = y1;
+		minz = z1;
+		maxx = x2;
+		maxy = y2;
+		maxz = z2;
+		isset = true;
+	}
 
+	/**
+	 * Creates an unset extent.
+	 */
 	public Extent() {
 	}
 
@@ -68,6 +82,7 @@ public class Extent {
 		maxy = y;
 		minz = z;
 		maxz = z;
+		isset = true;
 	}
 
 	/**
@@ -235,7 +250,8 @@ public class Extent {
 	}
 
 	/**
-	 * Returns true if this extent contains any blocks we shouldn't overwrite
+	 * Returns true if this extent contains any blocks we shouldn't overwrite. These
+	 * should be natural blocks, not built ones - it should be possible to overwrite these
 	 * 
 	 * @return
 	 */
@@ -245,7 +261,8 @@ public class Extent {
 			for (int y = miny; y <= maxy; y++) {
 				for (int z = minz; z <= maxz; z++) {
 					int typeId = w.getBlockAt(x, y, z).getTypeId();
-					if (typeId > 0 && typeId < 17)
+					// avoid anything less than block 17 except for 5 (which is wood, so roofs are ok)
+					if (typeId > 0 && typeId < 17 && typeId!=5)
 						return true;
 				}
 			}
@@ -289,6 +306,10 @@ public class Extent {
 		return subvec(v.x, v.y, v.z);
 	}
 
+	/**
+	 * Find the maximum height of this extent above the ground
+	 * @return
+	 */
 	public int getMaxHeightAboveWorld() {
 		int maxheight = 0;
 		World w = Castle.getInstance().getWorld();
@@ -304,6 +325,25 @@ public class Extent {
 		return maxheight;
 	}
 	
+	/**
+	 * Find the maximum height of this extent above the ground
+	 * @return
+	 */
+	public int getMinHeightAboveWorld() {
+		int minheight = 1000;
+		World w = Castle.getInstance().getWorld();
+		for (int x = minx; x <= maxx; x++) {
+			for (int z = minz; z <= maxz; z++) {
+				int h = w.getHighestBlockYAt(x, z);
+				int diff = miny - h;
+				if (diff < minheight)
+					minheight = diff;
+			}
+		}
+
+		return minheight;
+	}
+
 	static final int BADHEIGHT = -1000;
 	
 	/**
@@ -318,7 +358,8 @@ public class Extent {
 		if(x<minx || x>maxx || z<minz || z>maxz)
 			return BADHEIGHT;
 		for(int y=maxy;y>=miny;y--){
-			if(!w.getBlockAt(x, y, z).isEmpty())
+			Block b = w.getBlockAt(x,y,z);
+			if(b.getType().isSolid())
 				return y;
 		}
 		return BADHEIGHT;
@@ -330,7 +371,7 @@ public class Extent {
 	 * 
 	 * @return
 	 */
-	public Extent getWall(IntVector.Direction d) {
+	public Extent getWall(Direction d) {
 		Extent e = new Extent(this);
 		switch (d) {
 		case NORTH:
@@ -361,7 +402,7 @@ public class Extent {
 	 * 
 	 */
 
-	public Extent(IntVector.Direction d, int w, int h,int depth) {
+	public Extent(Direction d, int w, int h,int depth) {
 		miny = 0;
 		maxy = h - 1;
 		switch (d) {
@@ -408,7 +449,7 @@ public class Extent {
 	/**
 	 * grow the extent along the given direction by the given number of steps each way
 	 */
-	public Extent growDirection(IntVector.Direction d, int n){
+	public Extent growDirection(Direction d, int n){
 		Extent e = new Extent(this);
 		switch(d){
 		case EAST:

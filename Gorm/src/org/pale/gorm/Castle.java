@@ -1,7 +1,7 @@
 package org.pale.gorm;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
 
 /**
@@ -22,8 +23,6 @@ public class Castle {
 	private Extent allRoomsExtent = new Extent();
 	private World world;
 	public Random r = new Random();
-
-	private List<Extent> exits = new LinkedList<Extent>();
 
 	/**
 	 * Private ctor so this is a singleton
@@ -50,7 +49,7 @@ public class Castle {
 		return instance;
 	}
 
-	private List<Room> rooms = new LinkedList<Room>();
+	private List<Room> rooms = new ArrayList<Room>();
 
 	public int getRoomCount() {
 		return rooms.size();
@@ -78,24 +77,6 @@ public class Castle {
 				return true;
 		}
 		return overlapsExit(e);
-	}
-
-	/**
-	 * Return the list of exits
-	 */
-	public List<Extent> getExits() {
-		return exits;
-	}
-
-	/**
-	 * Add an exit
-	 */
-	public void addExit(Extent e) {
-		exits.add(new Extent(e));
-		/*
-		 * for(Extent x:exits){ fill(x,Material.AIR,0); x = new Extent(x);
-		 * x.miny-=10; x.maxy-=2; ensureSteps(x); }
-		 */
 	}
 
 	/**
@@ -157,17 +138,24 @@ public class Castle {
 	private boolean canOverwrite(Block b) {
 		Material m = b.getType();
 		// materials walls can be made of
-		if (m == Material.SMOOTH_BRICK || m == Material.WOOD || m == Material.BRICK ||
-				m == Material.LAPIS_BLOCK || m==Material.GOLD_BLOCK)
+		if (m == Material.SMOOTH_BRICK || m == Material.WOOD
+				|| m == Material.BRICK || m == Material.LAPIS_BLOCK
+				|| m == Material.GOLD_BLOCK)
 			return false;
-		
+
 		// check for 'inside' air which we can't overwrite
-		if (m==Material.AIR && b.getData()==1) 
+		if (m == Material.AIR && b.getData() == 1)
 			return false;
 		return true;
 	}
 
-	public void fillBrickWithCracksAndMoss(Extent e) {
+	/**
+	 * Fill an area with bricks, adding moss and cracks.
+	 * 
+	 * @param e
+	 * @param checkOverwrite
+	 */
+	public void fillBrickWithCracksAndMoss(Extent e, boolean checkOverwrite) {
 		GormPlugin.log("filling " + e.toString());
 		int t = 0;
 		int dataVals[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -176,7 +164,7 @@ public class Castle {
 			for (int y = e.miny; y <= e.maxy; y++) {
 				for (int z = e.minz; z <= e.maxz; z++) {
 					Block b = world.getBlockAt(x, y, z);
-					if (canOverwrite(b)) {
+					if (!checkOverwrite || canOverwrite(b)) {
 						b.setType(Material.SMOOTH_BRICK);
 						b.setData((byte) dataVals[r.nextInt(dataVals.length)]);
 						t++;
@@ -227,13 +215,19 @@ public class Castle {
 		return rooms;
 	}
 
-	public boolean contains(IntVector p) {
-		for (Room x : rooms) {
-			if (x.contains(p)) {
-				return true;
-			}
+	/**
+	 * Return a list of rooms within a given extent
+	 * 
+	 * @return
+	 */
+	public Collection<Room> getRoomsIntersecting(Extent e) {
+		ArrayList<Room> out = new ArrayList<Room>();
+
+		for (Room r : rooms) {
+			if (r.intersects(e))
+				out.add(r);
 		}
-		return false;
+		return out;
 	}
 
 	/**
@@ -243,17 +237,16 @@ public class Castle {
 	 * @return
 	 */
 	public boolean overlapsExit(Extent x) {
-		for (Extent e : exits) {
-			if (x.intersects(e))
+		for (Room r : rooms) {
+			if (r.overlapsExit(x))
 				return true;
 		}
 		return false;
 	}
 
-
-	private void setStairs(int x, int y, int z, BlockFace dir) {
+	private void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
 		Block b = world.getBlockAt(x, y, z);
-		Stairs s = new Stairs(Material.SMOOTH_STAIRS);
+		Stairs s = new Stairs(mat);
 		s.setFacingDirection(dir);
 		b.setData(s.getData());
 		b.setType(s.getItemType());
@@ -265,84 +258,170 @@ public class Castle {
 				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS);
 	}
 
-	public void postProcessExit(Extent e, IntVector.Direction d) {
+	/**
+	 * Attempt to run out from an extent representing a hole in a wall, dropping
+	 * stairs until we hit the floor. We start one step out from the floor block
+	 * of the exit.
+	 * 
+	 * @param e
+	 * @param d
+	 * @return
+	 */
+	private boolean dropExitStairs(Extent e, Direction d) {
 		IntVector v = d.vec;
+		int floory = e.miny; // get the floor of the exit
 
-		e = e.growDirection(d, 100); // stretch out the extent for scanning
-										// purposes
-		e.miny -= 100;
+		e = e.growDirection(d, 2); // stretch out the extent for scanning
+									// purposes
+		e = e.growDirection(d.opposite(), 1); // and in a bit as well.
+		e.miny -= 100; // so that getHeightWithin() will read heights lower than
+						// the current floor
 
+		boolean done = false;
+		// we need to iterate over the 'stripes' within a multi-block-wide exit
 		if (v.x == 0) {
-			// north/south case
-			// for each x..
+			// the north-south case
 			for (int x = e.minx; x <= e.maxx; x++) {
-				// keep building steps down until we hit floor. First get the
-				// initial height.
-				int z = (e.maxz + e.minz) / 2; // we start in the middle of the
-												// exit, in the gap itself
-				int y = e.getHeightWithin(x, z);
-				GormPlugin.log(String.format("%d,%d in %s has height %d", x, z,
-						e.toString(), y));
-				for (;;) {
-					z += v.z; // move one step out the exit
-					int y2 = e.getHeightWithin(x, z); // get that height
-					GormPlugin.log(String.format("%d,%d in %s has height %d",
-							x, z, e.toString(), y2));
-					// if it is lower than where we were, build it up with
-					// stairs
-					if (y2 != Extent.BADHEIGHT && y2 < y) {
-						// get the direction
-						IntVector dir = new IntVector(-v.x, 0, -v.z);
-						// make stair data and set the material
-						setStairs(x, y, z, dir.toBlockFace());
-						y--; // and go down one
-					} else
-						break; // otherwise get out of the loop
-				}
+				int startz = v.z > 0 ? e.minz : e.maxz;
+				IntVector start = new IntVector(x, floory, startz);
+				done |= stairScan(start, e, v);
 			}
-		} else {                //THIS CODE IS THE SAME AS ABOVE apart from the direction. Yes, it's bad.
-			// east/west case 
-			// for each z..
+		} else {
+			// the north-south case
 			for (int z = e.minz; z <= e.maxz; z++) {
-				// keep building steps down until we hit floor. First get the
-				// initial height.
-				int x = (e.maxx + e.minx) / 2; // we start in the middle of the
-												// exit, in the gap itself
-				int y = e.getHeightWithin(x, z);
-				GormPlugin.log(String.format("%d,%d in %s has height %d", x, z,
-						e.toString(), y));
-				for (;;) {
-					x += v.x; // move one step out the exit
-					int y2 = e.getHeightWithin(x, z); // get that height
-					GormPlugin.log(String.format("%d,%d in %s has height %d",
-							x, z, e.toString(), y2));
-					// if it is lower than where we were, build it up with
-					// stairs
-					if (y2 != Extent.BADHEIGHT && y2 < y) {
-						// get the direction
-						IntVector dir = new IntVector(-v.x, 0, -v.z);
-						// make stair data and set the material
-						setStairs(x, y, z, dir.toBlockFace());
-						y--; // and go down one
-					} else
-						break; // otherwise get out of the loop
-				}
+				int startx = v.x > 0 ? e.minx : e.maxx;
+				IntVector start = new IntVector(startx, floory, z);
+				done |= stairScan(start, e, v);
 			}
 		}
+
+		return done;
+	}
+
+	/**
+	 * Starting at a point, scan along a given vector within the given extent,
+	 * filling in drops with stairs as necessary. Return true if we did
+	 * anything.
+	 * 
+	 * @param start
+	 * @param e
+	 * @param v
+	 * @return
+	 */
+	private boolean stairScan(IntVector start, Extent e, IntVector v) {
+		boolean done = false;
+		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
+		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
+		
+		int y = e.getHeightWithin(start.x, start.z);
+		Material mat = Material.WOOD_STAIRS;
+		
+		// steps starting from blind walls can happen.. but are stupid.
+		IntVector startWall = start.subtract(v).add(0,1,0);
+		if(world.getBlockAt(startWall.x,startWall.y,startWall.z).getType().isSolid())
+			return false;
+		
+		for (IntVector pt = new IntVector(start);
+				e.contains(pt.x, e.miny, pt.z); pt = pt.add(v)) {
+			int newy = e.getHeightWithin(pt.x, pt.z);
+			if (isStairs(world.getBlockAt(pt.x, newy, pt.z).getType()))
+				break;
+			if (newy > y) {
+				// if we've gone UP, exit the loop. We only work down.
+				break;
+			} else if (newy < y) {
+				GormPlugin.log(String.format(
+						"height was %d, is now %d - filling", y, newy));
+				// we've gone down, so build up, saving the old block state
+				undoBuffer.add(world.getBlockAt(pt.x,y,pt.z).getState());
+				setStairs(pt.x, y, pt.z, bf, mat);
+				
+				Block b = world.getBlockAt(pt.x,y-1,pt.z); // check we landed!
+				if(b.getType().isSolid())
+					done = true;
+				mat = Material.SMOOTH_STAIRS;
+				y--; // and go down again!
+			}
+		}
+		
+		if(!done){
+			// didn't achieve what we wanted, so restore all blocks
+			for(BlockState s: undoBuffer){
+				// for some reason update() isn't working for me.
+				world.getBlockAt(s.getLocation()).setType(s.getType());
+			}
+		}
+		return done;
+	}
+
+	/**
+	 * Attempt to build stairs down and connect to nearby rooms. Can be run on
+	 * any exit several times.
+	 * 
+	 * @param e
+	 * @param d
+	 */
+
+	public void postProcessExit(Exit e) {
+		
+		replaceSolidWithAir(e.getExtendedExtent());
+		
+		Extent extent = e.getExtent();
+		Direction d = e.getDirection();
+		if (!dropExitStairs(extent, d)) {
+			// if we didn't do any stairs magic one way, try the other way.
+			dropExitStairs(extent, d.opposite());
+		}
+	}
+
+	private void replaceSolidWithAir(Extent e) {
+		for (int x = e.minx; x <= e.maxx; x++) {
+			for (int y = e.miny; y <= e.maxy; y++) {
+				for (int z = e.minz; z <= e.maxz; z++) {
+					Block b = world.getBlockAt(x, y, z);
+					b.setType(Material.AIR);
+					b.setData((byte) 0);
+				}
+			}
+		}		
+	}
+
+	/**
+	 * Post process the exits whose rooms intersect a given extent, try to
+	 * make exits link up with steps or bridges and clear any dross.
+	 */
+	public void postProcessExitsForRoomsIntersecting(Extent e) {
+		for (Room r : getRoomsIntersecting(e)) {
+			for (Exit exit : r.getExits()) {
+				GormPlugin.log("processing exit");
+				postProcessExit(exit);
+			}
+		}
+
+	}
+
+	/**
+	 * This will decorate an exit - does nowt as yet
+	 * 
+	 * @param e
+	 */
+	public void decorateExit(Exit e) {
+		GormPlugin.log("decorate exit does nothing");
+		int qq = e.getDirection().vec.x == 0 ? Extent.Y | Extent.X : Extent.Y
+				| Extent.Z;
+		Extent x = e.getExtent().expand(1, qq);
+		fill(x, Material.DIAMOND_BLOCK, 0);
+		fill(e.getExtent(), Material.AIR, 1);
 	}
 
 	public void raze() {
 		for (Room r : rooms) {
 			fill(r.getExtent(), Material.AIR, 0);
-			fill(r.getExtent().getWall(IntVector.Direction.DOWN),
-					Material.GRASS, 0);
+			fill(r.getExtent().getWall(Direction.DOWN), Material.GRASS, 0);
+			for (Exit x : r.getExits()) {
+				fill(x.getExtent(), Material.AIR, 0);
+			}
 		}
 		rooms.clear();
-
-		for (Extent x : exits) {
-			fill(x, Material.AIR, 0);
-		}
-		exits.clear();
-
 	}
 }

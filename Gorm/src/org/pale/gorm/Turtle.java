@@ -71,7 +71,7 @@ public class Turtle {
 		}
 	}
 
-	public Turtle(World  w, IntVector initpos, IntVector.Direction initdir) {
+	public Turtle(World  w, IntVector initpos, Direction initdir) {
 		world = w;
 		dir = initdir.vec;
 		pos = initpos;

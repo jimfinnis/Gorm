@@ -14,7 +14,7 @@ public class UnroofedSpace extends Room {
 		Castle c = Castle.getInstance();
 		
 		// just some practice.
-		c.fillBrickWithCracksAndMoss(extent);
+		c.fillBrickWithCracksAndMoss(extent,true);
 		e = new Extent(extent);
 		e.miny = (e.miny+e.maxy)/2;
 		e.maxy = e.miny;
@@ -24,13 +24,13 @@ public class UnroofedSpace extends Room {
 		e.maxy++;
 		c.fill(e,Material.AIR,1); // fill with 'inside' air
 		
-		lightWalls();
-		floorLights();
+		lightWalls(e);
+		floorLights(e);
 		underfill();
 		
-		makeExit(true);
-		makeExit(true);
-		makeExit(true);
+		makeExit(e.miny,true);
+		makeExit(e.miny,true);
+		makeExit(e.miny,true);
 	}
 	
 	

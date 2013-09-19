@@ -102,27 +102,32 @@ public final class GormPlugin extends JavaPlugin {
 	}
 
 	private void test(Player p) {
-		IntVector pos = new IntVector(p.getLocation());
-		Extent x = new Extent(pos,10,10,10);
-		x.miny-=4;
+//		IntVector pos = new IntVector(p.getLocation());
 		Castle c = Castle.getInstance();
-		if(c==null){
-			p.sendMessage("no castle!");
-		} else {
-			// nowt
-		}
+		c.setWorld(p.getWorld());
+		Room r = new Room(Room.RoomType.ROOM, new Extent(0, 80, 0, 20, 90, 10));
+		r.render();
+		c.addRoom(r);
+		Room r2 = new Room(Room.RoomType.ROOM,
+				new Extent(20, 82, 0, 30, 90, 10));
+		r2.render();
+		c.addRoom(r2);
+		Exit x = new Exit(new Extent(20, 83, 5, 20, 84, 5), Direction.WEST);
+		r2.getExits().add(x);
+		c.fill(x.getExtent(), Material.AIR, 1);
+		c.postProcessExit(x);
 	}
 
 	private void flatten(Player p) {
 		IntVector pos = new IntVector(p.getLocation());
 		int size = 30;
 		World w = p.getWorld();
-		for(int dx=-size;dx<=size;dx++){
-			for(int dz=-size;dz<=size;dz++){
-				int x = dx+pos.x;
-				int z = dz+pos.z;
-				int y = w.getHighestBlockYAt(x,z);
-				while(y>=pos.y){
+		for (int dx = -size; dx <= size; dx++) {
+			for (int dz = -size; dz <= size; dz++) {
+				int x = dx + pos.x;
+				int z = dz + pos.z;
+				int y = w.getHighestBlockYAt(x, z);
+				while (y >= pos.y) {
 					Block b = w.getBlockAt(x, y, z);
 					b.setType(Material.AIR);
 					b.setData((byte) 0);
@@ -137,7 +142,7 @@ public final class GormPlugin extends JavaPlugin {
 		Location loc = p.getLocation();
 
 		float f = loc.getYaw();
-		IntVector.Direction dir = IntVector.yawToDir(f);
+		Direction dir = IntVector.yawToDir(f);
 
 		IntVector pos = new IntVector(p.getTargetBlock(null, 100).getLocation());
 		GormPlugin.log("Direction : " + dir.toString() + " from yaw "

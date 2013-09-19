@@ -3,6 +3,7 @@ package org.pale.gorm.roomutils;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.pale.gorm.Castle;
+import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.IntVector;
 import org.pale.gorm.Turtle;
@@ -19,17 +20,17 @@ public class PitchedRoofBuilder implements RoofBuilder {
 		
 		roof.miny = roof.maxy + 1; // we'll work out maxy in a bit, maybe
 		// which is the longest edge?
-		IntVector.Direction dir;
+		Direction dir;
 		int longEdge;
 		int shortEdge;
 		int startx;
 		if(roof.xsize() > roof.zsize()){
-			dir = IntVector.Direction.SOUTH;
+			dir = Direction.SOUTH;
 			startx = roof.maxx;
 			longEdge = roof.xsize();
 			shortEdge = roof.zsize();
 		}else{
-			dir = IntVector.Direction.EAST;
+			dir = Direction.EAST;
 			startx = roof.minx;
 			longEdge = roof.zsize();
 			shortEdge = roof.xsize();

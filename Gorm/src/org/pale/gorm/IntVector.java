@@ -10,17 +10,6 @@ import org.bukkit.block.BlockFace;
  * 
  */
 public class IntVector {
-	public enum Direction {
-		NORTH(0, 0, -1), SOUTH(0, 0, 1), EAST(1, 0, 0), WEST(-1, 0, 0), UP(0,
-				1, 0), DOWN(0, -1, 0);
-
-		Direction(int x, int y, int z) {
-			vec = new IntVector(x, y, z);
-		}
-
-		public final IntVector vec;
-	}
-
 	public int x, y, z;
 
 	public IntVector(int x, int y, int z) {
@@ -134,10 +123,10 @@ public class IntVector {
 	 */
 	public static Direction yawToDir(float f){
 		if(f<0)f+=360;
-		if (f > 45 && f <= 135) return IntVector.Direction.WEST;
-		else if (f > 135 && f <= 225) return IntVector.Direction.NORTH;
-		else if (f > 225 && f <= 315) return IntVector.Direction.EAST;
-		else return IntVector.Direction.SOUTH;
+		if (f > 45 && f <= 135) return Direction.WEST;
+		else if (f > 135 && f <= 225) return Direction.NORTH;
+		else if (f > 225 && f <= 315) return Direction.EAST;
+		else return Direction.SOUTH;
 	}
 
 	/**

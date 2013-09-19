@@ -105,13 +105,13 @@ public final class GormPlugin extends JavaPlugin {
 //		IntVector pos = new IntVector(p.getLocation());
 		Castle c = Castle.getInstance();
 		c.setWorld(p.getWorld());
-		Building r = new Building(Building.BuildingType.ROOM, new Extent(0, 80, 0, 20, 90, 10));
-		r.render();
-		c.addBuilding(r);
-		Building r2 = new Building(Building.BuildingType.ROOM,
-				new Extent(20, 82, 0, 30, 90, 10));
-		r2.render();
-		c.addBuilding(r2);
+		
+		Extent e = new Extent(p.getLocation());
+		
+		for(Building b: c.getBuildingsIntersecting(e)){
+			b.makeRandomExit();
+		}
+		
 	}
 
 	private void flatten(Player p) {

@@ -24,6 +24,7 @@ public class UnroofedSpace extends Building {
 		e.maxy++;
 		c.fill(e,Material.AIR,1); // fill with 'inside' air
 		
+		makeSingleRoom();
 		lightWalls(e);
 		floorLights(e);
 		underfill();

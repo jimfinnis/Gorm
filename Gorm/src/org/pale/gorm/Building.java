@@ -86,6 +86,14 @@ public class Building {
 	public Extent getExtent() {
 		return extent;
 	}
+	
+	/** The standard operation for single-room buildings
+	 *
+	 */
+	public void makeSingleRoom(){
+		rooms = new ArrayList<Room>(); // make sure any old ones are gone
+		rooms.add(new Room(extent,this));
+	}
 
 	/**
 	 * Return the 'type' of the building
@@ -143,7 +151,7 @@ public class Building {
 	}
 
 	/**
-	 * Place a floor and some exits at height h above the building base. Floors
+	 * Place a floor at height h above the building base. Floors
 	 * are one deep.
 	 * 
 	 * @param yAboveFloor
@@ -294,7 +302,7 @@ public class Building {
 	 * Tell this building to make a random exit to an adjacent building - this
 	 * is for horizontal exits
 	 */
-	public void makeRandomExit() {
+	public boolean makeRandomExit() {
 		Castle c = Castle.getInstance();
 
 		GormPlugin.log("Attempting to make an exit from building "
@@ -332,30 +340,36 @@ public class Building {
 
 		if (buildings.size() != 0) {
 			Building b = buildings.get(c.r.nextInt(buildings.size()));
-			makeRandomExit(b);
+			GormPlugin.log(String.format("Trying to make an exit between %d and %d!!!",
+					id,b.id));
+			return makeRandomExit(b);
 		}
+		return false;
 	}
 	
 	/**
 	 *  Having found a building nearby, we need to find a pair of candidate rooms, one here
 	 *  and one over there.
 	 */
-	private void makeRandomExit(Building other){
+	private boolean makeRandomExit(Building other){
 		// we don't want to always do one floor.
 		Collections.shuffle(rooms);
 		
 		for(Room r: rooms){
 			for(Room r2: other.rooms){
-				if(Math.abs(r2.e.miny - r.e.miny) < 3){
+				if(Math.abs(r2.e.miny - r.e.miny) < 4){
 					// that'll do!
 					if(r2.e.miny<r.e.miny) // destination is lower than src. 
-						makeExitBetweenRooms(r,r2);
+						return makeExitBetweenRooms(r,r2);
 					else
-						makeExitBetweenRooms(r2,r);
-					return;
-				}
+						return makeExitBetweenRooms(r2,r);
+					
+				} 
 			}
 		}
+		
+		GormPlugin.log("Make exit failed; level mismatch");
+		return false;
 	}
 	
 	
@@ -366,10 +380,15 @@ public class Building {
 	 * 
 	 * @param r
 	 */
-	private void makeExitBetweenRooms(Room thisRoom, Room remoteRoom) {
+	private boolean makeExitBetweenRooms(Room thisRoom, Room remoteRoom) {
 		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
 		Direction dir;
-
+		
+		if(thisRoom.exitMap.containsKey(remoteRoom)){
+			GormPlugin.log(String.format("exit already exists between %d and %d",thisRoom.b.id,remoteRoom.b.id));
+			return false;
+		}
+			
 		// work out the orientation of the exit
 		if (intersection.xsize() > intersection.zsize()) {
 			dir = remoteRoom.e.minz == thisRoom.e.maxz ? Direction.SOUTH
@@ -396,6 +415,8 @@ public class Building {
 		remoteRoom.exitMap.put(thisRoom, dest); // exit 'dest' leads back here
 		// blow the hole
 		Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
+		GormPlugin.log("hole blown: "+src.getExtent().toString());
 		Castle.getInstance().postProcessExit(src);
+		return true;
 	}
 }

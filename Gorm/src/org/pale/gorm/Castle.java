@@ -20,7 +20,7 @@ import org.bukkit.material.Stairs;
  */
 public class Castle {
 	private static Castle instance;
-	private Extent allRoomsExtent = new Extent();
+	private Extent allExtent = new Extent();
 	private World world;
 	public Random r = new Random();
 
@@ -49,34 +49,34 @@ public class Castle {
 		return instance;
 	}
 
-	private List<Room> rooms = new ArrayList<Room>();
+	private List<Building> buildings = new ArrayList<Building>();
 
-	public int getRoomCount() {
-		return rooms.size();
+	public int getBuildingCount() {
+		return buildings.size();
 	}
 
 	/**
-	 * Add a room to the internal lists.
+	 * Add a building to the internal lists.
 	 * 
 	 * @param r
 	 */
-	void addRoom(Room r) {
-		rooms.add(r);
-		allRoomsExtent = allRoomsExtent.union(r.getExtent());
+	void addBuilding(Building r) {
+		buildings.add(r);
+		allExtent = allExtent.union(r.getExtent());
 	}
 
 	/**
-	 * returns true if e intersects any room or exit at all
+	 * returns true if e intersects any building or exit at all
 	 * 
 	 * @param e
 	 * @return
 	 */
 	public boolean intersects(Extent e) {
-		for (Room x : rooms) {
+		for (Building x : buildings) {
 			if (x.getExtent().intersects(e))
 				return true;
 		}
-		return overlapsExit(e);
+		return false;
 	}
 
 	/**
@@ -129,7 +129,7 @@ public class Castle {
 	}
 
 	/**
-	 * We should use this when we might overwrite a room or exit, to prevent
+	 * We should use this when we might overwrite a blg or exit, to prevent
 	 * that.
 	 * 
 	 * @param b
@@ -211,37 +211,23 @@ public class Castle {
 		return m[r.nextInt(m.length)];
 	}
 
-	public Collection<Room> getRooms() {
-		return rooms;
+	public Collection<Building> getBuildings() {
+		return buildings;
 	}
 
 	/**
-	 * Return a list of rooms within a given extent
+	 * Return a list of buildings within a given extent
 	 * 
 	 * @return
 	 */
-	public Collection<Room> getRoomsIntersecting(Extent e) {
-		ArrayList<Room> out = new ArrayList<Room>();
+	public Collection<Building> getBuildingsIntersecting(Extent e) {
+		ArrayList<Building> out = new ArrayList<Building>();
 
-		for (Room r : rooms) {
+		for (Building r : buildings) {
 			if (r.intersects(e))
 				out.add(r);
 		}
 		return out;
-	}
-
-	/**
-	 * Returns true if an extent overlaps an exit
-	 * 
-	 * @param exit
-	 * @return
-	 */
-	public boolean overlapsExit(Extent x) {
-		for (Room r : rooms) {
-			if (r.overlapsExit(x))
-				return true;
-		}
-		return false;
 	}
 
 	private void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
@@ -271,9 +257,8 @@ public class Castle {
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
 
-		e = e.growDirection(d, 2); // stretch out the extent for scanning
+		e = e.growDirection(d, 5); // stretch out the extent for scanning
 									// purposes
-		e = e.growDirection(d.opposite(), 1); // and in a bit as well.
 		e.miny -= 100; // so that getHeightWithin() will read heights lower than
 						// the current floor
 
@@ -354,74 +339,50 @@ public class Castle {
 		return done;
 	}
 
-	/**
-	 * Attempt to build stairs down and connect to nearby rooms. Can be run on
-	 * any exit several times.
-	 * 
-	 * @param e
-	 * @param d
-	 */
-
-	public void postProcessExit(Exit e) {
-		
-		replaceSolidWithAir(e.getExtendedExtent());
-		
-		Extent extent = e.getExtent();
-		Direction d = e.getDirection();
-		if (!dropExitStairs(extent, d)) {
-			// if we didn't do any stairs magic one way, try the other way.
-			dropExitStairs(extent, d.opposite());
-		}
-	}
-
 	private void replaceSolidWithAir(Extent e) {
 		for (int x = e.minx; x <= e.maxx; x++) {
 			for (int y = e.miny; y <= e.maxy; y++) {
 				for (int z = e.minz; z <= e.maxz; z++) {
 					Block b = world.getBlockAt(x, y, z);
-					b.setType(Material.AIR);
-					b.setData((byte) 0);
+					if(b.getType().isSolid()){
+						b.setType(Material.AIR);
+						b.setData((byte) 0);
+					}
 				}
 			}
 		}		
 	}
 
-	/**
-	 * Post process the exits whose rooms intersect a given extent, try to
-	 * make exits link up with steps or bridges and clear any dross.
-	 */
-	public void postProcessExitsForRoomsIntersecting(Extent e) {
-		for (Room r : getRoomsIntersecting(e)) {
-			for (Exit exit : r.getExits()) {
-				GormPlugin.log("processing exit");
-				postProcessExit(exit);
-			}
-		}
-
-	}
 
 	/**
 	 * This will decorate an exit - does nowt as yet
 	 * 
 	 * @param e
 	 */
-	public void decorateExit(Exit e) {
+	private void decorateExit(Exit e) {
 		GormPlugin.log("decorate exit does nothing");
-		int qq = e.getDirection().vec.x == 0 ? Extent.Y | Extent.X : Extent.Y
-				| Extent.Z;
-		Extent x = e.getExtent().expand(1, qq);
-		fill(x, Material.DIAMOND_BLOCK, 0);
-		fill(e.getExtent(), Material.AIR, 1);
+		IntVector v = e.getDirection().vec;
+		v = v.add(0,2,0).add(e.getExtent().getCentre());
+		fill(new Extent(v,0,0,0),Material.LAPIS_BLOCK,0);
+	}
+	
+	public void postProcessExit(Exit e){
+		dropExitStairs(e.getExtent(), e.getDirection());
+		decorateExit(e);
 	}
 
 	public void raze() {
-		for (Room r : rooms) {
+		for (Building r : buildings) {
 			fill(r.getExtent(), Material.AIR, 0);
 			fill(r.getExtent().getWall(Direction.DOWN), Material.GRASS, 0);
-			for (Exit x : r.getExits()) {
-				fill(x.getExtent(), Material.AIR, 0);
-			}
 		}
-		rooms.clear();
+		buildings.clear();
+	}
+
+	public Building getRandomBuilding() {
+		if(buildings.size()==0)
+			return null;
+		else
+			return buildings.get(r.nextInt(buildings.size()));
 	}
 }

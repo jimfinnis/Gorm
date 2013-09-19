@@ -5,10 +5,10 @@ package org.pale.gorm;
  * @author white
  *
  */
-public class Hall extends Room {
+public class Hall extends Building {
 
 	public Hall(Extent e) {
-		super(RoomType.HALL,e);
+		super(BuildingType.HALL,e);
 		// TODO Auto-generated constructor stub
 	}
 

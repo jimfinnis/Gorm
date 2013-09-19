@@ -2,10 +2,10 @@ package org.pale.gorm;
 
 import org.bukkit.Material;
 
-public class UnroofedSpace extends Room {
+public class UnroofedSpace extends Building {
 
 	public UnroofedSpace(Extent e) {
-		super(RoomType.GARDEN,e);
+		super(BuildingType.GARDEN,e);
 	}
 
 	@Override
@@ -27,12 +27,5 @@ public class UnroofedSpace extends Room {
 		lightWalls(e);
 		floorLights(e);
 		underfill();
-		
-		makeExit(e.miny,true);
-		makeExit(e.miny,true);
-		makeExit(e.miny,true);
 	}
-	
-	
-
 }

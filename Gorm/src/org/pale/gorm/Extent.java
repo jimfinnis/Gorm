@@ -434,6 +434,21 @@ public class Extent {
 			maxz = minx + w -1;
 		}
 	}
+	
+	public Extent intersect(Extent e){
+		if(intersects(e)){
+			Extent out = new Extent();
+			out.minx = minx>e.minx ? minx : e.minx; 
+			out.maxx = maxx<e.maxx ? maxx : e.maxx; 
+			out.miny = miny>e.miny ? miny : e.miny; 
+			out.maxy = maxy<e.maxy ? maxy : e.maxy; 
+			out.minz = minz>e.minz ? minz : e.minz; 
+			out.maxz = maxz<e.maxz ? maxz : e.maxz;
+			out.isset =true;
+			return out;
+		} else
+			return null;
+	}
 
 	/**
 	 * Return true if the passed extent is entirely inside me

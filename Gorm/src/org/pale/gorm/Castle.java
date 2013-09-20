@@ -11,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
+import org.pale.gorm.Exit.ExitType;
 
 /**
  * Singleton class for the whole castle.
@@ -254,11 +255,17 @@ public class Castle {
 	 * @return
 	 */
 	private boolean dropExitStairs(Extent e, Direction d) {
+
+		GormPlugin.log("Processing exit stairs for " + e.toString());
+
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
 
 		e = e.growDirection(d, 5); // stretch out the extent for scanning
 									// purposes
+
+		GormPlugin.log("Extended extent for stairs is " + e.toString());
+
 		e.miny -= 100; // so that getHeightWithin() will read heights lower than
 						// the current floor
 
@@ -297,17 +304,18 @@ public class Castle {
 		boolean done = false;
 		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
-		
+
 		int y = e.getHeightWithin(start.x, start.z);
 		Material mat = Material.WOOD_STAIRS;
-		
+
 		// steps starting from blind walls can happen.. but are stupid.
-		IntVector startWall = start.subtract(v).add(0,1,0);
-		if(world.getBlockAt(startWall.x,startWall.y,startWall.z).getType().isSolid())
+		IntVector startWall = start.subtract(v).add(0, 1, 0);
+		if (world.getBlockAt(startWall.x, startWall.y, startWall.z).getType()
+				.isSolid())
 			return false;
-		
-		for (IntVector pt = new IntVector(start);
-				e.contains(pt.x, e.miny, pt.z); pt = pt.add(v)) {
+
+		for (IntVector pt = new IntVector(start); e
+				.contains(pt.x, e.miny, pt.z); pt = pt.add(v)) {
 			int newy = e.getHeightWithin(pt.x, pt.z);
 			if (isStairs(world.getBlockAt(pt.x, newy, pt.z).getType()))
 				break;
@@ -316,22 +324,24 @@ public class Castle {
 				break;
 			} else if (newy < y) {
 				GormPlugin.log(String.format(
-						"height was %d, is now %d - filling", y, newy));
+						"%d,%d: height was %d, is now %d - filling", pt.x,
+						pt.z, y, newy));
 				// we've gone down, so build up, saving the old block state
-				undoBuffer.add(world.getBlockAt(pt.x,y,pt.z).getState());
+				undoBuffer.add(world.getBlockAt(pt.x, y, pt.z).getState());
 				setStairs(pt.x, y, pt.z, bf, mat);
-				
-				Block b = world.getBlockAt(pt.x,y-1,pt.z); // check we landed!
-				if(b.getType().isSolid())
+
+				Block b = world.getBlockAt(pt.x, y - 1, pt.z); // check we
+																// landed!
+				if (b.getType().isSolid())
 					done = true;
 				mat = Material.SMOOTH_STAIRS;
 				y--; // and go down again!
 			}
 		}
-		
-		if(!done){
+
+		if (!done) {
 			// didn't achieve what we wanted, so restore all blocks
-			for(BlockState s: undoBuffer){
+			for (BlockState s : undoBuffer) {
 				// for some reason update() isn't working for me.
 				world.getBlockAt(s.getLocation()).setType(s.getType());
 			}
@@ -344,15 +354,14 @@ public class Castle {
 			for (int y = e.miny; y <= e.maxy; y++) {
 				for (int z = e.minz; z <= e.maxz; z++) {
 					Block b = world.getBlockAt(x, y, z);
-					if(b.getType().isSolid()){
+					if (b.getType().isSolid()) {
 						b.setType(Material.AIR);
 						b.setData((byte) 0);
 					}
 				}
 			}
-		}		
+		}
 	}
-
 
 	/**
 	 * This will decorate an exit - does nowt as yet
@@ -360,13 +369,15 @@ public class Castle {
 	 * @param e
 	 */
 	private void decorateExit(Exit e) {
-		GormPlugin.log("decorate exit does nothing");
-		IntVector v = e.getDirection().vec;
-		v = v.add(0,2,0).add(e.getExtent().getCentre());
-		fill(new Extent(v,0,0,0),Material.LAPIS_BLOCK,0);
+		if (e.getType() != ExitType.OUTSIDE) {
+			GormPlugin.log("decorate exit does nothing");
+			IntVector v = e.getDirection().vec;
+			v = v.add(0, 2, 0).add(e.getExtent().getCentre());
+			fill(new Extent(v, 0, 0, 0), Material.LAPIS_BLOCK, 0);
+		}
 	}
-	
-	public void postProcessExit(Exit e){
+
+	public void postProcessExit(Exit e) {
 		dropExitStairs(e.getExtent(), e.getDirection());
 		decorateExit(e);
 	}
@@ -380,7 +391,7 @@ public class Castle {
 	}
 
 	public Building getRandomBuilding() {
-		if(buildings.size()==0)
+		if (buildings.size() == 0)
 			return null;
 		else
 			return buildings.get(r.nextInt(buildings.size()));

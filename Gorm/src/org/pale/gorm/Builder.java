@@ -32,15 +32,15 @@ public class Builder {
 		IntVector v = new IntVector(loc);
 		if (castle.getBuildingCount() == 0) {
 			Extent e = new Extent(v, 20, 0, 30).setHeight(10);
-			Building r = new UnroofedSpace(e);
-			r.render();
+			Building r = new Garden(e);
+			r.build();
 			castle.addBuilding(r);
 		} else {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
-			Building r = createAndFitRoom();
+			Building r = createAndFitBuilding();
 			if (r != null) {
-				r.render();
+				r.build();
 				castle.addBuilding(r);
 				r.makeRandomExit();
 
@@ -52,13 +52,13 @@ public class Builder {
 			makeRandomExit();
 		}
 	}
-	
+
 	/**
 	 * Attempt to construct a random link between two rooms
 	 */
-	private void makeRandomExit(){
+	private void makeRandomExit() {
 		Building r = castle.getRandomBuilding();
-		if(r!=null){
+		if (r != null) {
 			r.makeRandomExit();
 		}
 	}
@@ -69,7 +69,7 @@ public class Builder {
 	 * 
 	 * @return room
 	 */
-	private Building createAndFitRoom() {
+	private Building createAndFitBuilding() {
 
 		// we try to find a suitable room, picking random rooms from the
 		// beginning of the list.
@@ -78,7 +78,7 @@ public class Builder {
 			double qqq = 1.0 / (double) castle.getBuildingCount();
 			for (Building r : castle.getBuildings()) {
 				if (rnd.nextDouble() < qqq) {
-					Building newRoom = createRoom(r);
+					Building newRoom = createBuilding(r);
 					if (moveRoomUntilFit(newRoom, 3 + tries, r)) { // more
 																	// laxity in
 																	// y-slide
@@ -98,23 +98,19 @@ public class Builder {
 	 * 
 	 * @return
 	 */
-	private Building createRoom(Building r) {
-		GormPlugin.log("creating room around: " + r.getExtent().toString());
-		Extent e = new Extent(r.getExtent().getCentre(), rnd.nextInt(10) + 5,
-				1, // the y setting here is unused
-				rnd.nextInt(10) + 5);
-		e.miny = r.getExtent().miny; // make floors align
-		if (rnd.nextFloat() < 0.1)
-			e = e.setHeight(rnd.nextInt(10) + 20);
-		else
-			e = e.setHeight(rnd.nextInt(3) + 15);
+	private Building createBuilding(Building r) {
+		switch (rnd.nextInt(5)) {
+		case 0:
+			return new Garden(r);
+		default:
+			return new Hall(r);
 
-		GormPlugin.log("new room has extent: " + e.toString());
-		return new Building(Building.BuildingType.ROOM, e);
+		}
 
 	}
 
-	private boolean moveRoomUntilFit(Building r, int maxyslide, Building parentRoom) {
+	private boolean moveRoomUntilFit(Building r, int maxyslide,
+			Building parentRoom) {
 		Extent start = new Extent(r.getExtent());
 
 		// we have to shrink the room by 1 so that walls are in common - 'start'
@@ -156,7 +152,8 @@ public class Builder {
 	 * @param yslide
 	 * @return
 	 */
-	private boolean tryMove(Building r, Extent moved, int yslide, Building parentRoom) {
+	private boolean tryMove(Building r, Extent moved, int yslide,
+			Building parentRoom) {
 		Extent e = moved.addvec(0, yslide, 0);
 		Extent eOuter = e.expand(1, Extent.ALL);
 		if (!castle.intersects(e) && !e.intersectsWorld()) {

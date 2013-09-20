@@ -462,22 +462,28 @@ public class Extent {
 	}
 	
 	/**
-	 * grow the extent along the given direction by the given number of steps each way
+	 * grow the extent along the given direction by the given number of steps; faster than scale-add. 
 	 */
 	public Extent growDirection(Direction d, int n){
 		Extent e = new Extent(this);
 		switch(d){
 		case EAST:
+			e.maxx += n;
+			break;
 		case WEST:
-			e.minx -= n;e.maxx+=n;
+			e.minx -= n;
 			break;
 		case NORTH:
+			e.minz -= n;
+			break;
 		case SOUTH:
-			e.minz -= n;e.maxz+=n;
+			e.maxz += n;
 			break;
 		case UP:
+			e.maxy += n;
+			break;
 		case DOWN:
-			e.miny -= n;e.maxy+=n;
+			e.miny -= n;
 			break;
 		}
 		return e;

@@ -8,18 +8,22 @@ package org.pale.gorm;
  *
  */
 public class Exit {
+	public enum ExitType {
+		OUTSIDE,INWARDS,OUTWARDS,INSIDE
+	}
+
 	private Extent e;
 	private Direction d;
 	/**
 	 * The exit is always colinear with a wall in the source room 
 	 */
-	private Building.Room source;
+	private Room source;
 	/**
 	 * The destination may have a bridge going to it.
 	 */
-	private Building.Room destination;
+	private Room destination;
 	
-	public Exit(Extent e,Direction d,Building.Room src,Building.Room dest){
+	public Exit(Extent e,Direction d,Room src,Room dest){
 		this.e = new Extent(e);
 		this.source = src;
 		this.destination = dest;
@@ -39,12 +43,29 @@ public class Exit {
 		return d;
 	}
 	
-	public Building.Room getSource(){
+	public Room getSource(){
 		return source;
 	}
 	
-	public Building.Room getDestination(){
+	public Room getDestination(){
 		return destination;
+	}
+
+	/**
+	 * Get the 'type' of this exit, which depends on the nature of the rooms it connects
+	 */
+	public ExitType getType(){
+		if(source.isOutside){
+			if(destination.isOutside)
+				return ExitType.OUTSIDE;
+			else
+				return ExitType.INWARDS;
+		}else{
+			if(destination.isOutside)
+				return ExitType.OUTWARDS;
+			else
+				return ExitType.INSIDE;
+		}
 	}
 
 	/**

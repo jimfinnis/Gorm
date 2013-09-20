@@ -1,16 +1,16 @@
 package org.pale.gorm;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.pale.gorm.roomutils.PitchedRoofBuilder;
+import org.bukkit.block.BlockFace;
+import org.bukkit.material.Ladder;
 
 /**
  * A building in the castle, consisting of rooms
@@ -18,29 +18,18 @@ import org.pale.gorm.roomutils.PitchedRoofBuilder;
  * @author white
  * 
  */
-public class Building {
-	public enum BuildingType {
-		HALL, CORRIDOR, ROOM, GARDEN
-	}
-
-	public class Room {
-		Extent e;
-		Building b;
-
-		/**
-		 * This is a map of exits by the room they go to
-		 */
-		Map<Room, Exit> exitMap = new HashMap<Room, Exit>();
-
-		/**
-		 * Our exits
-		 */
-		Collection<Exit> exits = new ArrayList<Exit>();
-
-		Room(Extent e, Building b) {
-			this.b = b;
-			this.e = new Extent(e);
-		}
+public abstract class Building {
+	/**
+	 * Given a parent room and a size, produce an extent for a room which can be slid around
+	 * by the Builder.
+	 * @param parent
+	 * @param e
+	 */
+	public void setInitialExtent(Building parent,int x,int y,int z){
+		Extent e = new Extent(parent.getExtent().getCentre(), x,1,z); // y unused
+		e.miny = parent.getExtent().miny; // make floors align
+		extent = e.setHeight(y);
+		
 	}
 
 	private static int idCounter = 0;
@@ -49,13 +38,7 @@ public class Building {
 	/**
 	 * List of the rooms - vertical sections within the building
 	 */
-	private List<Room> rooms = new ArrayList<Room>();
-
-	/**
-	 * The basic 'type' of the building
-	 * 
-	 */
-	private BuildingType building;
+	protected LinkedList<Room> rooms = new LinkedList<Room>();
 
 	/**
 	 * The extent of the entire building
@@ -67,16 +50,6 @@ public class Building {
 	 */
 	int roofDepth = 1;
 
-	/**
-	 * Construct the building - does not render it, because it might get moved
-	 * around
-	 * 
-	 * @param e
-	 */
-	public Building(BuildingType t, Extent e) {
-		extent = new Extent(e);
-		building = t;
-	}
 
 	/**
 	 * Return the bounding box of the building, including the walls
@@ -91,53 +64,22 @@ public class Building {
 	 *
 	 */
 	public void makeSingleRoom(){
-		rooms = new ArrayList<Room>(); // make sure any old ones are gone
+		rooms = new LinkedList<Room>(); // make sure any old ones are gone
 		rooms.add(new Room(extent,this));
 	}
+	
+	/**
+	 * Fill this in - it's what actually makes the building
+	 */
+	public abstract void build();
+
+
 
 	/**
-	 * Return the 'type' of the building
-	 * 
-	 * @return
+	 * Attempt to build a number of internal floors in tall buildings.
+	 * Floors are built in ascending order.
 	 */
-	public BuildingType getType() {
-		return building;
-	}
-
-	/**
-	 * Draw into the world - call this *before* adding the building!
-	 */
-	void render() {
-		Castle c = Castle.getInstance();
-
-		// basic building for now
-		c.fillBrickWithCracksAndMoss(extent, true);
-
-		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
-
-		underfill();
-
-		makeRooms();
-
-		// is the bit above the building free?
-		Extent e = new Extent(extent);
-		e.miny = e.maxy;
-		if (e.xsize() > e.zsize())
-			e.setHeight(e.xsize() / 2);
-		else
-			e.setHeight(e.zsize() / 2);
-		if (c.intersects(e)) {
-			// only building for a small roof
-		} else {
-			// room for a bigger roof
-			new PitchedRoofBuilder().buildRoof(extent);
-		}
-	}
-
-	/**
-	 * Attempt to build a number of internal floors in tall buildings,
-	 */
-	private void makeRooms() {
+	protected void makeRooms() {
 		Castle c = Castle.getInstance();
 
 		// start placing floors until we run out
@@ -152,8 +94,8 @@ public class Building {
 
 	/**
 	 * Place a floor at height h above the building base. Floors
-	 * are one deep.
-	 * 
+	 * are one deep, and are built in ascending order (i.e. the start of the 'rooms' list
+	 * will have the lower floor in it, if there is one, since they are added to the head)
 	 * @param yAboveFloor
 	 *            Y of the block just above the floor
 	 * @param yBelowCeiling
@@ -181,9 +123,40 @@ public class Building {
 		lightWalls(floor);
 		floorLights(floor);
 
+		Room lowerFloor = rooms.peekFirst(); // any prior floor will be the first item
 		Room r = new Room(roomExt, this);
-		rooms.add(r);
+		rooms.addFirst(r); // add new room to head of list
 
+		if(lowerFloor!=null){
+			// there is a floor below - try to build some kind of link down
+			buildVerticalExit(lowerFloor,r);
+		}
+	}
+
+	/**
+	 * Build a vertical exit between two rooms
+	 * @param lower lower room
+	 * @param upper upper room
+	 */
+	private void buildVerticalExit(Room lower, Room upper) {
+		World w = Castle.getInstance().getWorld();
+		
+		// get the inner extent of the lower room 
+		Extent innerLower = lower.e.expand(-1, Extent.ALL);
+		
+		// get one corner of that room (but go up one so we don't overwrite the carpet)
+		IntVector ladderPos = new IntVector(innerLower.minx, innerLower.miny+1, innerLower.minz);
+		
+		Ladder ladder = new Ladder();
+		ladder.setFacingDirection(BlockFace.NORTH);
+		
+		// build up, placing a ladder until we get to the floor above, and go one square into the room
+		// to clear the carpet too.
+		for(int y = ladderPos.y;y<=upper.e.miny+1;y++){
+			Block b = w.getBlockAt(ladderPos.x, y, ladderPos.z);
+			b.setType(Material.LADDER);
+			b.setData(ladder.getData());
+		}
 	}
 
 	/**
@@ -250,9 +223,9 @@ public class Building {
 	}
 
 	/**
-	 * Fill voids under the building in some way
+	 * Fill voids under the building in some way. If complete is true, make the block solid.
 	 */
-	void underfill() {
+	void underfill(boolean complete) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 

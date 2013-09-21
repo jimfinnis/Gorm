@@ -16,7 +16,8 @@ public class BlankRoom extends Room {
 	}
 
 	@Override
-	public void build(Extent buildingExtent) {
+	public Extent build(Extent buildingExtent) {
+		return buildingExtent;
 	}
 
 }

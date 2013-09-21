@@ -34,7 +34,7 @@ public abstract class Room {
 		this.b = b;
 		this.e = new Extent(e);
 		this.isOutside = outside;
-		build(b.getExtent());
+		b.extent = build(b.getExtent());
 	}
 	
 	public boolean getIsOutside(){
@@ -43,9 +43,10 @@ public abstract class Room {
 	
 	/**
 	 * actually make the room's walls and contents (the building's outer walls should already
-	 * exist.) Note that roof gardens may modify the building's extent.
+	 * exist.) Note that roof gardens may modify the building's extent; the new building extent
+	 * is returned.
 	 */
-	public abstract void build(Extent buildingExtent);
+	public abstract Extent build(Extent buildingExtent);
 	
 	
 }

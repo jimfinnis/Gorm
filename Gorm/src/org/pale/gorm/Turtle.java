@@ -19,8 +19,10 @@ public class Turtle {
 	private IntVector pos;
 	private IntVector dir;
 	private Material mat = Material.SMOOTH_BRICK;
+	private int data = 0;
 	private Random r = new Random();
-	private int mode = CHECKWRITE; // by default, we abort if we're going overwrite solid
+	private int mode = CHECKWRITE; // by default, we abort if we're going
+									// overwrite solid
 
 	int cur = 0;
 	private String string;
@@ -37,29 +39,34 @@ public class Turtle {
 	public boolean isModeFlag(int f) {
 		return (mode & f) != 0;
 	}
-	
-	public void setModeFlag(int f){
+
+	public void setModeFlag(int f) {
 		mode |= f;
 	}
-	
-	public void clrModeFlag(int f){
+
+	public void clrModeFlag(int f) {
 		mode &= ~f;
 	}
 
 	// flags
 	public static final int FOLLOW = 1; // follow walls if we hit them
-	public static final int SUPPORTFOLLOW = 2; // edge following on (build direction
-										// will turn to ensure support under
-										// built blocks)
+	public static final int SUPPORTFOLLOW = 2; // edge following on (build
+												// direction
+	// will turn to ensure support under
+	// built blocks)
 	public static final int LEFT = 4; // following will try left turn first
-	public static final int RANDOM = 8; // following will try either left or right
-									// (overrides LEFT)
-	public static final int HUGEDGE = 16; // we must always keep a wall to our left or
-									// right, and follow them round
+	public static final int RANDOM = 8; // following will try either left or
+										// right
+	// (overrides LEFT)
+	public static final int HUGEDGE = 16; // we must always keep a wall to our
+											// left or
+	// right, and follow them round
 	public static final int WRITEONMOVE = 32; // write at end of every move
-	public static final int CHECKWRITE = 64; // abort if write would cause overwrite of
-										// non-air block (on by default)
-	public static final int BACKSTAIRS = 128; // write stairs as facing away from us
+	public static final int CHECKWRITE = 64; // abort if write would cause
+												// overwrite of
+	// non-air block (on by default)
+	public static final int BACKSTAIRS = 128; // write stairs as facing away
+												// from us
 
 	char getNext() {
 		if (cur >= string.length())
@@ -71,17 +78,18 @@ public class Turtle {
 		}
 	}
 
-	public Turtle(World  w, IntVector initpos, Direction initdir) {
+	public Turtle(World w, IntVector initpos, Direction initdir) {
 		world = w;
 		dir = initdir.vec;
 		pos = initpos;
 	}
-	
+
 	/**
 	 * Clone a turtle - useful for effectively doing a save/restore!
+	 * 
 	 * @param t
 	 */
-	public Turtle(Turtle t){
+	public Turtle(Turtle t) {
 		world = t.world;
 		dir = t.dir;
 		pos = t.pos;
@@ -122,42 +130,49 @@ public class Turtle {
 			write();
 		lastMoveCausedTurn = !tmpDir.equals(dir);
 	}
-	
+
 	/**
 	 * Move, not turn. Follow rules will not apply.
 	 */
-	public void right(){
+	public void right() {
 		pos = pos.add(dir.rotate(1));
 	}
+
 	/**
 	 * Move, not turn. Follow rules will not apply.
 	 */
-	public void left(){
+	public void left() {
 		pos = pos.add(dir.rotate(3));
-		
+
 	}
-	
-	public void moveAbsolute(IntVector v){
+
+	public void moveAbsolute(IntVector v) {
 		pos = v;
 	}
-	
-	public IntVector getPos(){
+
+	public IntVector getPos() {
 		return pos;
 	}
-	
-	public void rotate(int turns){
+
+	public void rotate(int turns) {
 		dir.rotate(turns);
 	}
 
-	public void setMaterial(Material m){
-		mat= m;
+	public void setMaterial(Material m) {
+		mat = m;
+		data =0;
 	}
+	public void setMaterial(Material m,int d){
+		mat = m;
+		data = d;
+	}
+
 
 	public Block get() {
 		return world.getBlockAt(pos.x, pos.y, pos.z);
 	}
 
-	public void write() {
+	public boolean write() {
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
 			Block b = get();
 			b.setType(mat);
@@ -170,22 +185,23 @@ public class Turtle {
 				s.setFacingDirection(d.toBlockFace());
 				b.setData(s.getData());
 			} else
-				b.setData((byte) 0);
+				b.setData((byte) data);
+			return true;
 		} else
-			abort();
+			return false;
 	}
-	
-	public Material getMaterial(){
+
+	public Material getMaterial() {
 		return mat;
 	}
-	
-	public void up(){
+
+	public void up() {
 		pos = pos.add(0, 1, 0);
 		if (isModeFlag(WRITEONMOVE))
 			write();
 	}
-	
-	public void down(){
+
+	public void down() {
 		pos = pos.add(0, -1, 0);
 		if (isModeFlag(WRITEONMOVE))
 			write();
@@ -240,12 +256,13 @@ public class Turtle {
 		case ':': // mark the repeat point - we loop back here until we abort
 			loopPoint = cur;
 			break;
-		case '?': // condition - set the flag 
+		case '?': // condition - set the flag
 			checkCondition(getNext());
 			break;
 		case '(': // if flag is false, jump forwards to ')'
-			if(!status){
-				while(getNext()!=')');
+			if (!status) {
+				while (getNext() != ')')
+					;
 			}
 		}
 	}
@@ -282,31 +299,53 @@ public class Turtle {
 		}
 		return 0;
 	}
-	
+
 	private void setMaterial(char next) {
 
 		switch (next) {
 		case 'w':
 			mat = Material.WOOD;
+			data = 0;
+			break;
+		case 'f':
+			mat = Material.FENCE;
+			data = 0;
+			break;
+		case 'W':
+			mat = Material.COBBLE_WALL;
+			data = 0;
 			break;
 		case 'l':
 			mat = Material.LOG;
+			data = 0;
 			break;
 		case 'b':
 			mat = Material.SMOOTH_BRICK;
+			data = 0;
+			break;
+		case 'c':
+			mat = Material.SMOOTH_BRICK;
+			data = 3;
 			break;
 		case 's':
 			mat = Material.SMOOTH_STAIRS;
+			data = 0;
 			break;
 		case 'L':
-			mat = Material.LAPIS_BLOCK; // for fun
+			mat = Material.LAPIS_BLOCK;
+			data = 0; // for fun
 			break;
+		case 't':
+			mat = Material.TORCH;
+			data = 0;
+			break;
+			
 		default:
 		case 'a':
 			mat = Material.AIR;
+			data = 0;
 			break;
 		}
-
 	}
 
 	/**
@@ -395,7 +434,7 @@ public class Turtle {
 	 */
 	private boolean followOuterRight() {
 		if (isEmpty(1, 0, 1)) { // if the spot behind and to the right isn't a
-									// wall, fail
+								// wall, fail
 			GormPlugin.log("follow right failed");
 			return false;
 		} else {
@@ -434,23 +473,22 @@ public class Turtle {
 			return false;
 		}
 	}
-	
+
 	/**
-	 * If the step in front will take us onto an unsupported block, we need to turn.
-	 * By default we'll go clockwise.
+	 * If the step in front will take us onto an unsupported block, we need to
+	 * turn. By default we'll go clockwise.
 	 */
 	private void supportFollow() {
-		if(isEmpty(0,-1,-1)){
-			if(!isEmpty(1,-1,0))
+		if (isEmpty(0, -1, -1)) {
+			if (!isEmpty(1, -1, 0))
 				dir = dir.rotate(1);
-			else if(!isEmpty(-1,-1,0))
+			else if (!isEmpty(-1, -1, 0))
 				dir = dir.rotate(3);
 			else
 				abort();
 		}
-		
-	}
 
+	}
 
 	/**
 	 * Look at the block relative to the turtle - in turtle space - and tell

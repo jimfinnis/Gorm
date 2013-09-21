@@ -56,9 +56,9 @@ public class Hall extends Building {
 		Extent e = new Extent(extent);
 		e.miny = e.maxy;
 		if (e.xsize() > e.zsize())
-			e.setHeight(e.xsize() / 2);
+			e=e.setHeight(e.xsize() / 2);
 		else
-			e.setHeight(e.zsize() / 2);
+			e=e.setHeight(e.zsize() / 2);
 		if (c.intersects(e)) {
 			// only building for a small roof, so skip.
 		} else {
@@ -78,8 +78,11 @@ public class Hall extends Building {
 	 * below for the underfloor.
 	 */
 	private void buildRoofGarden(Extent e) {
+		GormPlugin.log("Garden extent: "+e.toString());
+		GormPlugin.log("Extent before roof garden: "+extent.toString());
 		Room r= new RoofGarden(e,this);
 		addRoomAndBuildExitDown(r, true);
+		GormPlugin.log("Extent after roof garden: "+extent.toString());
 	}
 
 }

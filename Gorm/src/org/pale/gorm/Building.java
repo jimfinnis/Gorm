@@ -363,10 +363,12 @@ public abstract class Building {
 		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
 		Direction dir;
 
+		GormPlugin.log(String.format(
+				"attempting to create exit between %d and %d", thisRoom.b.id,
+				remoteRoom.b.id));
+
 		if (thisRoom.exitMap.containsKey(remoteRoom)) {
-			GormPlugin.log(String.format(
-					"exit already exists between %d and %d", thisRoom.b.id,
-					remoteRoom.b.id));
+			GormPlugin.log(String.format("exit already exists"));
 			return false;
 		}
 

@@ -17,7 +17,7 @@ public class PlainRoom extends Room {
 	}
 
 	@Override
-	public void build(Extent buildingExtent) {
+	public Extent build(Extent buildingExtent) {
 		Castle c = Castle.getInstance();
 		// make the actual floor - first layer
 		Extent floor = e.expand(-1, Extent.X | Extent.Z);
@@ -29,7 +29,7 @@ public class PlainRoom extends Room {
 		b.lightWalls(inner);
 		b.floorLights(inner);
 
-
+		return buildingExtent;
 	}
 
 }

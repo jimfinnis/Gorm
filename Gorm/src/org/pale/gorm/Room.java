@@ -10,9 +10,9 @@ import java.util.Map;
  * @author white
  *
  */
-public class Room {
-	Extent e;
-	Building b;
+public abstract class Room {
+	protected Extent e;
+	protected Building b;
 
 	/**
 	 * This is a map of exits by the room they go to
@@ -26,13 +26,26 @@ public class Room {
 	
 	/**
 	 * This is used to appropriately 'decorate' exits between outside rooms.
-	 * False by default, it's set by appropriate buildings.
 	 */
-	public boolean isOutside = false;
+	private boolean isOutside;
+	
 
-	Room(Extent e, Building b) {
+	protected Room(Extent e, Building b,boolean outside) {
 		this.b = b;
 		this.e = new Extent(e);
+		this.isOutside = outside;
+		build(b.getExtent());
 	}
+	
+	public boolean getIsOutside(){
+		return isOutside;
+	}
+	
+	/**
+	 * actually make the room's walls and contents (the building's outer walls should already
+	 * exist.) Note that roof gardens may modify the building's extent.
+	 */
+	public abstract void build(Extent buildingExtent);
+	
 	
 }

@@ -55,13 +55,13 @@ public class Exit {
 	 * Get the 'type' of this exit, which depends on the nature of the rooms it connects
 	 */
 	public ExitType getType(){
-		if(source.isOutside){
-			if(destination.isOutside)
+		if(source.getIsOutside()){
+			if(destination.getIsOutside())
 				return ExitType.OUTSIDE;
 			else
 				return ExitType.INWARDS;
 		}else{
-			if(destination.isOutside)
+			if(destination.getIsOutside())
 				return ExitType.OUTWARDS;
 			else
 				return ExitType.INSIDE;

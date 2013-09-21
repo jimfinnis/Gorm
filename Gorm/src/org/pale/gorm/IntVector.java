@@ -1,6 +1,7 @@
 package org.pale.gorm;
 
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 
 /**
@@ -177,5 +178,16 @@ public class IntVector {
 			return BlockFace.SOUTH;
 		else
 			return null;
+	}
+	
+	/**
+	 * A useful method to get the block at a given vector. Only added late
+	 * in the process, there are probably a lot of things that could be refactored
+	 * to use this. On the other hand it would involve an extra method call and singleton
+	 * instance get etc.
+	 * @return
+	 */
+	public Block getBlock(){
+		return Castle.getInstance().getWorld().getBlockAt(x, y, z);
 	}
 }

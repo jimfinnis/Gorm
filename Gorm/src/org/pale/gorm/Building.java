@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.material.Ladder;
+import org.pale.gorm.rooms.BlankRoom;
+import org.pale.gorm.rooms.PlainRoom;
 
 /**
  * A building in the castle, consisting of rooms
@@ -20,16 +21,18 @@ import org.bukkit.material.Ladder;
  */
 public abstract class Building {
 	/**
-	 * Given a parent room and a size, produce an extent for a room which can be slid around
-	 * by the Builder.
+	 * Given a parent room and a size, produce an extent for a room which can be
+	 * slid around by the Builder.
+	 * 
 	 * @param parent
 	 * @param e
 	 */
-	public void setInitialExtent(Building parent,int x,int y,int z){
-		Extent e = new Extent(parent.getExtent().getCentre(), x,1,z); // y unused
+	public void setInitialExtent(Building parent, int x, int y, int z) {
+		Extent e = new Extent(parent.getExtent().getCentre(), x, 1, z); // y
+																		// unused
 		e.miny = parent.getExtent().miny; // make floors align
 		extent = e.setHeight(y);
-		
+
 	}
 
 	private static int idCounter = 0;
@@ -50,7 +53,6 @@ public abstract class Building {
 	 */
 	int roofDepth = 1;
 
-
 	/**
 	 * Return the bounding box of the building, including the walls
 	 * 
@@ -59,25 +61,24 @@ public abstract class Building {
 	public Extent getExtent() {
 		return extent;
 	}
-	
-	/** The standard operation for single-room buildings
-	 *
+
+	/**
+	 * The standard operation for single-room buildings
+	 * 
 	 */
-	public void makeSingleRoom(){
+	public void makeSingleRoom(boolean isOutside) {
 		rooms = new LinkedList<Room>(); // make sure any old ones are gone
-		rooms.add(new Room(extent,this));
+		rooms.add(new BlankRoom(extent, this, isOutside));
 	}
-	
+
 	/**
 	 * Fill this in - it's what actually makes the building
 	 */
 	public abstract void build();
 
-
-
 	/**
-	 * Attempt to build a number of internal floors in tall buildings.
-	 * Floors are built in ascending order.
+	 * Attempt to build a number of internal floors in tall buildings. Floors
+	 * are built in ascending order.
 	 */
 	protected void makeRooms() {
 		Castle c = Castle.getInstance();
@@ -93,66 +94,71 @@ public abstract class Building {
 	}
 
 	/**
-	 * Place a floor at height h above the building base. Floors
-	 * are one deep, and are built in ascending order (i.e. the start of the 'rooms' list
-	 * will have the lower floor in it, if there is one, since they are added to the head)
+	 * Place a floor at height h above the building base. Floors are one deep,
+	 * and are built in ascending order (i.e. the start of the 'rooms' list will
+	 * have the lower floor in it, if there is one, since they are added to the
+	 * head)
+	 * 
 	 * @param yAboveFloor
 	 *            Y of the block just above the floor
 	 * @param yBelowCeiling
 	 *            Y of the block just below the ceiling
 	 */
 	private void placeFloorAt(int yAboveFloor, int yBelowCeiling) {
-		Castle c = Castle.getInstance();
 
 		// work out the extent of this room
 		Extent roomExt = new Extent(extent);
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		// make the actual floor - first layer
-		Extent floor = extent.expand(-1, Extent.X | Extent.Z);
-		floor.miny = yAboveFloor - 1;
-		floor.maxy = floor.miny;
-		c.fillBrickWithCracksAndMoss(floor, false);
+		Room r = new PlainRoom(roomExt,this);
+		addRoomAndBuildExitDown(r, false);
+	}
 
-		// now make floor match the inner space of the building
-		floor.miny = yAboveFloor;
-		floor.maxy = yBelowCeiling;
-
-		carpet(floor, c.r.nextInt(14));
-		lightWalls(floor);
-		floorLights(floor);
-
-		Room lowerFloor = rooms.peekFirst(); // any prior floor will be the first item
-		Room r = new Room(roomExt, this);
+	/**
+	 * Create and add a new room, attempting to build an exit down from this room to the one below.
+	 * Assumes the room list is ordered such new rooms added are higher up.
+	 * @param newRoomExtent
+	 * @param outside is the room outside or inside
+	 */
+	protected void addRoomAndBuildExitDown(Room r, boolean outside) {
+		Room lowerFloor = rooms.peekFirst(); // any prior floor will be the
+		// first item
 		rooms.addFirst(r); // add new room to head of list
 
-		if(lowerFloor!=null){
+		if (lowerFloor != null) {
 			// there is a floor below - try to build some kind of link down
-			buildVerticalExit(lowerFloor,r);
+			buildVerticalExit(lowerFloor, r);
 		}
+
 	}
 
 	/**
 	 * Build a vertical exit between two rooms
-	 * @param lower lower room
-	 * @param upper upper room
+	 * 
+	 * @param lower
+	 *            lower room
+	 * @param upper
+	 *            upper room
 	 */
 	private void buildVerticalExit(Room lower, Room upper) {
 		World w = Castle.getInstance().getWorld();
-		
-		// get the inner extent of the lower room 
+
+		// get the inner extent of the lower room
 		Extent innerLower = lower.e.expand(-1, Extent.ALL);
-		
-		// get one corner of that room (but go up one so we don't overwrite the carpet)
-		IntVector ladderPos = new IntVector(innerLower.minx, innerLower.miny+1, innerLower.minz);
-		
+
+		// get one corner of that room (but go up one so we don't overwrite the
+		// carpet)
+		IntVector ladderPos = new IntVector(innerLower.minx,
+				innerLower.miny + 1, innerLower.minz);
+
 		Ladder ladder = new Ladder();
 		ladder.setFacingDirection(BlockFace.NORTH);
-		
-		// build up, placing a ladder until we get to the floor above, and go one square into the room
+
+		// build up, placing a ladder until we get to the floor above, and go
+		// one square into the room
 		// to clear the carpet too.
-		for(int y = ladderPos.y;y<=upper.e.miny+1;y++){
+		for (int y = ladderPos.y; y <= upper.e.miny + 1; y++) {
 			Block b = w.getBlockAt(ladderPos.x, y, ladderPos.z);
 			b.setType(Material.LADDER);
 			b.setData(ladder.getData());
@@ -165,7 +171,7 @@ public abstract class Building {
 	 * 
 	 * @param floor
 	 */
-	private void carpet(Extent floor, int col) {
+	public void carpet(Extent floor, int col) {
 		Castle c = Castle.getInstance();
 		floor = new Extent(floor);
 		floor.maxy = floor.miny;
@@ -178,7 +184,7 @@ public abstract class Building {
 	 * @param e
 	 *            the internal air space of the building
 	 */
-	void lightWalls(Extent e) {
+	public void lightWalls(Extent e) {
 		int y = e.miny + 4;
 		if (y > e.maxy)
 			y = e.maxy;
@@ -201,7 +207,7 @@ public abstract class Building {
 	 * 
 	 * @param e
 	 */
-	void floorLights(Extent e) {
+	public void floorLights(Extent e) {
 		World w = Castle.getInstance().getWorld();
 		int y = e.miny;
 
@@ -223,20 +229,27 @@ public abstract class Building {
 	}
 
 	/**
-	 * Fill voids under the building in some way. If complete is true, make the block solid.
+	 * Fill voids under the building in some way. If complete is true, make the
+	 * block solid.
 	 */
 	void underfill(boolean complete) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
+		int dx, dz;
 
-		int dx = extent.xsize() < 8 ? extent.xsize() - 1 : 4;
-		int dz = extent.zsize() < 8 ? extent.zsize() - 1 : 4;
+		if (complete) {
+			dx = 1;
+			dz = 1;
+		} else {
+			dx = extent.xsize() < 8 ? extent.xsize() - 1 : 4;
+			dz = extent.zsize() < 8 ? extent.zsize() - 1 : 4;
+		}
 
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
 					Block b = w.getBlockAt(x, y, z);
-					if (b.isEmpty() || b.getType() == Material.CARPET) {
+					if (!b.getType().isSolid()) {
 						b.setType(Material.COBBLESTONE);
 					} else {
 						break;
@@ -280,7 +293,7 @@ public abstract class Building {
 
 		GormPlugin.log("Attempting to make an exit from building "
 				+ Integer.toString(id));
-
+		
 		// first we need to find a suitable nearby building. This version of the
 		// code will only
 		// link with buildings with colinear walls.
@@ -288,8 +301,6 @@ public abstract class Building {
 		List<Building> buildings = new ArrayList<Building>();
 		for (Building r : c.getBuildings()) {
 			if (r != this) {
-				GormPlugin.log("  Checking building " + Integer.toString(r.id)
-						+ " for validity");
 				if (extent.intersects(r.extent)) {
 
 					Extent e = extent.intersect(r.extent); // get the
@@ -303,49 +314,44 @@ public abstract class Building {
 					// check it intersects enough
 					if (Math.max(e.xsize(), e.zsize()) >= 5) {
 						buildings.add(r);
-					} else
-						GormPlugin
-								.log("     building intersection is too small");
-				} else
-					GormPlugin.log("     buildings do not intersect");
+					} 
+				} 
 			}
 		}
 
 		if (buildings.size() != 0) {
 			Building b = buildings.get(c.r.nextInt(buildings.size()));
-			GormPlugin.log(String.format("Trying to make an exit between %d and %d!!!",
-					id,b.id));
+			GormPlugin.log(String.format(
+					"Trying to make an exit between %d and %d!!!", id, b.id));
 			return makeRandomExit(b);
 		}
 		return false;
 	}
-	
+
 	/**
-	 *  Having found a building nearby, we need to find a pair of candidate rooms, one here
-	 *  and one over there.
+	 * Having found a building nearby, we need to find a pair of candidate
+	 * rooms, one here and one over there.
 	 */
-	private boolean makeRandomExit(Building other){
+	private boolean makeRandomExit(Building other) {
 		// we don't want to always do one floor.
 		Collections.shuffle(rooms);
-		
-		for(Room r: rooms){
-			for(Room r2: other.rooms){
-				if(Math.abs(r2.e.miny - r.e.miny) < 4){
+
+		for (Room r : rooms) {
+			for (Room r2 : other.rooms) {
+				if (Math.abs(r2.e.miny - r.e.miny) < 4) {
 					// that'll do!
-					if(r2.e.miny<r.e.miny) // destination is lower than src. 
-						return makeExitBetweenRooms(r,r2);
+					if (r2.e.miny < r.e.miny) // destination is lower than src.
+						return makeExitBetweenRooms(r, r2);
 					else
-						return makeExitBetweenRooms(r2,r);
-					
-				} 
+						return makeExitBetweenRooms(r2, r);
+
+				}
 			}
 		}
-		
+
 		GormPlugin.log("Make exit failed; level mismatch");
 		return false;
 	}
-	
-	
 
 	/**
 	 * This is used to make a random horizontal exit to a building we already
@@ -356,12 +362,14 @@ public abstract class Building {
 	private boolean makeExitBetweenRooms(Room thisRoom, Room remoteRoom) {
 		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
 		Direction dir;
-		
-		if(thisRoom.exitMap.containsKey(remoteRoom)){
-			GormPlugin.log(String.format("exit already exists between %d and %d",thisRoom.b.id,remoteRoom.b.id));
+
+		if (thisRoom.exitMap.containsKey(remoteRoom)) {
+			GormPlugin.log(String.format(
+					"exit already exists between %d and %d", thisRoom.b.id,
+					remoteRoom.b.id));
 			return false;
 		}
-			
+
 		// work out the orientation of the exit
 		if (intersection.xsize() > intersection.zsize()) {
 			dir = remoteRoom.e.minz == thisRoom.e.maxz ? Direction.SOUTH
@@ -388,7 +396,7 @@ public abstract class Building {
 		remoteRoom.exitMap.put(thisRoom, dest); // exit 'dest' leads back here
 		// blow the hole
 		Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
-		GormPlugin.log("hole blown: "+src.getExtent().toString());
+		GormPlugin.log("hole blown: " + src.getExtent().toString());
 		Castle.getInstance().postProcessExit(src);
 		return true;
 	}

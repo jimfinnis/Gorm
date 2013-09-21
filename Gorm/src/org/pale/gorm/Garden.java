@@ -38,8 +38,7 @@ public class Garden extends Building {
 		
 		underfill(true);
 		
-		makeSingleRoom();
-		rooms.getFirst().isOutside = true;
+		makeSingleRoom(true); // this is a single, exterior room
 		floorLights(inner); // light the inner region
 	}
 }

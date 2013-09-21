@@ -99,7 +99,7 @@ public class Builder {
 	 * @return
 	 */
 	private Building createBuilding(Building r) {
-		switch (rnd.nextInt(5)) {
+		switch (rnd.nextInt(25)) {
 		case 0:
 			return new Garden(r);
 		default:

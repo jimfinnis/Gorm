@@ -20,7 +20,7 @@ public class Turtle {
 	private IntVector dir;
 	private Material mat = Material.SMOOTH_BRICK;
 	private Random r = new Random();
-	private int mode = CHECKWRITE;
+	private int mode = CHECKWRITE; // by default, we abort if we're going overwrite solid
 
 	int cur = 0;
 	private String string;
@@ -454,7 +454,7 @@ public class Turtle {
 
 	/**
 	 * Look at the block relative to the turtle - in turtle space - and tell
-	 * whether it's empty
+	 * whether it's empty (i.e. not solid)
 	 * 
 	 * @param x
 	 * @param z
@@ -466,7 +466,7 @@ public class Turtle {
 		Block b = world.getBlockAt(p.x, p.y, p.z);
 		// GormPlugin.log("  block at "+v.toString()+" is "+b.getType().toString());
 
-		return b.isEmpty();
+		return !b.getType().isSolid();
 	}
 
 	/**

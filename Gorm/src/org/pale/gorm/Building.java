@@ -66,9 +66,11 @@ public abstract class Building {
 	 * The standard operation for single-room buildings
 	 * 
 	 */
-	public void makeSingleRoom(boolean isOutside) {
+	public Room makeSingleRoom() {
 		rooms = new LinkedList<Room>(); // make sure any old ones are gone
-		rooms.add(new BlankRoom(extent, this, isOutside));
+		Room r = new BlankRoom(extent, this);
+		rooms.add(r);
+		return r;
 	}
 
 	/**

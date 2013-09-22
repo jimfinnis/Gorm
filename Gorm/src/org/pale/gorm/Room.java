@@ -3,7 +3,9 @@ package org.pale.gorm;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A room is a level of a building. Typically it's indoors, but the roof can also constitute a room.
@@ -25,20 +27,31 @@ public abstract class Room {
 	Collection<Exit> exits = new ArrayList<Exit>();
 	
 	/**
-	 * This is used to appropriately 'decorate' exits between outside rooms.
+	 * This is used to appropriately 'decorate' exits between rooms.
+	 * It marks which sides of the room are to be considered 'open'
 	 */
-	private boolean isOutside;
+	private Set<Direction> openSides = new HashSet<Direction>();
 	
 
-	protected Room(Extent e, Building b,boolean outside) {
+	protected Room(Extent e, Building b) {
 		this.b = b;
 		this.e = new Extent(e);
-		this.isOutside = outside;
 		b.extent = build(b.getExtent());
 	}
 	
-	public boolean getIsOutside(){
-		return isOutside;
+	protected void setOpenSide(Direction d){
+		openSides.add(d);
+	}
+	
+	public boolean isOpen(Direction d){
+		return openSides.contains(d);
+	}
+	
+	public void setAllSidesOpen(){
+		openSides.add(Direction.NORTH);
+		openSides.add(Direction.SOUTH);
+		openSides.add(Direction.EAST);
+		openSides.add(Direction.WEST);
 	}
 	
 	/**

@@ -24,7 +24,8 @@ public class Hall extends Building {
 		int z = rnd.nextInt(10) + 5;
 		int y;
 
-		if(parent.rooms.getFirst().getIsOutside() && rnd.nextFloat()<0.8) {
+		// TODO this is a blatant special case hack.
+		if(parent.rooms.getFirst() instanceof RoofGarden && rnd.nextFloat()<0.8) {
 			// if the top room of the parent has a garden, high chance that we're a good bit taller.
 			y = parent.extent.ysize() + 4 + rnd.nextInt(10);
 		}

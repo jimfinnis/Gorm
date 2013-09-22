@@ -13,7 +13,7 @@ import org.pale.gorm.Room;
 public class PlainRoom extends Room {
 
 	public PlainRoom(Extent e, Building b) {
-		super(e, b, false);
+		super(e, b);
 	}
 
 	@Override

@@ -11,8 +11,8 @@ import org.pale.gorm.Room;
  */
 public class BlankRoom extends Room {
 
-	public BlankRoom(Extent e, Building b, boolean outside) {
-		super(e, b, outside);
+	public BlankRoom(Extent e, Building b) {
+		super(e, b);
 	}
 
 	@Override

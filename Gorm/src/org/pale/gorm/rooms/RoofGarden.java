@@ -20,7 +20,8 @@ import org.pale.gorm.Turtle;
 public class RoofGarden extends Room {
 
 	public RoofGarden(Extent e, Building b) {
-		super(e, b, true);
+		super(e, b);
+		setAllSidesOpen();
 	}
 
 	/**

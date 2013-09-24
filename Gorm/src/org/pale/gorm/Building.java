@@ -66,9 +66,9 @@ public abstract class Building {
 	 * The standard operation for single-room buildings
 	 * 
 	 */
-	public Room makeSingleRoom() {
+	public Room makeSingleRoom(MaterialManager mgr) {
 		rooms = new LinkedList<Room>(); // make sure any old ones are gone
-		Room r = new BlankRoom(extent, this);
+		Room r = new BlankRoom(mgr, extent, this);
 		rooms.add(r);
 		return r;
 	}
@@ -76,19 +76,19 @@ public abstract class Building {
 	/**
 	 * Fill this in - it's what actually makes the building
 	 */
-	public abstract void build();
+	public abstract void build(MaterialManager mgr);
 
 	/**
 	 * Attempt to build a number of internal floors in tall buildings. Floors
 	 * are built in ascending order.
 	 */
-	protected void makeRooms() {
+	protected void makeRooms(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
 
 		// start placing floors until we run out
 		for (int h = extent.miny + 1; h < extent.maxy - 4;) {
 			int nexth = h + c.r.nextInt(3) + 4;
-			placeFloorAt(h, nexth);
+			placeFloorAt(mgr, h, nexth);
 
 			h = nexth + 2; // because h and nexth delineate the internal space -
 							// the air space - of the building
@@ -106,14 +106,14 @@ public abstract class Building {
 	 * @param yBelowCeiling
 	 *            Y of the block just below the ceiling
 	 */
-	private void placeFloorAt(int yAboveFloor, int yBelowCeiling) {
+	private void placeFloorAt(MaterialManager mgr, int yAboveFloor, int yBelowCeiling) {
 
 		// work out the extent of this room
 		Extent roomExt = new Extent(extent);
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = new PlainRoom(roomExt,this);
+		Room r = new PlainRoom(mgr, roomExt,this);
 		addRoomAndBuildExitDown(r, false);
 	}
 
@@ -233,11 +233,14 @@ public abstract class Building {
 	/**
 	 * Fill voids under the building in some way. If complete is true, make the
 	 * block solid.
+	 * @param mgr 
 	 */
-	void underfill(boolean complete) {
+	void underfill(MaterialManager mgr, boolean complete) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		int dx, dz;
+		
+		MaterialManager.MaterialDataPair mat = mgr.getSecondary();
 
 		if (complete) {
 			dx = 1;
@@ -252,7 +255,8 @@ public abstract class Building {
 				for (int y = extent.miny - 1;; y--) {
 					Block b = w.getBlockAt(x, y, z);
 					if (!b.getType().isSolid()) {
-						b.setType(Material.COBBLESTONE);
+						b.setType(mat.m);
+						b.setData((byte) mat.d);
 					} else {
 						break;
 					}
@@ -290,7 +294,7 @@ public abstract class Building {
 	 * Tell this building to make a random exit to an adjacent building - this
 	 * is for horizontal exits
 	 */
-	public boolean makeRandomExit() {
+	public boolean makeRandomExit(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
 
 		GormPlugin.log("Attempting to make an exit from building "
@@ -325,7 +329,7 @@ public abstract class Building {
 			Building b = buildings.get(c.r.nextInt(buildings.size()));
 			GormPlugin.log(String.format(
 					"Trying to make an exit between %d and %d!!!", id, b.id));
-			return makeRandomExit(b);
+			return makeRandomExit(mgr,b);
 		}
 		return false;
 	}
@@ -334,7 +338,7 @@ public abstract class Building {
 	 * Having found a building nearby, we need to find a pair of candidate
 	 * rooms, one here and one over there.
 	 */
-	private boolean makeRandomExit(Building other) {
+	private boolean makeRandomExit(MaterialManager mgr,Building other) {
 		// we don't want to always do one floor.
 		Collections.shuffle(rooms);
 
@@ -343,9 +347,9 @@ public abstract class Building {
 				if (Math.abs(r2.e.miny - r.e.miny) < 4) {
 					// that'll do!
 					if (r2.e.miny < r.e.miny) // destination is lower than src.
-						return makeExitBetweenRooms(r, r2);
+						return makeExitBetweenRooms(mgr, r, r2);
 					else
-						return makeExitBetweenRooms(r2, r);
+						return makeExitBetweenRooms(mgr, r2, r);
 
 				}
 			}
@@ -361,7 +365,7 @@ public abstract class Building {
 	 * 
 	 * @param r
 	 */
-	private boolean makeExitBetweenRooms(Room thisRoom, Room remoteRoom) {
+	private boolean makeExitBetweenRooms(MaterialManager mgr, Room thisRoom, Room remoteRoom) {
 		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
 		Direction dir;
 
@@ -401,7 +405,7 @@ public abstract class Building {
 		// blow the hole
 		Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
 		GormPlugin.log("hole blown: " + src.getExtent().toString());
-		Castle.getInstance().postProcessExit(src);
+		Castle.getInstance().postProcessExit(mgr,src);
 		return true;
 	}
 }

@@ -33,10 +33,10 @@ public abstract class Room {
 	private Set<Direction> openSides = new HashSet<Direction>();
 	
 
-	protected Room(Extent e, Building b) {
+	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
 		this.e = new Extent(e);
-		b.extent = build(b.getExtent());
+		b.extent = build(mgr,b.getExtent());
 	}
 	
 	protected void setOpenSide(Direction d){
@@ -59,7 +59,7 @@ public abstract class Room {
 	 * exist.) Note that roof gardens may modify the building's extent; the new building extent
 	 * is returned.
 	 */
-	public abstract Extent build(Extent buildingExtent);
+	public abstract Extent build(MaterialManager mgr,Extent buildingExtent);
 	
 	
 }

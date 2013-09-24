@@ -7,6 +7,7 @@ import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
+import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
 
@@ -19,8 +20,8 @@ import org.pale.gorm.Turtle;
  */
 public class RoofGarden extends Room {
 
-	public RoofGarden(Extent e, Building b) {
-		super(e, b);
+	public RoofGarden(MaterialManager mgr, Extent e, Building b) {
+		super(mgr, e, b);
 		setAllSidesOpen();
 	}
 
@@ -29,7 +30,7 @@ public class RoofGarden extends Room {
 	 * top.
 	 */
 	@Override
-	public Extent build(Extent buildingExtent) {
+	public Extent build(MaterialManager mgr, Extent buildingExtent) {
 		Castle c = Castle.getInstance();
 		// get the material for the underfloor; it's the same material as the
 		// centre of the ceiling.
@@ -42,23 +43,24 @@ public class RoofGarden extends Room {
 		c.fill(e.expand(-1, Extent.ALL), Material.AIR, 0);
 		// build the floor, using same material as underfloor for edge
 		c.checkFill(floor, underFloorMaterial, 0);
-		c.fill(floor.expand(-1, Extent.X | Extent.Z), Material.GRASS, 0);
+		c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
 
 		// fill in the perimeter
-		perimeter(c);
+		perimeter(mgr, c);
 
 		// set the new building extent
 		buildingExtent.maxy = e.maxy;
-		GormPlugin.log("updating building extent to "+buildingExtent.toString());
+		GormPlugin.log("updating building extent to "
+				+ buildingExtent.toString());
 		return buildingExtent;
 	}
 
-	private void perimeter(Castle c) {
+	private void perimeter(MaterialManager mgr, Castle c) {
 		int tp = c.r.nextInt(); // bitfield describing the perimeter posts
-		placePost(c, e.minx, e.miny, e.minz, tp);
-		placePost(c, e.maxx, e.miny, e.minz, tp);
-		placePost(c, e.minx, e.miny, e.maxz, tp);
-		placePost(c, e.maxx, e.miny, e.maxz, tp);
+		placePost(mgr, c, e.minx, e.miny, e.minz, tp);
+		placePost(mgr, c, e.maxx, e.miny, e.minz, tp);
+		placePost(mgr, c, e.minx, e.miny, e.maxz, tp);
+		placePost(mgr, c, e.maxx, e.miny, e.maxz, tp);
 
 		// for each side, use turtle to place wall. If walls are odd length,
 		// consider alternating
@@ -84,12 +86,10 @@ public class RoofGarden extends Room {
 				v = null;
 			}
 			if (v != null) {
-				t = new Turtle(c.getWorld(), v, d);
-				t.setMaterial(Material.COBBLE_WALL,0); // change this!
+				t = new Turtle(mgr, c.getWorld(), v, d);
+				t.setMaterial(mgr.getFence());
 				t.up();
-				if ((tp & 32) != 0)
-					t.up();
-				for (;;) {
+				for (int i=0;i<200;i++) {
 					t.forwards();
 					if (!t.write())
 						break;
@@ -101,31 +101,20 @@ public class RoofGarden extends Room {
 
 	}
 
-	private void placePost(Castle c, int x, int y, int z, int tp) {
-		Turtle t = new Turtle(c.getWorld(), new IntVector(x, y + 1, z),
+	private void placePost(MaterialManager mgr, Castle c, int x, int y, int z,
+			int tp) {
+		Turtle t = new Turtle(mgr, c.getWorld(), new IntVector(x, y + 1, z),
 				Direction.NORTH);
-		boolean alternateMaterial = (tp & 16) == 0;
 		switch (tp & 7) {
-		case 0:
-			if (alternateMaterial) {
-				t.setMaterial(Material.SMOOTH_BRICK,3);
-			} else
-				t.setMaterial(Material.FENCE);
-			break;
-		case 1:
-			t.setMaterial(Material.SMOOTH_BRICK);
-			break;
-		case 2:
-			t.setMaterial(Material.COBBLESTONE);
-			break;
-		case 3:
-			t.setMaterial(Material.SMOOTH_BRICK,3);
-			break;
+		case 0:t.run("m1wu.Mtw");break;
+		case 1:t.run("m2wu.m2wu.Mtw");break;
+		case 2:t.run("mowu.m1wu.Mtw");break;
+		case 3:t.run("m1wu.mpwu.Mtw");break;
+		case 4:t.run("mowu.mpwu.Mtw");break;
+		case 5:t.run("mpwu.Mtw");break;
+		case 6:t.run("mowu.Mtw");break;
+		case 7:t.run("m1wu.m2wu.m1wu.m2w.Mt.fwbbwfLwRRw");break;
 		}
-		if ((tp & 32) != 0)
-			t.run("wuwumtw");
-		else
-			t.run("wumtw");
 	}
 
 }

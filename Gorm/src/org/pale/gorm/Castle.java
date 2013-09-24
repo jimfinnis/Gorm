@@ -12,6 +12,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
 import org.pale.gorm.Exit.ExitType;
+import org.pale.gorm.MaterialManager.MaterialDataPair;
 
 /**
  * Singleton class for the whole castle.
@@ -81,7 +82,8 @@ public class Castle {
 	}
 
 	/**
-	 * Fill an extent with a material and data
+	 * Fill an extent with a material and data, checking we don't overwrite
+	 * certain things
 	 * 
 	 * @param e
 	 * @param mat
@@ -89,22 +91,31 @@ public class Castle {
 	 */
 
 	public void checkFill(Extent e, Material mat, int data) {
-		GormPlugin.log("filling " + e.toString());
-		int t = 0;
-		for (int x = e.minx; x <= e.maxx; x++) {
-			for (int y = e.miny; y <= e.maxy; y++) {
-				for (int z = e.minz; z <= e.maxz; z++) {
-					Block b = world.getBlockAt(x, y, z);
-					if (canOverwrite(b)) {
-						b.setType(mat);
-						b.setData((byte) data);
-						t++;
+		if (mat == Material.SMOOTH_BRICK) {
+			fillBrickWithCracksAndMoss(e, true);
+		} else {
+			GormPlugin.log("filling " + e.toString());
+			int t = 0;
+			for (int x = e.minx; x <= e.maxx; x++) {
+				for (int y = e.miny; y <= e.maxy; y++) {
+					for (int z = e.minz; z <= e.maxz; z++) {
+						Block b = world.getBlockAt(x, y, z);
+						if (canOverwrite(b)) {
+							b.setType(mat);
+							b.setData((byte) data);
+							t++;
+						}
 					}
 				}
 			}
+			GormPlugin.log("blocks filled: " + Integer.toString(t));
 		}
-		GormPlugin.log("blocks filled: " + Integer.toString(t));
 	}
+	
+	public void checkFill(Extent e, MaterialManager.MaterialDataPair mp){
+		checkFill(e,mp.m,mp.d);
+	}
+
 
 	/**
 	 * Fill an extent with a material and data DOES NOT CHECK that the stuff
@@ -115,18 +126,26 @@ public class Castle {
 	 * @param data
 	 */
 	public void fill(Extent e, Material mat, int data) {
-		GormPlugin.log("filling " + e.toString());
-		int t = 0;
-		for (int x = e.minx; x <= e.maxx; x++) {
-			for (int y = e.miny; y <= e.maxy; y++) {
-				for (int z = e.minz; z <= e.maxz; z++) {
-					Block b = world.getBlockAt(x, y, z);
-					b.setType(mat);
-					b.setData((byte) data);
+		if (mat == Material.SMOOTH_BRICK)
+			fillBrickWithCracksAndMoss(e, false);
+		else {
+			GormPlugin.log("filling " + e.toString());
+			int t = 0;
+			for (int x = e.minx; x <= e.maxx; x++) {
+				for (int y = e.miny; y <= e.maxy; y++) {
+					for (int z = e.minz; z <= e.maxz; z++) {
+						Block b = world.getBlockAt(x, y, z);
+						b.setType(mat);
+						b.setData((byte) data);
+					}
 				}
 			}
+			GormPlugin.log("blocks filled: " + Integer.toString(t));
 		}
-		GormPlugin.log("blocks filled: " + Integer.toString(t));
+	}
+	
+	public void fill(Extent e, MaterialManager.MaterialDataPair mp){
+		fill(e,mp.m,mp.d);
 	}
 
 	/**
@@ -156,7 +175,7 @@ public class Castle {
 	 * @param e
 	 * @param checkOverwrite
 	 */
-	public void fillBrickWithCracksAndMoss(Extent e, boolean checkOverwrite) {
+	private void fillBrickWithCracksAndMoss(Extent e, boolean checkOverwrite) {
 		GormPlugin.log("filling " + e.toString());
 		int t = 0;
 		int dataVals[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -206,12 +225,6 @@ public class Castle {
 		}
 	}
 
-	public Material getRandomWallMaterial() {
-		Material[] m = { Material.STONE, Material.SMOOTH_BRICK, Material.WOOD,
-				Material.BRICK };
-		return m[r.nextInt(m.length)];
-	}
-
 	public Collection<Building> getBuildings() {
 		return buildings;
 	}
@@ -241,8 +254,10 @@ public class Castle {
 
 	static boolean isStairs(Material m) {
 		return (m == Material.COBBLESTONE_STAIRS || m == Material.WOOD_STAIRS
-				|| m == Material.BIRCH_WOOD_STAIRS
-				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS);
+				|| m == Material.BIRCH_WOOD_STAIRS || m == Material.SANDSTONE_STAIRS
+				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS || m==Material.QUARTZ_STAIRS
+				|| m == Material.NETHER_BRICK_STAIRS || m == Material.JUNGLE_WOOD_STAIRS || m==Material.SPRUCE_WOOD_STAIRS
+				);
 	}
 
 	/**
@@ -254,7 +269,7 @@ public class Castle {
 	 * @param d
 	 * @return
 	 */
-	private boolean dropExitStairs(Extent e, Direction d) {
+	private boolean dropExitStairs(MaterialManager mgr,Extent e, Direction d) {
 
 		GormPlugin.log("Processing exit stairs for " + e.toString());
 
@@ -276,14 +291,14 @@ public class Castle {
 			for (int x = e.minx; x <= e.maxx; x++) {
 				int startz = v.z > 0 ? e.minz : e.maxz;
 				IntVector start = new IntVector(x, floory, startz);
-				done |= stairScan(start, e, v);
+				done |= stairScan(mgr,start, e, v);
 			}
 		} else {
 			// the north-south case
 			for (int z = e.minz; z <= e.maxz; z++) {
 				int startx = v.x > 0 ? e.minx : e.maxx;
 				IntVector start = new IntVector(startx, floory, z);
-				done |= stairScan(start, e, v);
+				done |= stairScan(mgr,start, e, v);
 			}
 		}
 
@@ -300,13 +315,13 @@ public class Castle {
 	 * @param v
 	 * @return
 	 */
-	private boolean stairScan(IntVector start, Extent e, IntVector v) {
+	private boolean stairScan(MaterialManager mgr, IntVector start, Extent e, IntVector v) {
 		boolean done = false;
 		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
 
 		int y = e.getHeightWithin(start.x, start.z);
-		Material mat = Material.WOOD_STAIRS;
+		Material mat = mgr.getStair();
 
 		// steps starting from blind walls can happen.. but are stupid.
 		IntVector startWall = start.subtract(v).add(0, 1, 0);
@@ -334,7 +349,6 @@ public class Castle {
 																// landed!
 				if (b.getType().isSolid())
 					done = true;
-				mat = Material.SMOOTH_STAIRS;
 				y--; // and go down again!
 			}
 		}
@@ -377,8 +391,8 @@ public class Castle {
 		}
 	}
 
-	public void postProcessExit(Exit e) {
-		dropExitStairs(e.getExtent(), e.getDirection());
+	public void postProcessExit(MaterialManager mgr,Exit e) {
+		dropExitStairs(mgr,e.getExtent(), e.getDirection());
 		decorateExit(e);
 	}
 

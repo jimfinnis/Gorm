@@ -39,17 +39,17 @@ public class Hall extends Building {
 	/**
 	 * Draw into the world - call this *before* adding the building!
 	 */
-	public void build() {
+	public void build(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
 
-		// basic building for now
-		c.fillBrickWithCracksAndMoss(extent, true);
-
+		// fill with primary material
+		MaterialManager.MaterialDataPair prim = mgr.getPrimary();
+		c.fill(extent,prim.m,prim.d);
 		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
 
-		underfill(false);
+		underfill(mgr,false);
 
-		makeRooms();
+		makeRooms(mgr);
 
 		// is the bit above the building free?
 		// Calculate an extent for a putative pitched roof, the height
@@ -65,9 +65,9 @@ public class Hall extends Building {
 		} else {
 			// room for a bigger roof or maybe a roof garden! Roof garden if we're short.
 			if (c.r.nextFloat() < 0.5 || extent.ysize()<24) {
-				buildRoofGarden(e);
+				buildRoofGarden(mgr,e);
 			} else {
-				new PitchedRoofBuilder().buildRoof(extent);
+				new PitchedRoofBuilder().buildRoof(mgr,extent);
 			}
 		}
 	}
@@ -78,10 +78,10 @@ public class Hall extends Building {
 	 * and this room will intrude one block into the innerspace of the the room
 	 * below for the underfloor.
 	 */
-	private void buildRoofGarden(Extent e) {
+	private void buildRoofGarden(MaterialManager mgr,Extent e) {
 		GormPlugin.log("Garden extent: "+e.toString());
 		GormPlugin.log("Extent before roof garden: "+extent.toString());
-		Room r= new RoofGarden(e,this);
+		Room r= new RoofGarden(mgr,e,this);
 		addRoomAndBuildExitDown(r, true);
 		GormPlugin.log("Extent after roof garden: "+extent.toString());
 	}

@@ -6,12 +6,14 @@ import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.IntVector;
+import org.pale.gorm.MaterialManager;
+import org.pale.gorm.MaterialManager.MaterialDataPair;
 import org.pale.gorm.Turtle;
 
 public class PitchedRoofBuilder implements RoofBuilder {
 
 	@Override
-	public void buildRoof(Extent roomExtent) {
+	public void buildRoof(MaterialManager mgr,Extent roomExtent) {
 		// simple ridged roof
 		// get extent
 		Extent roof = new Extent(roomExtent);
@@ -36,8 +38,10 @@ public class PitchedRoofBuilder implements RoofBuilder {
 			shortEdge = roof.xsize();
 		}
 		
-		Turtle t = new Turtle(Castle.getInstance().getWorld(),new IntVector(0,0,0),dir);
-		t.setMaterial(Material.WOOD_STAIRS);
+		Material mat = mgr.getRoofSteps();
+		MaterialDataPair fillMat = MaterialDataPair.fromSteps(mat);
+		Turtle t = new Turtle(mgr,Castle.getInstance().getWorld(),new IntVector(0,0,0),dir);
+		t.setMaterial(mat);
 		IntVector base1 = new IntVector(startx,roof.miny,roof.minz);
 		IntVector base2 = base1.add(dir.vec.scale(shortEdge-1));
 		
@@ -47,7 +51,7 @@ public class PitchedRoofBuilder implements RoofBuilder {
 			t.clrModeFlag(Turtle.BACKSTAIRS);
 			for(int j=0;j<longEdge;j++){
 				t.write();
-				roofFillDown(t,roof.miny,Material.WOOD);
+				roofFillDown(t,roof.miny,fillMat);
 				t.right();
 			}
 			t.setModeFlag(Turtle.BACKSTAIRS);
@@ -55,7 +59,7 @@ public class PitchedRoofBuilder implements RoofBuilder {
 			t.moveAbsolute(pos);
 			for(int j=0;j<longEdge;j++){
 				t.write();
-				roofFillDown(t,roof.miny,Material.WOOD);
+				roofFillDown(t,roof.miny,fillMat);
 				t.right();
 			}
 		}
@@ -63,12 +67,12 @@ public class PitchedRoofBuilder implements RoofBuilder {
 		// need a centre ridge, the roof size is odd.
 		if(shortEdge%2 != 0){
 			t.clrModeFlag(Turtle.BACKSTAIRS);
-			t.setMaterial(Material.WOOD);
+			t.setMaterial(mgr.getPrimary());
 			IntVector pos = base1.add(dir.vec.scale(shortEdge/2)).add(0,shortEdge/2,0);
 			t.moveAbsolute(pos);
 			for(int j=0;j<longEdge;j++){
 				t.write();
-				roofFillDown(t,roof.miny,Material.WOOD);
+				roofFillDown(t,roof.miny,fillMat);
 				if(j==0 || j==longEdge-1){ // put torches on the ends
 					t.up();
 					Block b = t.get();
@@ -85,9 +89,9 @@ public class PitchedRoofBuilder implements RoofBuilder {
 	 * Make the turtle drop down and fill from the current point
 	 * @param t
 	 */
-	private void roofFillDown(Turtle t,int y,Material m) {
+	private void roofFillDown(Turtle t,int y,MaterialDataPair mp) {
 		t = new Turtle(t); // work on a local copy of the turtle
-		t.setMaterial(m);
+		t.setMaterial(mp);
 		for(;;){
 			t.down();
 			if(t.getPos().y>=y){

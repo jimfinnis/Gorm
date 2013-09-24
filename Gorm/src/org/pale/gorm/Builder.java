@@ -30,19 +30,23 @@ public class Builder {
 	public void build(Location loc) {
 		// initial room test
 		IntVector v = new IntVector(loc);
+		
+		
 		if (castle.getBuildingCount() == 0) {
 			Extent e = new Extent(v, 20, 0, 30).setHeight(10);
+			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
 			Building r = new Garden(e);
-			r.build();
+			r.build(mgr);
 			castle.addBuilding(r);
 		} else {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
 			Building r = createAndFitBuilding();
+			MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());
 			if (r != null) {
-				r.build();
+				r.build(mgr);
 				castle.addBuilding(r);
-				r.makeRandomExit();
+				r.makeRandomExit(mgr);
 
 				GormPlugin.log("room created and added!");
 			} else {
@@ -58,8 +62,9 @@ public class Builder {
 	 */
 	private void makeRandomExit() {
 		Building r = castle.getRandomBuilding();
+		MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());		
 		if (r != null) {
-			r.makeRandomExit();
+			r.makeRandomExit(mgr);
 		}
 	}
 

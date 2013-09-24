@@ -24,21 +24,27 @@ public class Garden extends Building {
 	}
 
 	@Override
-	public void build() {
+	public void build(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
 		Extent inner = extent.expand(-1, Extent.ALL);
+		
+
+		MaterialManager.MaterialDataPair ground;
+		
+		if(c.r.nextFloat()<0.2)
+			ground = mgr.getSupSecondary();
+		else
+			ground = mgr.getGround();
 
 		// fill the floor with a random material
 		Extent floor = extent.getWall(Direction.DOWN);
-		Material[] m = {Material.GRASS,Material.GRASS,Material.GRASS,
-				Material.GRAVEL};
 		c.fill(inner, Material.AIR, 0);	// fill the inner area unconditionally
 		c.checkFill(extent, Material.AIR, 0); // but avoid filling in walls already there
-		c.checkFill(floor, m[c.r.nextInt(m.length)], 0);
+		c.checkFill(floor, ground.m, ground.d);
 		
-		underfill(true);
+		underfill(mgr,true);
 		
-		makeSingleRoom().setAllSidesOpen(); // this is a single, exterior room
+		makeSingleRoom(mgr).setAllSidesOpen(); // this is a single, exterior room
 		floorLights(inner); // light the inner region
 	}
 }

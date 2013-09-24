@@ -109,7 +109,8 @@ public final class GormPlugin extends JavaPlugin {
 		Extent e = new Extent(p.getLocation());
 		
 		for(Building b: c.getBuildingsIntersecting(e)){
-			b.makeRandomExit();
+			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
+			b.makeRandomExit(mgr);
 		}
 		
 	}
@@ -143,7 +144,8 @@ public final class GormPlugin extends JavaPlugin {
 		IntVector pos = new IntVector(p.getTargetBlock(null, 100).getLocation());
 		GormPlugin.log("Direction : " + dir.toString() + " from yaw "
 				+ Float.toString(f));
-		Turtle t = new Turtle(p.getWorld(), pos, dir);
+		MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
+		Turtle t = new Turtle(mgr,p.getWorld(), pos, dir);
 		t.run(str);
 
 	}

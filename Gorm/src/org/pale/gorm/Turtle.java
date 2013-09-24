@@ -18,8 +18,8 @@ public class Turtle {
 	private World world;
 	private IntVector pos;
 	private IntVector dir;
-	private Material mat = Material.SMOOTH_BRICK;
-	private int data = 0;
+	private Material mat = Material.STAINED_CLAY; // default is purple clay
+	private int data = 11;
 	private Random r = new Random();
 	private int mode = CHECKWRITE; // by default, we abort if we're going
 									// overwrite solid
@@ -34,7 +34,9 @@ public class Turtle {
 	 */
 	private boolean status; // status variable for conditions
 	private boolean lastMoveCausedTurn; // true if the last follow we did caused
-										// a turn
+	private MaterialManager mgr;
+
+	// a turn
 
 	public boolean isModeFlag(int f) {
 		return (mode & f) != 0;
@@ -78,10 +80,12 @@ public class Turtle {
 		}
 	}
 
-	public Turtle(World w, IntVector initpos, Direction initdir) {
+	public Turtle(MaterialManager mgr, World w, IntVector initpos,
+			Direction initdir) {
 		world = w;
 		dir = initdir.vec;
 		pos = initpos;
+		this.mgr = mgr;
 	}
 
 	/**
@@ -95,6 +99,7 @@ public class Turtle {
 		pos = t.pos;
 		mat = t.mat;
 		mode = t.mode;
+		this.mgr = t.mgr;
 	}
 
 	public void run(String s) {
@@ -160,13 +165,17 @@ public class Turtle {
 
 	public void setMaterial(Material m) {
 		mat = m;
-		data =0;
+		data = 0;
 	}
-	public void setMaterial(Material m,int d){
+
+	public void setMaterial(Material m, int d) {
 		mat = m;
 		data = d;
 	}
 
+	public void setMaterial(MaterialManager.MaterialDataPair mp) {
+		setMaterial(mp.m, mp.d);
+	}
 
 	public Block get() {
 		return world.getBlockAt(pos.x, pos.y, pos.z);
@@ -175,8 +184,6 @@ public class Turtle {
 	public boolean write() {
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
 			Block b = get();
-			b.setType(mat);
-
 			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
 										// facing
 										// upwards away from us
@@ -184,8 +191,12 @@ public class Turtle {
 				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
 				s.setFacingDirection(d.toBlockFace());
 				b.setData(s.getData());
-			} else
+			}
+			else
 				b.setData((byte) data);
+
+			b.setType(mat);
+
 			return true;
 		} else
 			return false;
@@ -223,7 +234,7 @@ public class Turtle {
 			forwards();
 			dir = dir.rotate(3);
 			break;
-		case 'B': // move backwards
+		case 'b': // move backwards
 			dir = dir.rotate(2);
 			forwards();
 			dir = dir.rotate(2);
@@ -253,6 +264,9 @@ public class Turtle {
 		case 'm':
 			setMaterial(getNext());
 			break;
+		case 'M':
+			setMaterialDirect(getNext());
+			break;
 		case ':': // mark the repeat point - we loop back here until we abort
 			loopPoint = cur;
 			break;
@@ -264,6 +278,8 @@ public class Turtle {
 				while (getNext() != ')')
 					;
 			}
+			break;
+		default:break;
 		}
 	}
 
@@ -300,8 +316,48 @@ public class Turtle {
 		return 0;
 	}
 
+	/**
+	 * set material via material manager
+	 * 
+	 * @param next
+	 */
 	private void setMaterial(char next) {
+		switch (next) {
+		case '1':
+			setMaterial(mgr.getPrimary());
+			break;
+		case '2':
+			setMaterial(mgr.getSecondary());
+			break;
+		case '3':
+			setMaterial(mgr.getSupSecondary());
+			break;
+		case 'f':
+			setMaterial(mgr.getFence());
+			break;
+		case 's':
+			setMaterial(mgr.getStair(), 0);
+			break;
+		case 'o':
+			setMaterial(mgr.getOrnament());
+			break;
+		case 'g':
+			setMaterial(mgr.getGround());
+			break;
+		case 'p':
+			setMaterial(mgr.getPole());
+			break;
+		default:
+			setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
+		}
+	}
 
+	/**
+	 * set material via a direct abbreviation (try to avoid)
+	 * 
+	 * @param next
+	 */
+	private void setMaterialDirect(char next) {
 		switch (next) {
 		case 'w':
 			mat = Material.WOOD;
@@ -339,12 +395,12 @@ public class Turtle {
 			mat = Material.TORCH;
 			data = 0;
 			break;
-			
-		default:
 		case 'a':
 			mat = Material.AIR;
 			data = 0;
 			break;
+		default:
+			setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
 		}
 	}
 

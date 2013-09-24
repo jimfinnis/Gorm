@@ -2,6 +2,7 @@ package org.pale.gorm.rooms;
 
 import org.pale.gorm.Building;
 import org.pale.gorm.Extent;
+import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 
 /**
@@ -11,12 +12,12 @@ import org.pale.gorm.Room;
  */
 public class BlankRoom extends Room {
 
-	public BlankRoom(Extent e, Building b) {
-		super(e, b);
+	public BlankRoom(MaterialManager mgr,Extent e, Building b) {
+		super(mgr, e, b);
 	}
 
 	@Override
-	public Extent build(Extent buildingExtent) {
+	public Extent build(MaterialManager mgr, Extent buildingExtent) {
 		return buildingExtent;
 	}
 

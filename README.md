@@ -1,7 +1,8 @@
 Gorm
 ====
 
-Gorm generates enormous insane castles while you watch.
+Gorm is a Minecraft Bukkit plugin which generates enormous insane
+castles while you watch.
 
 Commands:
     /build      perform one build step. If there is no castle, will create a new "base

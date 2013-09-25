@@ -1,7 +1,5 @@
 package org.pale.gorm;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Material;
@@ -119,7 +117,8 @@ public class MaterialManager {
 			{ new MaterialDataPair(Material.SANDSTONE_STAIRS, 0) },
 			{ new MaterialDataPair(Material.FENCE, 0),
 					new MaterialDataPair(Material.IRON_FENCE, 0) },
-			{ new MaterialDataPair(Material.SANDSTONE_STAIRS, 0) },
+			{ new MaterialDataPair(Material.SANDSTONE_STAIRS, 0),
+					new MaterialDataPair(Material.BIRCH_WOOD_STAIRS, 0) },
 			{ new MaterialDataPair(Material.SAND, 0),
 					new MaterialDataPair(Material.GRAVEL, 0) },
 			{ new MaterialDataPair(Material.WOOD, 0) }, };
@@ -128,7 +127,10 @@ public class MaterialManager {
 			{ new MaterialDataPair(Material.STONE, 0) },
 			{ new MaterialDataPair(Material.GRAVEL, 0) },
 			{ new MaterialDataPair(Material.SMOOTH_BRICK, 3) },
-			{ new MaterialDataPair(Material.SMOOTH_STAIRS, 0) },
+			{ new MaterialDataPair(Material.SMOOTH_STAIRS, 0),
+					new MaterialDataPair(Material.BIRCH_WOOD_STAIRS, 0),
+					new MaterialDataPair(Material.JUNGLE_WOOD_STAIRS, 0),
+					new MaterialDataPair(Material.SPRUCE_WOOD_STAIRS, 0) },
 			{ new MaterialDataPair(Material.FENCE, 0),
 					new MaterialDataPair(Material.COBBLE_WALL, 0),
 					new MaterialDataPair(Material.IRON_FENCE, 0), },
@@ -161,7 +163,7 @@ public class MaterialManager {
 			matsNormal, matsNormal, matsCobble };
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
-			ground,pole;
+			ground, pole;
 	private Material stairs, roofSteps;
 
 	public MaterialManager(Biome b) {
@@ -189,30 +191,12 @@ public class MaterialManager {
 		roofSteps = getRandom(r, baseMats[ROOFSTEPS]).m;
 	}
 
-	static final double RANDOMLAMBDA = 6;
-
-	/**
-	 * exponential random number from 0 to n-1
-	 * 
-	 * @param n
-	 * @return
-	 */
-	private int randomExp(Random r, int n) {
-		int i;
-		do {
-			double u = r.nextFloat(); // uniform from 0 to 1
-			u = (Math.log10(1 - u) / Math.log10(2)) / -RANDOMLAMBDA;
-			i = (int) (u * n);
-		} while (i >= n);
-		return i;
-	}
-
 	private MaterialDataPair getRandom(Random r,
 			MaterialDataPair[] materialDataPairs) {
 		if (materialDataPairs.length == 1)
 			return materialDataPairs[0];
 		else
-			return materialDataPairs[randomExp(r, materialDataPairs.length)];
+			return materialDataPairs[Util.randomExp(r, materialDataPairs.length)];
 	}
 
 	public MaterialDataPair getPrimary() {
@@ -239,8 +223,8 @@ public class MaterialManager {
 	public Material getRoofSteps() {
 		return roofSteps;
 	}
-	
-	public MaterialDataPair getPole(){
+
+	public MaterialDataPair getPole() {
 		return pole;
 	}
 

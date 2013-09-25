@@ -13,6 +13,10 @@ import java.util.Set;
  *
  */
 public abstract class Room {
+	/**
+	 * The extent of the room including walls, floor and ceiling - which will overlap
+	 * with adjacent rooms.
+	 */
 	protected Extent e;
 	protected Building b;
 
@@ -22,9 +26,15 @@ public abstract class Room {
 	Map<Room, Exit> exitMap = new HashMap<Room, Exit>();
 
 	/**
-	 * Our exits
+	 * Our exits - these are duplicated in the other room (if there is one)
 	 */
 	Collection<Exit> exits = new ArrayList<Exit>();
+	
+	/**
+	 * Our windows - these *aren't* duplicated across adjacent rooms. Careful.
+	 */
+	Collection<Extent> windows = new ArrayList<Extent>();
+	
 	
 	/**
 	 * This is used to appropriately 'decorate' exits between rooms.
@@ -52,6 +62,28 @@ public abstract class Room {
 		openSides.add(Direction.SOUTH);
 		openSides.add(Direction.EAST);
 		openSides.add(Direction.WEST);
+	}
+	
+	public boolean exitIntersects(Extent e){
+		for(Exit x:exits){
+			if(x.getExtent().intersects(e))return true;
+		}
+		return false;
+	}
+	
+	public boolean windowIntersects(Extent e){
+		for(Extent x:windows){
+			if(x.intersects(e))return true;
+		}
+		return false;
+	}
+	
+	public void addWindow(Extent e){
+		windows.add(new Extent(e));
+	}
+
+	public Extent getExtent(){
+		return e;
 	}
 	
 	/**

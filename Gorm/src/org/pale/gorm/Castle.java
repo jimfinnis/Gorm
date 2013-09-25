@@ -12,7 +12,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
 import org.pale.gorm.Exit.ExitType;
-import org.pale.gorm.MaterialManager.MaterialDataPair;
 
 /**
  * Singleton class for the whole castle.
@@ -363,6 +362,7 @@ public class Castle {
 		return done;
 	}
 
+	@SuppressWarnings("unused")
 	private void replaceSolidWithAir(Extent e) {
 		for (int x = e.minx; x <= e.maxx; x++) {
 			for (int y = e.miny; y <= e.maxy; y++) {

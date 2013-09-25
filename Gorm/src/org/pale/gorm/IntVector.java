@@ -70,7 +70,8 @@ public class IntVector {
 	public IntVector rotate(int turns) {
 		IntVector v;
 		//GormPlugin.log("rotating "+Integer.toString(turns));
-
+		if(turns<0)
+			turns+=4;
 		switch (turns) {
 		default:
 		case 0:
@@ -190,4 +191,6 @@ public class IntVector {
 	public Block getBlock(){
 		return Castle.getInstance().getWorld().getBlockAt(x, y, z);
 	}
+	
+	
 }

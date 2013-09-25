@@ -160,7 +160,7 @@ public class Turtle {
 	}
 
 	public void rotate(int turns) {
-		dir.rotate(turns);
+		dir=dir.rotate(turns);
 	}
 
 	public void setMaterial(Material m) {
@@ -399,6 +399,19 @@ public class Turtle {
 			mat = Material.AIR;
 			data = 0;
 			break;
+		case 'g':
+			mat = Material.THIN_GLASS;
+			data=0;
+			break;
+		case 'G':
+			mat = Material.GLASS;
+			data=0;
+			break;
+		case 'i':
+			mat = Material.IRON_FENCE;
+			data=0;
+			break;
+			
 		default:
 			setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
 		}

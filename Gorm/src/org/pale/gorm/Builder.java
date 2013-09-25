@@ -42,8 +42,8 @@ public class Builder {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
 			Building r = createAndFitBuilding();
-			MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());
 			if (r != null) {
+				MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());
 				r.build(mgr);
 				castle.addBuilding(r);
 				r.makeRandomExit(mgr);

@@ -12,6 +12,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.material.Ladder;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.PlainRoom;
+import org.pale.gorm.roomutils.WindowMaker;
 
 /**
  * A building in the castle, consisting of rooms
@@ -106,22 +107,27 @@ public abstract class Building {
 	 * @param yBelowCeiling
 	 *            Y of the block just below the ceiling
 	 */
-	private void placeFloorAt(MaterialManager mgr, int yAboveFloor, int yBelowCeiling) {
+	private void placeFloorAt(MaterialManager mgr, int yAboveFloor,
+			int yBelowCeiling) {
 
 		// work out the extent of this room
 		Extent roomExt = new Extent(extent);
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = new PlainRoom(mgr, roomExt,this);
+		Room r = new PlainRoom(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
+		WindowMaker.buildWindows(mgr, r);
 	}
 
 	/**
-	 * Create and add a new room, attempting to build an exit down from this room to the one below.
-	 * Assumes the room list is ordered such new rooms added are higher up.
+	 * Create and add a new room, attempting to build an exit down from this
+	 * room to the one below. Assumes the room list is ordered such new rooms
+	 * added are higher up.
+	 * 
 	 * @param newRoomExtent
-	 * @param outside is the room outside or inside
+	 * @param outside
+	 *            is the room outside or inside
 	 */
 	protected void addRoomAndBuildExitDown(Room r, boolean outside) {
 		Room lowerFloor = rooms.peekFirst(); // any prior floor will be the
@@ -233,13 +239,14 @@ public abstract class Building {
 	/**
 	 * Fill voids under the building in some way. If complete is true, make the
 	 * block solid.
-	 * @param mgr 
+	 * 
+	 * @param mgr
 	 */
 	void underfill(MaterialManager mgr, boolean complete) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		int dx, dz;
-		
+
 		MaterialManager.MaterialDataPair mat = mgr.getSecondary();
 
 		if (complete) {
@@ -299,7 +306,7 @@ public abstract class Building {
 
 		GormPlugin.log("Attempting to make an exit from building "
 				+ Integer.toString(id));
-		
+
 		// first we need to find a suitable nearby building. This version of the
 		// code will only
 		// link with buildings with colinear walls.
@@ -320,8 +327,8 @@ public abstract class Building {
 					// check it intersects enough
 					if (Math.max(e.xsize(), e.zsize()) >= 5) {
 						buildings.add(r);
-					} 
-				} 
+					}
+				}
 			}
 		}
 
@@ -329,7 +336,7 @@ public abstract class Building {
 			Building b = buildings.get(c.r.nextInt(buildings.size()));
 			GormPlugin.log(String.format(
 					"Trying to make an exit between %d and %d!!!", id, b.id));
-			return makeRandomExit(mgr,b);
+			return makeRandomExit(mgr, b);
 		}
 		return false;
 	}
@@ -338,7 +345,7 @@ public abstract class Building {
 	 * Having found a building nearby, we need to find a pair of candidate
 	 * rooms, one here and one over there.
 	 */
-	private boolean makeRandomExit(MaterialManager mgr,Building other) {
+	private boolean makeRandomExit(MaterialManager mgr, Building other) {
 		// we don't want to always do one floor.
 		Collections.shuffle(rooms);
 
@@ -358,6 +365,8 @@ public abstract class Building {
 		GormPlugin.log("Make exit failed; level mismatch");
 		return false;
 	}
+	
+	static final int[] offsets={0,1,-1,2,-2,3,-3,4,-4,5,-5};
 
 	/**
 	 * This is used to make a random horizontal exit to a building we already
@@ -365,7 +374,8 @@ public abstract class Building {
 	 * 
 	 * @param r
 	 */
-	private boolean makeExitBetweenRooms(MaterialManager mgr, Room thisRoom, Room remoteRoom) {
+	private boolean makeExitBetweenRooms(MaterialManager mgr, Room thisRoom,
+			Room remoteRoom) {
 		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
 		Direction dir;
 
@@ -388,24 +398,49 @@ public abstract class Building {
 		}
 
 		int height = 3;
+		
+		// shrink the intersection along its longest axis, so we don't end
+		// up sliding the exit into a wall to avoid a window.
+		intersection=intersection.expand(-1,Extent.LONGESTXZ);
 
-		// create the actual hole
-		IntVector centreOfIntersection = intersection.getCentre();
-		Extent e = new Extent(centreOfIntersection.x, thisRoom.e.miny + 1,
-				centreOfIntersection.z, centreOfIntersection.x, thisRoom.e.miny
-						+ height, centreOfIntersection.z);
+		// try to find somewhere in the intersection which doesn't collide with
+		// a window or existing exit
 
-		// create the two exit structures
-		Exit src = new Exit(e, dir, thisRoom, remoteRoom);
-		Exit dest = new Exit(e, dir.opposite(), remoteRoom, thisRoom);
-		thisRoom.exits.add(src);
-		thisRoom.exitMap.put(remoteRoom, src); // exit 'src' leads to room 'r'
-		remoteRoom.exits.add(dest);
-		remoteRoom.exitMap.put(thisRoom, dest); // exit 'dest' leads back here
-		// blow the hole
-		Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
-		GormPlugin.log("hole blown: " + src.getExtent().toString());
-		Castle.getInstance().postProcessExit(mgr,src);
-		return true;
+		IntVector offsetVec = dir.vec.rotate(1); // get a perpendicular to slide along
+		for (int tries = 0; tries < offsets.length; tries++) {
+			int offset = offsets[tries];
+
+			// create the actual hole
+			IntVector centreOfIntersection = intersection.getCentre().add(offsetVec.scale(offset));
+			
+			if(!intersection.contains(centreOfIntersection))
+				continue; // slid out of intersection
+
+			Extent e = new Extent(centreOfIntersection.x, thisRoom.e.miny + 1,
+					centreOfIntersection.z, centreOfIntersection.x,
+					thisRoom.e.miny + height, centreOfIntersection.z);
+
+			// don't allow an exit if there's a window in the way!
+			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,Extent.Y);
+			if (thisRoom.windowIntersects(wideexit)
+					|| remoteRoom.windowIntersects(wideexit))
+				continue;
+
+			// create the two exit structures
+			Exit src = new Exit(e, dir, thisRoom, remoteRoom);
+			Exit dest = new Exit(e, dir.opposite(), remoteRoom, thisRoom);
+			thisRoom.exits.add(src);
+			thisRoom.exitMap.put(remoteRoom, src); // exit 'src' leads to room
+													// 'r'
+			remoteRoom.exits.add(dest);
+			remoteRoom.exitMap.put(thisRoom, dest); // exit 'dest' leads back
+													// here
+			// blow the hole
+			Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
+			GormPlugin.log("hole blown: " + src.getExtent().toString());
+			Castle.getInstance().postProcessExit(mgr, src);
+			return true;
+		}
+		return false;
 	}
 }

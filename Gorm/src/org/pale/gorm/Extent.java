@@ -1,5 +1,7 @@
 package org.pale.gorm;
 
+import java.util.Iterator;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -11,6 +13,72 @@ import org.bukkit.block.Block;
  * 
  */
 public class Extent {
+
+	/**
+	 * An iterable for iterating over points in a wall, returned by
+	 * getWallIterator()
+	 * 
+	 * @author white
+	 * 
+	 */
+	public class VectorIterable implements Iterable<IntVector> {
+		/**
+		 * Used to iterate along walls of an extent, returned by
+		 * WallIterable.iterator()
+		 * 
+		 * @author white
+		 * 
+		 */
+		public class VectorIterator implements Iterator<IntVector> {
+			IntVector pos, vec;
+
+			public VectorIterator() {
+				pos = new IntVector(minx, miny, minz);
+				switch (xzOnly ? getLongestAxisXZ() : getLongestAxis()) {
+				case X:
+					vec = new IntVector(1, 0, 0);break;
+				case Y:
+					vec = new IntVector(0, 1, 0);break;
+				default:
+				case Z:
+					vec = new IntVector(0, 0, 1);break;
+				}
+				pos = pos.add(vec.scale(offset));
+				vec = vec.scale(step);
+			}
+
+			@Override
+			public boolean hasNext() {
+				return contains(pos);
+			}
+
+			@Override
+			public IntVector next() {
+				IntVector p = new IntVector(pos);
+				pos = pos.add(vec);
+				return p;
+			}
+
+			@Override
+			public void remove() {
+			}
+		}
+		private int step,offset;
+		private boolean xzOnly;
+
+		VectorIterable(int step, int offset, boolean xzOnly) {
+			this.step = step;
+			this.offset = offset;
+			this.xzOnly = xzOnly;
+		}
+
+		@Override
+		public Iterator<IntVector> iterator() {
+			return new VectorIterator();
+		}
+
+	}
+
 	public int minx;
 	public int maxx;
 	public int miny;
@@ -21,10 +89,11 @@ public class Extent {
 
 	@Override
 	public String toString() {
-		return String.format("[%d - %d, %d - %d, %d - %d]",minx,maxx,miny,maxy,minz,maxz);
+		return String.format("[%d - %d, %d - %d, %d - %d]", minx, maxx, miny,
+				maxy, minz, maxz);
 	}
-	
-	public Extent(int x1,int y1,int z1,int x2,int y2,int z2){
+
+	public Extent(int x1, int y1, int z1, int x2, int y2, int z2) {
 		minx = x1;
 		miny = y1;
 		minz = z1;
@@ -68,14 +137,15 @@ public class Extent {
 		maxz = minz + zsize;
 		isset = true;
 	}
-	
+
 	/**
 	 * Construct a single-block extent
+	 * 
 	 * @param x
 	 * @param y
 	 * @param z
 	 */
-	public Extent(int x,int y,int z){
+	public Extent(int x, int y, int z) {
 		minx = x;
 		maxx = x;
 		miny = y;
@@ -100,18 +170,20 @@ public class Extent {
 		isset = e.isset;
 
 	}
-	
-	public int xsize(){
-		return (maxx-minx)+1;
-	}
-	public int ysize(){
-		return (maxy-miny)+1;
-	}
-	public int zsize(){
-		return (maxz-minz)+1;
+
+	public int xsize() {
+		return (maxx - minx) + 1;
 	}
 
-	private void add( int x, int y, int z) {
+	public int ysize() {
+		return (maxy - miny) + 1;
+	}
+
+	public int zsize() {
+		return (maxz - minz) + 1;
+	}
+
+	private void addPoint(int x, int y, int z) {
 		if (!isset) {
 			minx = x;
 			maxx = x;
@@ -146,7 +218,7 @@ public class Extent {
 	 */
 	public Extent union(int x, int y, int z) {
 		Extent e = new Extent(this);
-		e.add(x, y, z);
+		e.addPoint(x, y, z);
 		return e;
 	}
 
@@ -158,6 +230,10 @@ public class Extent {
 	public Extent union(Location loc) {
 		return union(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 	}
+	
+	public Extent union(IntVector v){
+		return union(v.x,v.y,v.z);
+	}
 
 	/**
 	 * Function of two extents, and returning a new extent
@@ -166,7 +242,7 @@ public class Extent {
 	 */
 	public Extent union(Extent e) {
 		e = union(e.minx, e.miny, e.minz);
-		e.add(e.maxx, e.maxy, e.maxz);
+		e.addPoint(e.maxx, e.maxy, e.maxz);
 		return e;
 	}
 
@@ -174,6 +250,49 @@ public class Extent {
 	public final static int Y = 2;
 	public final static int Z = 4;
 	public final static int ALL = X | Y | Z;
+	public final static int LONGEST = 8;
+	public final static int LONGESTXZ = 16;
+
+	/**
+	 * Get the longest axis as a code
+	 * 
+	 * @return
+	 */
+	public int getLongestAxis() {
+		if (xsize() > ysize() && xsize() > zsize())
+			return X;
+		else if (zsize() > ysize())
+			return Z;
+		else
+			return Y;
+	}
+	
+	public int getLongestAxisXZ() {
+		// TODO Auto-generated method stub
+		return xsize()>zsize() ? X : Z;
+	}
+
+
+
+	/**
+	 * Get length of axis
+	 */
+	public int getLengthOfAxis(int axis) {
+		if (axis == LONGEST)
+			axis = getLongestAxis();
+		else if(axis == LONGESTXZ){
+			axis = getLongestAxisXZ();
+		}
+		switch (axis) {
+		case X:
+			return xsize();
+		case Y:
+			return ysize();
+		case Z:
+		default:
+			return zsize();
+		}
+	}
 
 	/**
 	 * Expand the extent by N voxels in some axes
@@ -185,6 +304,14 @@ public class Extent {
 	 */
 	public Extent expand(int n, int axes) {
 		Extent e = new Extent(this);
+
+		if ((axes & LONGEST) != 0) {
+			axes |= getLongestAxis();
+		}
+		if ((axes & LONGESTXZ) != 0) {
+			axes |= getLongestAxisXZ();
+		}
+
 		if ((axes & X) != 0) {
 			e.minx -= n;
 			e.maxx += n;
@@ -250,8 +377,9 @@ public class Extent {
 	}
 
 	/**
-	 * Returns true if this extent contains any blocks we shouldn't overwrite. These
-	 * should be natural blocks, not built ones - it should be possible to overwrite these
+	 * Returns true if this extent contains any blocks we shouldn't overwrite.
+	 * These should be natural blocks, not built ones - it should be possible to
+	 * overwrite these
 	 * 
 	 * @return
 	 */
@@ -261,8 +389,9 @@ public class Extent {
 			for (int y = miny; y <= maxy; y++) {
 				for (int z = minz; z <= maxz; z++) {
 					int typeId = w.getBlockAt(x, y, z).getTypeId();
-					// avoid anything less than block 17 except for 5 (which is wood, so roofs are ok)
-					if (typeId > 0 && typeId < 17 && typeId!=5)
+					// avoid anything less than block 17 except for 5 (which is
+					// wood, so roofs are ok)
+					if (typeId > 0 && typeId < 17 && typeId != 5)
 						return true;
 				}
 			}
@@ -308,6 +437,7 @@ public class Extent {
 
 	/**
 	 * Find the maximum height of this extent above the ground
+	 * 
 	 * @return
 	 */
 	public int getMaxHeightAboveWorld() {
@@ -324,9 +454,10 @@ public class Extent {
 
 		return maxheight;
 	}
-	
+
 	/**
 	 * Find the maximum height of this extent above the ground
+	 * 
 	 * @return
 	 */
 	public int getMinHeightAboveWorld() {
@@ -345,21 +476,23 @@ public class Extent {
 	}
 
 	static final int BADHEIGHT = -1000;
-	
+
 	/**
-	 * Find the height of a square within this extent, ignoring any blocks above the extent.
-	 * Assumes a completely empty column to be -1000; ditto blocks outside the xz of the extent
+	 * Find the height of a square within this extent, ignoring any blocks above
+	 * the extent. Assumes a completely empty column to be -1000; ditto blocks
+	 * outside the xz of the extent
+	 * 
 	 * @param x
 	 * @param z
 	 * @return
 	 */
-	public int getHeightWithin(int x, int z){
+	public int getHeightWithin(int x, int z) {
 		World w = Castle.getInstance().getWorld();
-		if(x<minx || x>maxx || z<minz || z>maxz)
+		if (x < minx || x > maxx || z < minz || z > maxz)
 			return BADHEIGHT;
-		for(int y=maxy;y>=miny;y--){
-			Block b = w.getBlockAt(x,y,z);
-			if(b.getType().isSolid())
+		for (int y = maxy; y >= miny; y--) {
+			Block b = w.getBlockAt(x, y, z);
+			if (b.getType().isSolid())
 				return y;
 		}
 		return BADHEIGHT;
@@ -398,18 +531,19 @@ public class Extent {
 
 	/**
 	 * Generate an extent for an extent of given width and height, normal facing
-	 * in the given direction, with a given depth on each side (so '1' gives a depth of 3.)
+	 * in the given direction, with a given depth on each side (so '1' gives a
+	 * depth of 3.)
 	 * 
 	 */
 
-	public Extent(Direction d, int w, int h,int depth) {
+	public Extent(Direction d, int w, int h, int depth) {
 		miny = 0;
 		maxy = h - 1;
 		switch (d) {
 		case NORTH:
 		case SOUTH:
 			minx = -w / 2;
-			maxx = minx + w -1;
+			maxx = minx + w - 1;
 			miny = 0;
 			maxy = h - 1;
 			minz = -depth;
@@ -427,24 +561,24 @@ public class Extent {
 		case UP: // for up and down, h is ignored and w is used in both x and z
 		case DOWN:
 			minx = -w / 2;
-			maxx = minx + w -1;
+			maxx = minx + w - 1;
 			miny = -depth;
 			maxy = depth;
 			minz = -w / 2;
-			maxz = minx + w -1;
+			maxz = minx + w - 1;
 		}
 	}
-	
-	public Extent intersect(Extent e){
-		if(intersects(e)){
+
+	public Extent intersect(Extent e) {
+		if (intersects(e)) {
 			Extent out = new Extent();
-			out.minx = minx>e.minx ? minx : e.minx; 
-			out.maxx = maxx<e.maxx ? maxx : e.maxx; 
-			out.miny = miny>e.miny ? miny : e.miny; 
-			out.maxy = maxy<e.maxy ? maxy : e.maxy; 
-			out.minz = minz>e.minz ? minz : e.minz; 
-			out.maxz = maxz<e.maxz ? maxz : e.maxz;
-			out.isset =true;
+			out.minx = minx > e.minx ? minx : e.minx;
+			out.maxx = maxx < e.maxx ? maxx : e.maxx;
+			out.miny = miny > e.miny ? miny : e.miny;
+			out.maxy = maxy < e.maxy ? maxy : e.maxy;
+			out.minz = minz > e.minz ? minz : e.minz;
+			out.maxz = maxz < e.maxz ? maxz : e.maxz;
+			out.isset = true;
 			return out;
 		} else
 			return null;
@@ -456,17 +590,18 @@ public class Extent {
 	 * @param e1
 	 * @return
 	 */
-	public boolean inside(Extent e1) {
+	public boolean contains(Extent e1) {
 		return e1.minx >= minx && e1.maxx <= maxx && e1.miny >= miny
 				&& e1.maxy <= maxy && e1.minz >= minz && e1.maxz <= maxz;
 	}
-	
+
 	/**
-	 * grow the extent along the given direction by the given number of steps; faster than scale-add. 
+	 * grow the extent along the given direction by the given number of steps;
+	 * faster than scale-add.
 	 */
-	public Extent growDirection(Direction d, int n){
+	public Extent growDirection(Direction d, int n) {
 		Extent e = new Extent(this);
-		switch(d){
+		switch (d) {
 		case EAST:
 			e.maxx += n;
 			break;
@@ -487,6 +622,16 @@ public class Extent {
 			break;
 		}
 		return e;
+	}
+
+	/**
+	 * Create an iterator which will steps along the longest axis of an
+	 * extent.
+	 * 
+	 * @return
+	 */
+	public Iterable<IntVector> getVectorIterable(int step, int offset, boolean xzOnly) {
+		return new VectorIterable(step, offset,xzOnly);
 	}
 
 }

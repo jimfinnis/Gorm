@@ -7,7 +7,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 
 /**
- * A class to hold a bounding box, or extent or a room or the entire castle
+ * A class to hold an axis-aligned bounding box and manipulate it.
  * 
  * @author white
  * 
@@ -15,8 +15,8 @@ import org.bukkit.block.Block;
 public class Extent {
 
 	/**
-	 * An iterable for iterating over points in a wall, returned by
-	 * getWallIterator()
+	 * An iterable for iterating over points in an extent, returned by
+	 * getVectorIterator()
 	 * 
 	 * @author white
 	 * 
@@ -24,7 +24,7 @@ public class Extent {
 	public class VectorIterable implements Iterable<IntVector> {
 		/**
 		 * Used to iterate along walls of an extent, returned by
-		 * WallIterable.iterator()
+		 * VectorIterable.iterator()
 		 * 
 		 * @author white
 		 * 

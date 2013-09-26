@@ -12,7 +12,7 @@ Commands:
 
     /stopgorm   stop the gorm autobuild task
     
-    /gp <str>   issue a test turtle string. There must be a castle for this.
+    /gt <str>   issue a test turtle string. There must be a castle for this.
     
 Note that Gorm does not save rooms between reloads.
     

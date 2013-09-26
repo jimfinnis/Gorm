@@ -90,7 +90,7 @@ public class WindowMaker {
 
 		// for each wall, build windows!
 		for (Direction d : Direction.values()) {
-			if (d.vec.y == 0 && c.r.nextFloat() < 0.2) { // don't put windows on
+			if (d.vec.y == 0 && c.r.nextFloat() < 0.5) { // don't put windows on
 															// every wall, and
 															// only vertical
 															// walls!

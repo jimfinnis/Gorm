@@ -12,6 +12,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
 import org.pale.gorm.Exit.ExitType;
+import org.pale.gorm.roomutils.ExitDecorator;
 
 /**
  * Singleton class for the whole castle.
@@ -111,7 +112,7 @@ public class Castle {
 		}
 	}
 	
-	public void checkFill(Extent e, MaterialManager.MaterialDataPair mp){
+	public void checkFill(Extent e, MaterialDataPair mp){
 		checkFill(e,mp.m,mp.d);
 	}
 
@@ -143,7 +144,7 @@ public class Castle {
 		}
 	}
 	
-	public void fill(Extent e, MaterialManager.MaterialDataPair mp){
+	public void fill(Extent e, MaterialDataPair mp){
 		fill(e,mp.m,mp.d);
 	}
 
@@ -383,12 +384,7 @@ public class Castle {
 	 * @param e
 	 */
 	private void decorateExit(Exit e) {
-		if (e.getType() != ExitType.OUTSIDE) {
-			GormPlugin.log("decorate exit does nothing");
-			IntVector v = e.getDirection().vec;
-			v = v.add(0, 2, 0).add(e.getExtent().getCentre());
-			fill(new Extent(v, 0, 0, 0), Material.LAPIS_BLOCK, 0);
-		}
+		ExitDecorator.decorate(e);
 	}
 
 	public void postProcessExit(MaterialManager mgr,Exit e) {

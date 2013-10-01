@@ -43,7 +43,7 @@ public class Hall extends Building {
 		Castle c = Castle.getInstance();
 
 		// fill with primary material
-		MaterialManager.MaterialDataPair prim = mgr.getPrimary();
+		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(extent,prim.m,prim.d);
 		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
 

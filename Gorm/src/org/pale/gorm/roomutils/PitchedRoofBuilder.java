@@ -6,10 +6,15 @@ import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.IntVector;
+import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
-import org.pale.gorm.MaterialManager.MaterialDataPair;
 import org.pale.gorm.Turtle;
 
+/**
+ * An example of a RoofBuilder.
+ * @author white
+ *
+ */
 public class PitchedRoofBuilder implements RoofBuilder {
 
 	@Override

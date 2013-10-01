@@ -173,7 +173,7 @@ public class Turtle {
 		data = d;
 	}
 
-	public void setMaterial(MaterialManager.MaterialDataPair mp) {
+	public void setMaterial(MaterialDataPair mp) {
 		setMaterial(mp.m, mp.d);
 	}
 

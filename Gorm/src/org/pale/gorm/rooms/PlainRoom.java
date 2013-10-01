@@ -3,6 +3,7 @@ package org.pale.gorm.rooms;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
+import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 
@@ -25,7 +26,7 @@ public class PlainRoom extends Room {
 		floor.maxy = floor.miny;
 		
 		// fill with primary material
-		MaterialManager.MaterialDataPair prim = mgr.getPrimary();
+		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
 
 		Extent inner = e.expand(-1, Extent.ALL);

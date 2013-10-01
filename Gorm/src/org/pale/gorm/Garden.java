@@ -29,7 +29,7 @@ public class Garden extends Building {
 		Extent inner = extent.expand(-1, Extent.ALL);
 		
 
-		MaterialManager.MaterialDataPair ground;
+		MaterialDataPair ground;
 		
 		if(c.r.nextFloat()<0.2)
 			ground = mgr.getSupSecondary();

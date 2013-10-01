@@ -247,7 +247,7 @@ public abstract class Building {
 		World w = c.getWorld();
 		int dx, dz;
 
-		MaterialManager.MaterialDataPair mat = mgr.getSecondary();
+		MaterialDataPair mat = mgr.getSecondary();
 
 		if (complete) {
 			dx = 1;

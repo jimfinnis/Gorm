@@ -7,6 +7,7 @@ import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
+import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
@@ -108,8 +109,8 @@ public class RoofGarden extends Room {
 								// Looks weird.
 				alternate = false;
 
-			MaterialManager.MaterialDataPair main = mgr.getFence();
-			MaterialManager.MaterialDataPair alt = mgr.getSupSecondary();
+			MaterialDataPair main = mgr.getFence();
+			MaterialDataPair alt = mgr.getSupSecondary();
 
 			if (v != null) {
 				t = new Turtle(mgr, c.getWorld(), v, d);

@@ -17,6 +17,8 @@ import org.pale.gorm.Util;
  * 
  */
 public class WindowMaker {
+	private static final float WINDOW_CHANCE = 0.1f;
+
 	/**
 	 * Build a window covering the given extent. The key is a random value used
 	 * to make sure windows built at the same time look the same.
@@ -90,7 +92,7 @@ public class WindowMaker {
 
 		// for each wall, build windows!
 		for (Direction d : Direction.values()) {
-			if (d.vec.y == 0 && c.r.nextFloat() < 0.5) { // don't put windows on
+			if (d.vec.y == 0 && c.r.nextFloat() < WINDOW_CHANCE) { // don't put windows on
 															// every wall, and
 															// only vertical
 															// walls!

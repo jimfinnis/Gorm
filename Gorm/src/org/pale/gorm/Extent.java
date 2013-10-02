@@ -154,6 +154,7 @@ public class Extent {
 		maxz = z;
 		isset = true;
 	}
+	
 
 	/**
 	 * copy constructor

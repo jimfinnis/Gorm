@@ -31,22 +31,25 @@ public class Builder {
 		// initial room test
 		IntVector v = new IntVector(loc);
 		
-		
 		if (castle.getBuildingCount() == 0) {
 			Extent e = new Extent(v, 20, 0, 30).setHeight(10);
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
 			Building r = new Garden(e);
 			r.build(mgr);
 			castle.addBuilding(r);
+			// very important - tell the castle to re-sort the room list!
+			castle.sortRooms();
 		} else {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
-			Building r = createAndFitBuilding();
-			if (r != null) {
-				MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());
-				r.build(mgr);
-				castle.addBuilding(r);
-				r.makeRandomExit(mgr);
+			Building b = createAndFitBuilding();
+			if (b != null) {
+				MaterialManager mgr = new MaterialManager(b.getExtent().getCentre().getBlock().getBiome());
+				b.build(mgr);
+				castle.addBuilding(b);
+				// very important - tell the castle to re-sort the room list!
+				castle.sortRooms();
+				b.makeRandomExit();
 
 				GormPlugin.log("room created and added!");
 			} else {
@@ -60,12 +63,11 @@ public class Builder {
 	/**
 	 * Attempt to construct a random link between two rooms
 	 */
-	private void makeRandomExit() {
-		Building r = castle.getRandomBuilding();
-		MaterialManager mgr = new MaterialManager(r.getExtent().getCentre().getBlock().getBiome());		
-		if (r != null) {
-			r.makeRandomExit(mgr);
+	private boolean makeRandomExit() {
+		for(Room r: castle.getRooms()){
+			if(r.attemptMakeExit())return true;
 		}
+		return false;
 	}
 
 	/**

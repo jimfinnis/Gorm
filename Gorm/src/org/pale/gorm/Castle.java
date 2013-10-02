@@ -2,8 +2,11 @@ package org.pale.gorm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeSet;
 
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,7 +14,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Stairs;
-import org.pale.gorm.Exit.ExitType;
 import org.pale.gorm.roomutils.ExitDecorator;
 
 /**
@@ -25,12 +27,16 @@ public class Castle {
 	private Extent allExtent = new Extent();
 	private World world;
 	public Random r = new Random();
+	
+	/**
+	 * Rooms so we can sort by number of exits.
+	 */
+	private ArrayList<Room> rooms =  new ArrayList<Room>();
 
 	/**
 	 * Private ctor so this is a singleton
 	 */
-	private Castle() {
-	}
+	private Castle() {}
 
 	/**
 	 * MUST call this before building
@@ -91,8 +97,8 @@ public class Castle {
 	 */
 
 	public void checkFill(Extent e, Material mat, int data) {
-		if (mat == Material.SMOOTH_BRICK) {
-			fillBrickWithCracksAndMoss(e, true);
+		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
+			fillBrickWithCracksAndMoss(e, false);
 		} else {
 			GormPlugin.log("filling " + e.toString());
 			int t = 0;
@@ -126,7 +132,7 @@ public class Castle {
 	 * @param data
 	 */
 	public void fill(Extent e, Material mat, int data) {
-		if (mat == Material.SMOOTH_BRICK)
+		if (mat == Material.SMOOTH_BRICK && data==0) // if this is plain brick, flash it up!
 			fillBrickWithCracksAndMoss(e, false);
 		else {
 			GormPlugin.log("filling " + e.toString());
@@ -378,19 +384,18 @@ public class Castle {
 		}
 	}
 
-	/**
-	 * This will decorate an exit - does nowt as yet
-	 * 
-	 * @param e
-	 */
-	private void decorateExit(Exit e) {
-		ExitDecorator.decorate(e);
-	}
 
 	public void postProcessExit(MaterialManager mgr,Exit e) {
 		dropExitStairs(mgr,e.getExtent(), e.getDirection());
-		decorateExit(e);
+		ExitDecorator.decorate(mgr,e);
 	}
+	
+	public static boolean requiresLight(int x, int y, int z) {
+		Block b = Castle.getInstance().getWorld().getBlockAt(x, y, z);
+		return b.getLightLevel() < 7;
+	}
+
+
 
 	public void raze() {
 		for (Building r : buildings) {
@@ -405,5 +410,17 @@ public class Castle {
 			return null;
 		else
 			return buildings.get(r.nextInt(buildings.size()));
+	}
+
+	public void addRoom(Room r) {
+		rooms.add(r);
+	}
+	
+	public Collection<Room> getRooms() {
+		return rooms;
+	}
+
+	public void sortRooms() {
+		Collections.sort(rooms);
 	}
 }

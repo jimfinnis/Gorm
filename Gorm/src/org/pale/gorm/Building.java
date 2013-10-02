@@ -36,13 +36,19 @@ public abstract class Building {
 
 	}
 
-	private static int idCounter = 0;
-	private int id = idCounter++;
-
+	private static int idCounter =  0;
+	int id = idCounter++;
+	
 	/**
-	 * List of the rooms - vertical sections within the building
+	 * List of the rooms - vertical sections within the building. DO NOT add rooms directly,
+	 * use addRoom()
 	 */
 	protected LinkedList<Room> rooms = new LinkedList<Room>();
+	
+	protected void addRoom(Room r){
+		rooms.addFirst(r);
+		Castle.getInstance().addRoom(r);
+	}
 
 	/**
 	 * The extent of the entire building
@@ -70,7 +76,7 @@ public abstract class Building {
 	public Room makeSingleRoom(MaterialManager mgr) {
 		rooms = new LinkedList<Room>(); // make sure any old ones are gone
 		Room r = new BlankRoom(mgr, extent, this);
-		rooms.add(r);
+		addRoom(r);
 		return r;
 	}
 
@@ -132,8 +138,7 @@ public abstract class Building {
 	protected void addRoomAndBuildExitDown(Room r, boolean outside) {
 		Room lowerFloor = rooms.peekFirst(); // any prior floor will be the
 		// first item
-		rooms.addFirst(r); // add new room to head of list
-
+		addRoom(r); //adds to head 
 		if (lowerFloor != null) {
 			// there is a floor below - try to build some kind of link down
 			buildVerticalExit(lowerFloor, r);
@@ -193,19 +198,20 @@ public abstract class Building {
 	 *            the internal air space of the building
 	 */
 	public void lightWalls(Extent e) {
+		
 		int y = e.miny + 4;
 		if (y > e.maxy)
 			y = e.maxy;
 		for (int x = e.minx; x <= e.maxx; x++) {
-			if (requiresLight(x, y, e.minz))
+			if (Castle.requiresLight(x, y, e.minz))
 				addLight(x, y, e.minz);
-			if (requiresLight(x, y, e.maxz))
+			if (Castle.requiresLight(x, y, e.maxz))
 				addLight(x, y, e.maxz);
 		}
 		for (int z = e.minz; z <= e.maxz; z++) {
-			if (requiresLight(e.minx, y, z))
+			if (Castle.requiresLight(e.minx, y, z))
 				addLight(e.minx, y, z);
-			if (requiresLight(e.maxx, y, z))
+			if (Castle.requiresLight(e.maxx, y, z))
 				addLight(e.maxx, y, z);
 		}
 	}
@@ -279,11 +285,6 @@ public abstract class Building {
 		b.setType(Material.TORCH);
 	}
 
-	boolean requiresLight(int x, int y, int z) {
-		Block b = Castle.getInstance().getWorld().getBlockAt(x, y, z);
-		return b.getLightLevel() < 7;
-	}
-
 	public boolean contains(IntVector v) {
 		return extent.contains(v);
 	}
@@ -301,146 +302,17 @@ public abstract class Building {
 	 * Tell this building to make a random exit to an adjacent building - this
 	 * is for horizontal exits
 	 */
-	public boolean makeRandomExit(MaterialManager mgr) {
+	public boolean makeRandomExit() {
 		Castle c = Castle.getInstance();
 
-		GormPlugin.log("Attempting to make an exit from building "
-				+ Integer.toString(id));
-
-		// first we need to find a suitable nearby building. This version of the
-		// code will only
-		// link with buildings with colinear walls.
-
-		List<Building> buildings = new ArrayList<Building>();
-		for (Building r : c.getBuildings()) {
-			if (r != this) {
-				if (extent.intersects(r.extent)) {
-
-					Extent e = extent.intersect(r.extent); // get the
-															// intersecting
-															// wall
-					if (e.xsize() != 1 && e.zsize() != 1) {
-						throw new RuntimeException(
-								"two buildings intersect >1 deep");
-					}
-
-					// check it intersects enough
-					if (Math.max(e.xsize(), e.zsize()) >= 5) {
-						buildings.add(r);
-					}
-				}
-			}
+		// find a room with few exits. Or not many. Just iterate until an exit has been made.
+		
+		for(Room r: rooms){
+			if(r.attemptMakeExit())return true;
 		}
-
-		if (buildings.size() != 0) {
-			Building b = buildings.get(c.r.nextInt(buildings.size()));
-			GormPlugin.log(String.format(
-					"Trying to make an exit between %d and %d!!!", id, b.id));
-			return makeRandomExit(mgr, b);
-		}
-		return false;
-	}
-
-	/**
-	 * Having found a building nearby, we need to find a pair of candidate
-	 * rooms, one here and one over there.
-	 */
-	private boolean makeRandomExit(MaterialManager mgr, Building other) {
-		// we don't want to always do one floor.
-		Collections.shuffle(rooms);
-
-		for (Room r : rooms) {
-			for (Room r2 : other.rooms) {
-				if (Math.abs(r2.e.miny - r.e.miny) < 4) {
-					// that'll do!
-					if (r2.e.miny < r.e.miny) // destination is lower than src.
-						return makeExitBetweenRooms(mgr, r, r2);
-					else
-						return makeExitBetweenRooms(mgr, r2, r);
-
-				}
-			}
-		}
-
-		GormPlugin.log("Make exit failed; level mismatch");
 		return false;
 	}
 	
-	static final int[] offsets={0,1,-1,2,-2,3,-3,4,-4,5,-5};
-
-	/**
-	 * This is used to make a random horizontal exit to a building we already
-	 * know intersects enough with us
-	 * 
-	 * @param r
-	 */
-	private boolean makeExitBetweenRooms(MaterialManager mgr, Room thisRoom,
-			Room remoteRoom) {
-		Extent intersection = thisRoom.e.intersect(remoteRoom.e);
-		Direction dir;
-
-		GormPlugin.log(String.format(
-				"attempting to create exit between %d and %d", thisRoom.b.id,
-				remoteRoom.b.id));
-
-		if (thisRoom.exitMap.containsKey(remoteRoom)) {
-			GormPlugin.log(String.format("exit already exists"));
-			return false;
-		}
-
-		// work out the orientation of the exit
-		if (intersection.xsize() > intersection.zsize()) {
-			dir = remoteRoom.e.minz == thisRoom.e.maxz ? Direction.SOUTH
-					: Direction.NORTH;
-		} else {
-			dir = remoteRoom.e.minx == thisRoom.e.maxx ? Direction.EAST
-					: Direction.WEST;
-		}
-
-		int height = 3;
-		
-		// shrink the intersection along its longest axis, so we don't end
-		// up sliding the exit into a wall to avoid a window.
-		intersection=intersection.expand(-1,Extent.LONGESTXZ);
-
-		// try to find somewhere in the intersection which doesn't collide with
-		// a window or existing exit
-
-		IntVector offsetVec = dir.vec.rotate(1); // get a perpendicular to slide along
-		for (int tries = 0; tries < offsets.length; tries++) {
-			int offset = offsets[tries];
-
-			// create the actual hole
-			IntVector centreOfIntersection = intersection.getCentre().add(offsetVec.scale(offset));
-			
-			if(!intersection.contains(centreOfIntersection))
-				continue; // slid out of intersection
-
-			Extent e = new Extent(centreOfIntersection.x, thisRoom.e.miny + 1,
-					centreOfIntersection.z, centreOfIntersection.x,
-					thisRoom.e.miny + height, centreOfIntersection.z);
-
-			// don't allow an exit if there's a window in the way!
-			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,Extent.Y);
-			if (thisRoom.windowIntersects(wideexit)
-					|| remoteRoom.windowIntersects(wideexit))
-				continue;
-
-			// create the two exit structures
-			Exit src = new Exit(e, dir, thisRoom, remoteRoom);
-			Exit dest = new Exit(e, dir.opposite(), remoteRoom, thisRoom);
-			thisRoom.exits.add(src);
-			thisRoom.exitMap.put(remoteRoom, src); // exit 'src' leads to room
-													// 'r'
-			remoteRoom.exits.add(dest);
-			remoteRoom.exitMap.put(thisRoom, dest); // exit 'dest' leads back
-													// here
-			// blow the hole
-			Castle.getInstance().fill(src.getExtent(), Material.AIR, 1);
-			GormPlugin.log("hole blown: " + src.getExtent().toString());
-			Castle.getInstance().postProcessExit(mgr, src);
-			return true;
-		}
-		return false;
-	}
+	
+	
 }

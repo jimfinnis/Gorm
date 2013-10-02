@@ -108,11 +108,18 @@ public final class GormPlugin extends JavaPlugin {
 		
 		Extent e = new Extent(p.getLocation());
 		
+		for(Room q: Castle.getInstance().getRooms())
+			GormPlugin.log("   loop: room "+q.id+" has "+q.exits.size());
+		GormPlugin.log("Done!");
+
+		
+
+/*		
 		for(Building b: c.getBuildingsIntersecting(e)){
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
 			b.makeRandomExit(mgr);
 		}
-		
+*/		
 	}
 
 	private void flatten(Player p) {

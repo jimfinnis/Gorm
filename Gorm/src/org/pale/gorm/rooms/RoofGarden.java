@@ -69,7 +69,7 @@ public class RoofGarden extends Room {
 		placePost(mgr, c, e.maxx, e.miny, e.maxz, tp);
 
 		boolean alternate = (tp & 16) == 1;
-		boolean useStepsAsWall = ((tp >> 64) & 3) == 3;
+		boolean useStepsAsWall = ((tp >> 5) & 3) == 3;
 		boolean altTorch = (tp & 32) == 1;
 
 		alternate = true;

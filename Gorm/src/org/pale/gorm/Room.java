@@ -2,11 +2,14 @@ package org.pale.gorm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 
 /**
@@ -118,6 +121,10 @@ public abstract class Room implements Comparable<Room> {
 	public boolean attemptMakeExit() {
 		// iterate rooms in exit count order - the caller is doing this too.
 		// We keep going until we succeed, which we might not.
+		// Annoyingly, because I'm using a set (and NOT doing that can result is slowness during the add)
+		// I have to convert it to a list before I can sort it.
+		List<Room> rooms = new ArrayList<Room>(adjacentRooms()); 
+		Collections.sort(rooms);
 		for(Room that: Castle.getInstance().getRooms()){
 			//GormPlugin.log("This: "+e.toString()+" That: "+that.e.toString());
 			// don't try to connect a room to itself or another in the same building
@@ -160,12 +167,12 @@ public abstract class Room implements Comparable<Room> {
 		
 	}
 
-	static final int[] offsets={0,1,-1,2,-2,3,-3,4,-4,5,-5};
+	static final int[] offsets={0,1,-1,2,-2,3,-3};
 	/**
-	 * This is used to make a random horizontal exit to a building we already
+	 * This is used to make a random horizontal exit to a room we already
 	 * know intersects enough with us
 	 * 
-	 * @param r
+	 * @param that destination room
 	 */
 	private boolean makeExitBetweenRooms(Room that) {
 		Extent intersection = this.e.intersect(that.e);
@@ -218,6 +225,10 @@ public abstract class Room implements Comparable<Room> {
 					|| that.windowIntersects(wideexit))
 				continue;
 			
+			// the exit must not intersect any other exits in either building
+			if(this.exitIntersects(wideexit)||that.exitIntersects(wideexit))
+				continue;
+			
 			// grab an appropriate material manager
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
 
@@ -239,7 +250,47 @@ public abstract class Room implements Comparable<Room> {
 		}
 		return false;
 	}
+	
+	/**
+	 * Obtain the set of chunks which encompasses this room. Will cache the set.
+	 * @return
+	 */
+	public Set<Integer> getChunks(){
+		if(chunks==null)
+			chunks = e.expand(5,Extent.ALL).getChunks();
+		return chunks;
+		
+	}
+	private Set<Integer> chunks = null;
+	
+	/**
+	 * Get the nearby rooms to this one - not necessarily intersecting
+	 * @return
+	 */
+	public Collection<Room> nearbyRooms(){
+		Castle c = Castle.getInstance();
+		Set<Room> out = new HashSet<Room>();
+		for(int ch: getChunks()){
+			out.addAll(c.getRoomsByChunk(ch));
+		}
+		return out;
+	}
 
+	/**
+	 * Get the rooms nearby which intersect
+	 * @return
+	 */
+	public Collection<Room> adjacentRooms(){
+		Castle c = Castle.getInstance();
+		Set<Room> out = new HashSet<Room>();
+		for(int ch: getChunks()){
+			for(Room r: c.getRoomsByChunk(ch))
+				if(r.e.intersects(e))
+					out.add(r);
+		}
+		return out;
+	}
+	
 	/**
 	 * actually make the room's walls and contents (the building's outer walls should already
 	 * exist.) Note that roof gardens may modify the building's extent; the new building extent

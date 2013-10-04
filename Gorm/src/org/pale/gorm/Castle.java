@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.TreeSet;
+import java.util.Set;
+import java.util.HashSet;
 
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -24,9 +28,14 @@ import org.pale.gorm.roomutils.ExitDecorator;
  */
 public class Castle {
 	private static Castle instance;
-	private Extent allExtent = new Extent();
 	private World world;
 	public Random r = new Random();
+	
+	/**
+	 * Each chunk has a list of rooms which intersect it. Naturally, a room is likely
+	 * to belong to more than one chunk
+	 */
+	private Map<Integer,Collection<Room>> roomsByChunk = new HashMap<Integer,Collection<Room>>();
 	
 	/**
 	 * Rooms so we can sort by number of exits.
@@ -64,25 +73,31 @@ public class Castle {
 	}
 
 	/**
-	 * Add a building to the internal lists.
+	 * Add a building to the internal lists, along with its rooms
 	 * 
 	 * @param r
 	 */
 	void addBuilding(Building r) {
 		buildings.add(r);
-		allExtent = allExtent.union(r.getExtent());
 	}
 
 	/**
-	 * returns true if e intersects any building or exit at all
+	 * returns true if e intersects any room at all. This works
+	 * by iterating over the rooms in the chunks for that extent
 	 * 
 	 * @param e
 	 * @return
 	 */
 	public boolean intersects(Extent e) {
-		for (Building x : buildings) {
-			if (x.getExtent().intersects(e))
-				return true;
+		Set<Integer> chunks = e.getChunks();
+		for(int c: chunks){
+			Collection<Room> list = getRoomsByChunk(c);
+			if(list!=null){
+				for(Room r: list){
+					if(r.getExtent().intersects(e))
+						return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -412,14 +427,38 @@ public class Castle {
 			return buildings.get(r.nextInt(buildings.size()));
 	}
 
+	/**
+	 * add a room to both the room list and the rooms-by-chunk map
+	 * @param r
+	 */
 	public void addRoom(Room r) {
 		rooms.add(r);
+		for(int c: r.getChunks()){
+			Collection<Room> list;
+			if(!roomsByChunk.containsKey(c)) {
+				list = new ArrayList<Room>();
+				roomsByChunk.put(c, list);
+			} else
+				list = roomsByChunk.get(c);
+			list.add(r);
+		}
+	}
+	
+	/**
+	 * This will return null if a chunk isn't in the map yet
+	 * @return
+	 */
+	public Collection<Room> getRoomsByChunk(int key){
+		return roomsByChunk.get(key);
 	}
 	
 	public Collection<Room> getRooms() {
 		return rooms;
 	}
-
+	
+	/**
+	 * make sure the rooms list is sorted by number of exits
+	 */
 	public void sortRooms() {
 		Collections.sort(rooms);
 	}

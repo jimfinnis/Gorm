@@ -1,7 +1,10 @@
 package org.pale.gorm;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -36,12 +39,15 @@ public class Extent {
 				pos = new IntVector(minx, miny, minz);
 				switch (xzOnly ? getLongestAxisXZ() : getLongestAxis()) {
 				case X:
-					vec = new IntVector(1, 0, 0);break;
+					vec = new IntVector(1, 0, 0);
+					break;
 				case Y:
-					vec = new IntVector(0, 1, 0);break;
+					vec = new IntVector(0, 1, 0);
+					break;
 				default:
 				case Z:
-					vec = new IntVector(0, 0, 1);break;
+					vec = new IntVector(0, 0, 1);
+					break;
 				}
 				pos = pos.add(vec.scale(offset));
 				vec = vec.scale(step);
@@ -63,7 +69,8 @@ public class Extent {
 			public void remove() {
 			}
 		}
-		private int step,offset;
+
+		private int step, offset;
 		private boolean xzOnly;
 
 		VectorIterable(int step, int offset, boolean xzOnly) {
@@ -154,7 +161,6 @@ public class Extent {
 		maxz = z;
 		isset = true;
 	}
-	
 
 	/**
 	 * copy constructor
@@ -231,9 +237,9 @@ public class Extent {
 	public Extent union(Location loc) {
 		return union(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 	}
-	
-	public Extent union(IntVector v){
-		return union(v.x,v.y,v.z);
+
+	public Extent union(IntVector v) {
+		return union(v.x, v.y, v.z);
 	}
 
 	/**
@@ -267,13 +273,11 @@ public class Extent {
 		else
 			return Y;
 	}
-	
+
 	public int getLongestAxisXZ() {
 		// TODO Auto-generated method stub
-		return xsize()>zsize() ? X : Z;
+		return xsize() > zsize() ? X : Z;
 	}
-
-
 
 	/**
 	 * Get length of axis
@@ -281,7 +285,7 @@ public class Extent {
 	public int getLengthOfAxis(int axis) {
 		if (axis == LONGEST)
 			axis = getLongestAxis();
-		else if(axis == LONGESTXZ){
+		else if (axis == LONGESTXZ) {
 			axis = getLongestAxisXZ();
 		}
 		switch (axis) {
@@ -626,13 +630,44 @@ public class Extent {
 	}
 
 	/**
-	 * Create an iterator which will steps along the longest axis of an
-	 * extent.
+	 * Create an iterator which will steps along the longest axis of an extent.
 	 * 
 	 * @return
 	 */
-	public Iterable<IntVector> getVectorIterable(int step, int offset, boolean xzOnly) {
-		return new VectorIterable(step, offset,xzOnly);
+	public Iterable<IntVector> getVectorIterable(int step, int offset,
+			boolean xzOnly) {
+		return new VectorIterable(step, offset, xzOnly);
+	}
+	
+	static final int INTERNAL_CHUNK_SIZE = 32;
+	/**
+	 * Return a 'chunk code' for a given pixel. Nothing to do with MC's chunks,
+	 * although it was once.
+	 * @param x
+	 * @param z
+	 * @return
+	 */
+	private static int getChunkCode(int x,int z){
+		x/=INTERNAL_CHUNK_SIZE;
+		z/=INTERNAL_CHUNK_SIZE;
+		return x + z*INTERNAL_CHUNK_SIZE;
+	}
+
+	/**
+	 * Build a list of all the chunks in the extent. They're not actually real
+	 * chunks, just unique codes. My chunks are bigger than MCs.
+	 * 
+	 * @return
+	 */
+	public Set<Integer> getChunks() {
+		Set<Integer> chunks = new HashSet<Integer>();
+		for (int x = minx; x < maxx + INTERNAL_CHUNK_SIZE; x+=INTERNAL_CHUNK_SIZE) {
+			for (int z = minz; z < maxz + INTERNAL_CHUNK_SIZE; z+=INTERNAL_CHUNK_SIZE) {
+				
+				chunks.add(getChunkCode(x,z));
+			}
+		}
+		return chunks;
 	}
 
 }

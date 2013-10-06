@@ -17,7 +17,7 @@ import org.pale.gorm.Util;
  * 
  */
 public class WindowMaker {
-	private static final float WINDOW_CHANCE = 0.1f;
+	private static final float WINDOW_CHANCE = 0.2f;
 
 	/**
 	 * Build a window covering the given extent. The key is a random value used

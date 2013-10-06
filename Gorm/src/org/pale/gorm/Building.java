@@ -5,11 +5,15 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.crypto.dsig.CanonicalizationMethod;
+
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.material.Ladder;
+import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.roomutils.WindowMaker;
@@ -22,7 +26,7 @@ import org.pale.gorm.roomutils.WindowMaker;
  */
 public abstract class Building {
 	/**
-	 * Given a parent room and a size, produce an extent for a room which can be
+	 * Given a parent building and a size, produce an extent for a building which can be
 	 * slid around by the Builder.
 	 * 
 	 * @param parent
@@ -173,6 +177,9 @@ public abstract class Building {
 		// to clear the carpet too.
 		for (int y = ladderPos.y; y <= upper.e.miny + 1; y++) {
 			Block b = w.getBlockAt(ladderPos.x, y, ladderPos.z);
+//			BlockState s = b.getState();
+//			s.setData((MaterialData)ladder);
+//			s.update();
 			b.setType(Material.LADDER);
 			b.setData(ladder.getData());
 		}
@@ -267,7 +274,7 @@ public abstract class Building {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
 					Block b = w.getBlockAt(x, y, z);
-					if (!b.getType().isSolid()) {
+					if (!b.getType().isSolid() && Castle.canOverwrite(b)) { // also avoid "unwritable air"
 						b.setType(mat.m);
 						b.setData((byte) mat.d);
 					} else {
@@ -295,7 +302,15 @@ public abstract class Building {
 
 	public void setExtent(Extent e) {
 		extent = new Extent(e);
-
+	}
+	
+	/** 
+	 * Force update packet sending
+	 */
+	public void update(){
+		for(Room r:rooms){
+			r.update();
+		}
 	}
 
 	/**

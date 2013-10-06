@@ -4,7 +4,9 @@ import java.util.Random;
 
 import org.bukkit.Material;
 import org.pale.gorm.rooms.RoofGarden;
+import org.pale.gorm.roomutils.BoxBuilder;
 import org.pale.gorm.roomutils.PitchedRoofBuilder;
+import org.pale.gorm.roomutils.RoofBuilder;
 
 /**
  * A hall with stone walls and multiple floors
@@ -41,15 +43,12 @@ public class Hall extends Building {
 	 */
 	public void build(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
+		
+		BoxBuilder.build(mgr, extent); // make the walls
 
-		// fill with primary material
-		MaterialDataPair prim = mgr.getPrimary();
-		c.fill(extent,prim.m,prim.d);
-		c.fill(extent.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
+		underfill(mgr,false); // build "stilts" if required
 
-		underfill(mgr,false);
-
-		makeRooms(mgr);
+		makeRooms(mgr); // and make the internal rooms
 
 		// is the bit above the building free?
 		// Calculate an extent for a putative pitched roof, the height
@@ -62,12 +61,13 @@ public class Hall extends Building {
 			e=e.setHeight(e.zsize() / 2);
 		if (c.intersects(e)) {
 			// only building for a small roof, so skip.
+			RoofBuilder.randomRoof(mgr,extent);
 		} else {
 			// room for a bigger roof or maybe a roof garden! Roof garden if we're short.
 			if (c.r.nextFloat() < 0.5 || extent.ysize()<24) {
 				buildRoofGarden(mgr,e);
 			} else {
-				new PitchedRoofBuilder().buildRoof(mgr,extent);
+				RoofBuilder.randomRoof(mgr,extent);
 			}
 		}
 	}

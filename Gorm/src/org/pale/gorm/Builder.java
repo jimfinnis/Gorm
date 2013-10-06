@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.material.Sign;
 
 /**
  * This object actually does the building inside the castle
@@ -29,16 +30,17 @@ public class Builder {
 	 */
 	public void build(Location loc) {
 		// initial room test
-		IntVector v = new IntVector(loc);
+		IntVector v = new IntVector(loc).subtract(0,1,0);
 		
 		if (castle.getBuildingCount() == 0) {
 			Extent e = new Extent(v, 20, 0, 30).setHeight(10);
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
-			Building r = new Garden(e);
-			r.build(mgr);
-			castle.addBuilding(r);
+			Building b = new Garden(e);
+			b.build(mgr);
+			castle.addBuilding(b);
 			// very important - tell the castle to re-sort the room list!
 			castle.sortRooms();
+			b.update();
 		} else {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
@@ -46,17 +48,19 @@ public class Builder {
 			if (b != null) {
 				MaterialManager mgr = new MaterialManager(b.getExtent().getCentre().getBlock().getBiome());
 				b.build(mgr);
+				
 				castle.addBuilding(b);
 				// very important - tell the castle to re-sort the room list!
 				castle.sortRooms();
 				b.makeRandomExit();
 
-				GormPlugin.log("room created and added!");
+				GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
 			} else {
-				GormPlugin.log("could not create room!");
+				GormPlugin.log("Could not move building "+Integer.toString(b.id)+" to a good place.");
 			}
 			makeRandomExit();
 			makeRandomExit();
+			b.update();
 		}
 	}
 
@@ -65,32 +69,36 @@ public class Builder {
 	 */
 	private boolean makeRandomExit() {
 		for(Room r: castle.getRooms()){
-			if(r.attemptMakeExit())return true;
+			if(r.attemptMakeExit()){
+				r.update();
+				return true;
+			}
 		}
 		return false;
 	}
 
 	/**
-	 * Create a room of the type we most need, in the same location as another
+	 * Create a building of the type we most need, in the same location as another
 	 * room. Then slide it about until it fits.
 	 * 
 	 * @return room
 	 */
 	private Building createAndFitBuilding() {
 
-		// we try to find a suitable room, picking random rooms from the
+		// we try to find a suitable building, picking random buidingsfrom the
 		// beginning of the list.
 		Random rnd = new Random();
 		for (int tries = 0; tries < 10; tries++) {
 			double qqq = 1.0 / (double) castle.getBuildingCount();
-			for (Building r : castle.getBuildings()) {
+			for (Building b : castle.getBuildings()) {
 				if (rnd.nextDouble() < qqq) {
-					Building newRoom = createBuilding(r);
-					if (moveRoomUntilFit(newRoom, 3 + tries, r)) { // more
+					Building newBuilding = createBuilding(b);
+					GormPlugin.log("New building "+Integer.toString(newBuilding.id)+" created: attempting move");
+					if (moveRoomUntilFit(newBuilding, 3 + tries, b)) { // more
 																	// laxity in
 																	// y-slide
 																	// each time
-						return newRoom;
+						return newBuilding;
 					}
 				}
 			}
@@ -154,20 +162,20 @@ public class Builder {
 	/**
 	 * Test out moving a room to a given position, with a bit of y added too.
 	 * 
-	 * @param r
+	 * @param b
 	 * @param moved
 	 * @param yslide
 	 * @return
 	 */
-	private boolean tryMove(Building r, Extent moved, int yslide,
+	private boolean tryMove(Building b, Extent moved, int yslide,
 			Building parentRoom) {
 		Extent e = moved.addvec(0, yslide, 0);
 		Extent eOuter = e.expand(1, Extent.ALL);
 		if (!castle.intersects(e) && !e.intersectsWorld()) {
 			if (e.getMinHeightAboveWorld() < 3 && parentRoom.intersects(eOuter)) {
 				// that'll do!
-				r.setExtent(eOuter);
-				GormPlugin.log("room moved to: " + r.getExtent().toString());
+				b.setExtent(eOuter);
+				GormPlugin.log("building "+Integer.toString(b.id)+" moved to: " + b.getExtent().toString());
 				return true;
 			}
 		}

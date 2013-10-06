@@ -75,7 +75,6 @@ public class Turtle {
 			return 0;
 		else {
 			char c = string.charAt(cur++);
-			GormPlugin.log("Next char: " + Character.toString(c));
 			return c;
 		}
 	}
@@ -106,7 +105,7 @@ public class Turtle {
 		char c;
 		string = s;
 		aborted = false;
-		dumpMap();
+//		dumpMap();
 		for (;;) {
 			c = getNext();
 			if (c == 0) {
@@ -435,8 +434,6 @@ public class Turtle {
 	 * If we're about to hit a wall, turn to avoid it
 	 */
 	private void follow() {
-		GormPlugin.log("following: dir " + dir.toString());
-
 		if (!isEmpty(0, 0, -1)) { // ahead is full, we're going to hit a wall -
 									// attempt INNER FOLLOW
 			if (tryLeftFirst()) {
@@ -486,11 +483,9 @@ public class Turtle {
 	private boolean followOuterLeft() {
 		if (isEmpty(-1, 0, 1)) { // if the spot behind and to the left isn't a
 									// wall, fail
-			GormPlugin.log("follow left failed");
 			return false;
 		} else {
 			dir = dir.rotate(3); // or turn left
-			GormPlugin.log("follow left OK");
 			return true;
 		}
 	}
@@ -504,11 +499,9 @@ public class Turtle {
 	private boolean followOuterRight() {
 		if (isEmpty(1, 0, 1)) { // if the spot behind and to the right isn't a
 								// wall, fail
-			GormPlugin.log("follow right failed");
 			return false;
 		} else {
 			dir = dir.rotate(1); // or turn right
-			GormPlugin.log("follow right OK");
 			return true;
 		}
 	}
@@ -518,12 +511,10 @@ public class Turtle {
 	 */
 	private boolean followInnerLeft() {
 		if (isEmpty(-1, 0, 0)) {
-			GormPlugin.log("inner follow left OK");
 			dir = dir.rotate(3);
 			return true;
 		} else {
-			GormPlugin.log("inner follow left failed");
-			dumpMap();
+//			dumpMap();
 			return false;
 		}
 	}
@@ -533,12 +524,10 @@ public class Turtle {
 	 */
 	private boolean followInnerRight() {
 		if (isEmpty(1, 0, 0)) {
-			GormPlugin.log("inner follow right OK");
 			dir = dir.rotate(1);
 			return true;
 		} else {
-			GormPlugin.log("inner follow right failed");
-			dumpMap();
+//			dumpMap();
 			return false;
 		}
 	}
@@ -580,8 +569,8 @@ public class Turtle {
 	 * End the run
 	 */
 	private void abort() {
-		GormPlugin.log("aborted");
-		dumpMap();
+//		GormPlugin.log("aborted");
+//		dumpMap();
 		aborted = true;
 	}
 
@@ -589,6 +578,7 @@ public class Turtle {
 	 * Useful debugging; print 5x5 map relative to the turtle = X is solid, _ is
 	 * empty.
 	 */
+	@SuppressWarnings("unused")
 	private void dumpMap() {
 		for (int z = -2; z <= 2; z++) {
 			String foo = String.format("%3d", z);

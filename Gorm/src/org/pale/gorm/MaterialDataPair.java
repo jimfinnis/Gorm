@@ -3,7 +3,7 @@ package org.pale.gorm;
 import org.bukkit.Material;
 
 public class MaterialDataPair {
-	MaterialDataPair(Material m, int d) {
+	public MaterialDataPair(Material m, int d) {
 		this.m = m;
 		this.d = d;
 	}

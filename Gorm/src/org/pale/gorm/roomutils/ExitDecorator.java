@@ -3,6 +3,7 @@ package org.pale.gorm.roomutils;
 import java.util.Random;
 
 import org.bukkit.Material;
+import org.bukkit.block.BlockFace;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Exit;
@@ -23,23 +24,14 @@ public class ExitDecorator {
 		if (e.getType() == ExitType.OUTSIDE) // don't decorate outside exits
 		{
 
-			GormPlugin.log("decorate exit does nothing");
-			IntVector v = e.getDirection().vec;
-			v = v.add(0, 2, 0).add(e.getExtent().getCentre());
-			c.fill(new Extent(v, 0, 0, 0), Material.LAPIS_BLOCK, 0);
 			return;
 		}
 		// first decorate the sides and top the same way
 		decorateSidesAndTop(e, mgr);
 
-		// then, if we're an outward or inward exit, maybe add a little porch
-		// thing
 		// and add a door if we're outside, or maybe just anyway
 
-		if (e.getType() == ExitType.INWARDS || e.getType() == ExitType.OUTWARDS) {
-			addPorch(e, mgr);
-			addDoor(e, mgr);
-		} else if (c.r.nextFloat() < 0.5)
+		if (e.getType() == ExitType.INWARDS || e.getType() == ExitType.OUTWARDS || c.r.nextFloat() < 0.5)
 			addDoor(e, mgr);
 
 		// add a light, perhaps
@@ -59,14 +51,22 @@ public class ExitDecorator {
 	}
 
 	private static void addDoor(Exit e, MaterialManager mgr) {
-		// TODO Auto-generated method stub
+		Castle c = Castle.getInstance();
+
+		// doors are deprecated, so this might be hairy.
+		Extent x = e.getExtent();
+
+		x = x.getWall(Direction.DOWN);
+		c.fill(x, Material.WOODEN_DOOR, 0); // bottom
+		c.fill(x.addvec(Direction.UP.vec), Material.WOODEN_DOOR, 8); // then top
+
+		// fill in the hole at the top if there is one
+		x.miny += 2;
+		c.fill(x, c.r.nextFloat() < 0.3 ? new MaterialDataPair(
+				Material.THIN_GLASS, 0) : mgr.getOrnament());
 
 	}
 
-	private static void addPorch(Exit e, MaterialManager mgr) {
-		// TODO Auto-generated method stub
-
-	}
 
 	private static void decorateSidesAndTop(Exit e, MaterialManager mgr) {
 		Castle c = Castle.getInstance();
@@ -79,8 +79,8 @@ public class ExitDecorator {
 			else
 				x = x.expand(1, Extent.Y | Extent.Z);
 			x.miny = e.getExtent().miny;
-			//c.fill(x, mgr.getOrnament());
-			c.fill(x, Material.SMOOTH_BRICK,3);
+			// c.fill(x, mgr.getOrnament());
+			c.fill(x, Material.SMOOTH_BRICK, 3);
 			c.fill(e.getExtent(), Material.AIR, 0);
 		}
 	}

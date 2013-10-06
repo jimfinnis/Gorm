@@ -21,7 +21,7 @@ public final class GormPlugin extends JavaPlugin {
 
 	private static Logger logger;
 	private Builder builder = null;
-	private BukkitTask task;
+	private static BukkitTask task=null;
 
 	@Override
 	public void onDisable() {
@@ -71,10 +71,7 @@ public final class GormPlugin extends JavaPlugin {
 			}
 			return true;
 		} else if (command.getName().equalsIgnoreCase("stopgorm")) {
-			if (task != null) {
-				task.cancel();
-				task = null;
-			}
+			stopGormProcess();
 			return true;
 		} else if (command.getName().equalsIgnoreCase("razegorm")) {
 			Castle.getInstance().raze();
@@ -169,5 +166,12 @@ public final class GormPlugin extends JavaPlugin {
 			builder = new Builder(p.getWorld());
 		}
 		builder.build(p.getLocation());
+	}
+
+	public static void stopGormProcess() {
+		if (task != null) {
+			task.cancel();
+			task = null;
+		}
 	}
 }

@@ -17,6 +17,11 @@ import org.bukkit.block.Block;
  */
 public class Extent {
 
+	public interface LocationRunner {
+		void run(int x,int y,int z);
+
+	}
+
 	/**
 	 * An iterable for iterating over points in an extent, returned by
 	 * getVectorIterator()
@@ -275,7 +280,6 @@ public class Extent {
 	}
 
 	public int getLongestAxisXZ() {
-		// TODO Auto-generated method stub
 		return xsize() > zsize() ? X : Z;
 	}
 
@@ -377,8 +381,10 @@ public class Extent {
 	}
 
 	public boolean intersects(Extent e) {
-		return !(e.minx > maxx || e.maxx < minx || e.miny > maxy
-				|| e.maxy < miny || e.minz > maxz || e.maxz < minz);
+		
+		
+		return e.minx <= maxx && e.maxx >= minx && e.miny <= maxy
+				&& e.maxy >= miny && e.minz <= maxz && e.maxz >= minz;
 	}
 
 	/**
@@ -668,6 +674,16 @@ public class Extent {
 			}
 		}
 		return chunks;
+	}
+	
+	public void runOnAllLocations(LocationRunner e){
+		for (int x = minx; x <= maxx; x++) {
+			for (int y = miny; y <= maxy; y++) {
+				for (int z = minz; z <= maxz; z++) {
+					e.run(x,y,z);
+				}
+			}
+		}
 	}
 
 }

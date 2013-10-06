@@ -1,61 +1,30 @@
-package org.pale.gorm.rooms;
+package org.pale.gorm.roomutils;
 
 import org.bukkit.Material;
-import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
-import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
-import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
 
 /**
- * A roof garden - must be the last room added to a building. Also changes the
- * building extent.
+ * A bit like the perimeter walls for roof gardens, this. BUT DELIBERATELY
+ * DIFFERENT.
  * 
  * @author white
  * 
  */
-public class RoofGarden extends Room {
+public class RoofCrenellationBuilder {
 
-	public RoofGarden(MaterialManager mgr, Extent e, Building b) {
-		super(mgr, e, b);
-		setAllSidesOpen();
-	}
+	Extent e;
 
-	/**
-	 * Note - this changes the extent of the building, adding a new "room" on
-	 * top.
-	 */
-	@Override
-	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		Castle c = Castle.getInstance();
-		// get the material for the underfloor; it's the same material as the
-		// centre of the ceiling.
-		Extent floor = e.getWall(Direction.DOWN);
-		Material underFloorMaterial = floor.getCentre().getBlock().getType();
-
-		// build the underfloor
-		c.fill(floor.subvec(0, 1, 0), underFloorMaterial, 0);
-		// clear the area
-		c.fill(e.expand(-1, Extent.ALL), Material.AIR, 0);
-		// build the floor, using same material as underfloor for edge
-		c.checkFill(floor, underFloorMaterial, 0);
-		c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
-
-		// fill in the perimeter
-		perimeter(mgr, c);
-		
-		addSignHack();
-
-		// set the new building extent
-		buildingExtent.maxy = e.maxy;
-		GormPlugin.log("updating building extent to "
-				+ buildingExtent.toString());
-		return buildingExtent; // return modified building extent
+	public void buildRoof(MaterialManager mgr, Extent extent) {
+		e = extent.getWall(Direction.UP);
+		e.setHeight(5);
+		e.addvec(0, 1, 0);
+		perimeter(mgr,Castle.getInstance());
 	}
 
 	private void perimeter(MaterialManager mgr, Castle c) {
@@ -76,11 +45,62 @@ public class RoofGarden extends Room {
 
 		alternate = true;
 		useStepsAsWall = true;
+		
+		MaterialDataPair main;
+
+		switch (c.r.nextInt(6)) {
+		case 0:
+		default:
+			main = mgr.getFence();
+			break;
+		case 1:
+			main = mgr.getPrimary();
+			break;
+		case 2:
+			main = mgr.getSecondary();
+			break;
+		case 3:
+			main = mgr.getOrnament();
+			break;
+		case 4:
+			main = mgr.getOrnament();
+			break;
+		}
+
+		MaterialDataPair alt;
+		switch (c.r.nextInt(6)) {
+		case 0:
+		default:
+			alt = mgr.getSupSecondary();
+			break;
+		case 1:
+			alt = mgr.getPrimary();
+			break;
+		case 2:
+			alt = mgr.getSecondary();
+			break;
+		case 3:
+			alt = mgr.getOrnament();
+			break;
+		case 4:
+			alt = mgr.getSupSecondary();
+			break;
+		case 5:
+			alt = mgr.getSupSecondary();
+			break;
+		}
+
+		// this is a roof which doesn't need safety rails!
+		if (c.r.nextFloat() < 0.4)
+			main = new MaterialDataPair(Material.AIR, 0);
+		if (c.r.nextFloat() < 0.4)
+			alt = new MaterialDataPair(Material.AIR, 0);
+
 
 		// for each side, use turtle to place wall. If walls are odd length,
 		// consider alternating
 		// wall blocks.
-
+		
 		Turtle t;
 		for (Direction d : Direction.values()) {
 			IntVector v;
@@ -111,8 +131,6 @@ public class RoofGarden extends Room {
 								// Looks weird.
 				alternate = false;
 
-			MaterialDataPair main = mgr.getFence();
-			MaterialDataPair alt = mgr.getSupSecondary();
 
 			if (v != null) {
 				t = new Turtle(mgr, c.getWorld(), v, d);
@@ -147,13 +165,11 @@ public class RoofGarden extends Room {
 
 				}
 			}
-
 		}
-
 	}
 
-	private static void placePost(MaterialManager mgr, Castle c, int x, int y, int z,
-			int tp) {
+	private static void placePost(MaterialManager mgr, Castle c, int x, int y,
+			int z, int tp) {
 		Turtle t = new Turtle(mgr, c.getWorld(), new IntVector(x, y + 1, z),
 				Direction.NORTH);
 		switch (tp & 7) {

@@ -15,13 +15,13 @@ import org.pale.gorm.Turtle;
  * @author white
  *
  */
-public class PitchedRoofBuilder implements RoofBuilder {
+public class PitchedRoofBuilder extends RoofBuilder {
 
 	@Override
-	public void buildRoof(MaterialManager mgr,Extent roomExtent) {
+	public void buildRoof(MaterialManager mgr,Extent buildingExtent) {
 		// simple ridged roof
 		// get extent
-		Extent roof = new Extent(roomExtent);
+		Extent roof = new Extent(buildingExtent);
 		if(Castle.getInstance().r.nextFloat()<0.5)
 			roof=roof.expand(1, Extent.X|Extent.Z); // so we get eaves sometimes
 		

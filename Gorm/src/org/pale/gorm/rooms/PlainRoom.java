@@ -1,5 +1,6 @@
 package org.pale.gorm.rooms;
 
+import org.bukkit.Material;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
@@ -33,8 +34,10 @@ public class PlainRoom extends Room {
 		b.carpet(inner, c.r.nextInt(14));
 		b.lightWalls(inner);
 		b.floorLights(inner);
+		
+		addSignHack();
 
-		return buildingExtent;
+		return null; // we don't modify the building extent
 	}
 
 }

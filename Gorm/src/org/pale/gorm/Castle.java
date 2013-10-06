@@ -113,10 +113,8 @@ public class Castle {
 
 	public void checkFill(Extent e, Material mat, int data) {
 		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
-			fillBrickWithCracksAndMoss(e, false);
+			fillBrickWithCracksAndMoss(e, true);
 		} else {
-			GormPlugin.log("filling " + e.toString());
-			int t = 0;
 			for (int x = e.minx; x <= e.maxx; x++) {
 				for (int y = e.miny; y <= e.maxy; y++) {
 					for (int z = e.minz; z <= e.maxz; z++) {
@@ -124,12 +122,10 @@ public class Castle {
 						if (canOverwrite(b)) {
 							b.setType(mat);
 							b.setData((byte) data);
-							t++;
 						}
 					}
 				}
 			}
-			GormPlugin.log("blocks filled: " + Integer.toString(t));
 		}
 	}
 	
@@ -150,8 +146,6 @@ public class Castle {
 		if (mat == Material.SMOOTH_BRICK && data==0) // if this is plain brick, flash it up!
 			fillBrickWithCracksAndMoss(e, false);
 		else {
-			GormPlugin.log("filling " + e.toString());
-			int t = 0;
 			for (int x = e.minx; x <= e.maxx; x++) {
 				for (int y = e.miny; y <= e.maxy; y++) {
 					for (int z = e.minz; z <= e.maxz; z++) {
@@ -161,7 +155,6 @@ public class Castle {
 					}
 				}
 			}
-			GormPlugin.log("blocks filled: " + Integer.toString(t));
 		}
 	}
 	
@@ -176,16 +169,18 @@ public class Castle {
 	 * @param b
 	 * @return
 	 */
-	private boolean canOverwrite(Block b) {
+	public static boolean canOverwrite(Block b) {
 		Material m = b.getType();
+		// this is going to be hideous if they remove getData().
+		byte data = b.getData();
 		// materials walls can be made of
 		if (m == Material.SMOOTH_BRICK || m == Material.WOOD
-				|| m == Material.BRICK || m == Material.LAPIS_BLOCK
-				|| m == Material.GOLD_BLOCK)
+				|| m == Material.BRICK || m==Material.COBBLESTONE || (m==Material.SANDSTONE && data!=0)
+				|| isStairs(m))
 			return false;
 
 		// check for 'inside' air which we can't overwrite
-		if (m == Material.AIR && b.getData() == 1)
+		if (m == Material.AIR && data == 1)
 			return false;
 		return true;
 	}
@@ -197,7 +192,6 @@ public class Castle {
 	 * @param checkOverwrite
 	 */
 	private void fillBrickWithCracksAndMoss(Extent e, boolean checkOverwrite) {
-		GormPlugin.log("filling " + e.toString());
 		int t = 0;
 		int dataVals[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 2, 2, 1, 2 };
@@ -208,12 +202,10 @@ public class Castle {
 					if (!checkOverwrite || canOverwrite(b)) {
 						b.setType(Material.SMOOTH_BRICK);
 						b.setData((byte) dataVals[r.nextInt(dataVals.length)]);
-						t++;
 					}
 				}
 			}
 		}
-		GormPlugin.log("blocks filled: " + Integer.toString(t));
 		spreadMoss(e);
 		// spreadMoss(e);
 	}
@@ -265,7 +257,7 @@ public class Castle {
 		return out;
 	}
 
-	private void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
+	public void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
 		Block b = world.getBlockAt(x, y, z);
 		Stairs s = new Stairs(mat);
 		s.setFacingDirection(dir);
@@ -292,15 +284,11 @@ public class Castle {
 	 */
 	private boolean dropExitStairs(MaterialManager mgr,Extent e, Direction d) {
 
-		GormPlugin.log("Processing exit stairs for " + e.toString());
-
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
 
 		e = e.growDirection(d, 5); // stretch out the extent for scanning
 									// purposes
-
-		GormPlugin.log("Extended extent for stairs is " + e.toString());
 
 		e.miny -= 100; // so that getHeightWithin() will read heights lower than
 						// the current floor
@@ -359,9 +347,6 @@ public class Castle {
 				// if we've gone UP, exit the loop. We only work down.
 				break;
 			} else if (newy < y) {
-				GormPlugin.log(String.format(
-						"%d,%d: height was %d, is now %d - filling", pt.x,
-						pt.z, y, newy));
 				// we've gone down, so build up, saving the old block state
 				undoBuffer.add(world.getBlockAt(pt.x, y, pt.z).getState());
 				setStairs(pt.x, y, pt.z, bf, mat);
@@ -432,6 +417,7 @@ public class Castle {
 	 * @param r
 	 */
 	public void addRoom(Room r) {
+		GormPlugin.log("Adding room "+Integer.toString(r.id)+" with extent "+r.getExtent().toString());
 		rooms.add(r);
 		for(int c: r.getChunks()){
 			Collection<Room> list;
@@ -461,5 +447,14 @@ public class Castle {
 	 */
 	public void sortRooms() {
 		Collections.sort(rooms);
+	}
+
+	/**
+	 * Useful shortcut for getting a block in the world.
+	 * @param pos
+	 * @return
+	 */
+	public Block getBlockAt(IntVector pos) {
+		return world.getBlockAt(pos.x,pos.y,pos.z);
 	}
 }

@@ -58,7 +58,12 @@ public class MaterialManager {
 					new MaterialDataPair(Material.COBBLE_WALL, 0),
 					new MaterialDataPair(Material.IRON_FENCE, 0), },
 			{ new MaterialDataPair(Material.WOOD_STAIRS, 0),
-					new MaterialDataPair(Material.SMOOTH_STAIRS, 0), },
+					new MaterialDataPair(Material.SMOOTH_STAIRS, 0),
+					new MaterialDataPair(Material.BIRCH_WOOD_STAIRS, 0),
+					new MaterialDataPair(Material.JUNGLE_WOOD_STAIRS, 0),
+					new MaterialDataPair(Material.SPRUCE_WOOD_STAIRS, 0),
+					new MaterialDataPair(Material.OBSIDIAN, 0),
+					},
 			{ new MaterialDataPair(Material.GRASS, 0),
 					new MaterialDataPair(Material.GRAVEL, 0),
 					new MaterialDataPair(Material.SAND, 0) },
@@ -92,7 +97,6 @@ public class MaterialManager {
 	public MaterialManager(Biome b) {
 		Random r = Castle.getInstance().r;
 		MaterialDataPair[][] baseMats;
-		GormPlugin.log("creating mat mgr: biome=" + b.toString());
 		switch (b) {
 		case DESERT:
 		case DESERT_HILLS:
@@ -119,7 +123,8 @@ public class MaterialManager {
 		if (materialDataPairs.length == 1)
 			return materialDataPairs[0];
 		else
-			return materialDataPairs[Util.randomExp(r, materialDataPairs.length)];
+			return materialDataPairs[Util
+					.randomExp(r, materialDataPairs.length)];
 	}
 
 	public MaterialDataPair getPrimary() {

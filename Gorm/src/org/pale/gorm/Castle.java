@@ -132,6 +132,40 @@ public class Castle {
 	public void checkFill(Extent e, MaterialDataPair mp){
 		checkFill(e,mp.m,mp.d);
 	}
+	
+	/**
+	 * Replace certain blocks within an Extent
+	 * 
+	 * @param e
+	 * @param mat
+	 * @param data
+	 * @param matReplace
+	 * @param dataReplace
+	 */
+
+	public void replace(Extent e, Material mat, int data, Material matReplace, int dataReplace) {
+		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
+			fillBrickWithCracksAndMoss(e, true);
+		} else {
+			for (int x = e.minx; x <= e.maxx; x++) {
+				for (int y = e.miny; y <= e.maxy; y++) {
+					for (int z = e.minz; z <= e.maxz; z++) {
+						Block b = world.getBlockAt(x, y, z);
+						if (b.getType() == matReplace){
+							if (b.getData() == (byte) dataReplace){
+								b.setType(mat);
+								b.setData((byte) data);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public void replace(Extent e, MaterialDataPair mp, MaterialDataPair mpReplace){
+		replace(e,mp.m,mp.d,mpReplace.m,mpReplace.d);
+	}
 
 
 	/**

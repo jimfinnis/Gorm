@@ -19,6 +19,7 @@ import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.ChestRoom;
+import org.pale.gorm.rooms.SpawnerRoom;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.roomutils.WindowMaker;
 
@@ -139,17 +140,19 @@ public abstract class Building {
 	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld){
 		Random rnd = new Random();
 		GormPlugin plugin = new GormPlugin();
-		switch (rnd.nextInt(2)) {
-		case 0:
-			if (plugin.getDungeon()){
-				return new ChestRoom(mgr, roomExt, bld);
+		if(plugin.getDungeon()){
+			switch (rnd.nextInt(10)) {
+			case 0:
+					return new ChestRoom(mgr, roomExt, bld);
+			case 1:
+			case 2:
+					return new SpawnerRoom(mgr,roomExt,bld);
+			default:
+					return new PlainRoom(mgr, roomExt, bld);
 			}
-			else{
-				return new PlainRoom(mgr, roomExt, bld);
-			}
-		default:
+		}
+		else{
 			return new PlainRoom(mgr, roomExt, bld);
-
 		}
 	}
 
@@ -219,6 +222,19 @@ public abstract class Building {
 		floor = new Extent(floor);
 		floor.maxy = floor.miny;
 		c.fill(floor, Material.CARPET, col);
+	}
+	
+	/**
+	 * Block any glass or ironfence with primary, for darkness
+	 * 
+	 * @param room
+	 */
+	public void blockWindows(Extent room) {
+		Castle c = Castle.getInstance();
+		room = new Extent(room);
+		MaterialManager mgr = new MaterialManager(room.getCentre().getBlock().getBiome());
+		c.replace(room, mgr.getPrimary(), mgr.getWindow());
+		c.replace(room, mgr.getPrimary(), new MaterialDataPair(Material.IRON_FENCE, 0));
 	}
 	
 

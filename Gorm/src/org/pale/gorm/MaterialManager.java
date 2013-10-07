@@ -45,6 +45,19 @@ public class MaterialManager {
 			{ new MaterialDataPair(Material.SAND, 0),
 					new MaterialDataPair(Material.GRAVEL, 0) },
 			{ new MaterialDataPair(Material.WOOD, 0) }, };
+	static final MaterialDataPair[][] matsNether = {
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
+			{ new MaterialDataPair(Material.AIR, 0) },
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
+			{ new MaterialDataPair(Material.NETHER_BRICK_STAIRS, 0) },
+			{ new MaterialDataPair(Material.NETHER_FENCE, 0),
+					new MaterialDataPair(Material.IRON_FENCE, 0) },
+			{ new MaterialDataPair(Material.NETHER_BRICK_STAIRS, 0),
+					new MaterialDataPair(Material.NETHER_BRICK_STAIRS, 0) },
+			{ new MaterialDataPair(Material.SOUL_SAND, 0),
+					new MaterialDataPair(Material.NETHERRACK, 0) },
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) }, };
 	static final MaterialDataPair[][] matsNormal = {
 			{ new MaterialDataPair(Material.SMOOTH_BRICK, 0) },
 			{ new MaterialDataPair(Material.STONE, 0) },
@@ -89,6 +102,8 @@ public class MaterialManager {
 			matsSand, matsNormal };
 	static final MaterialDataPair[][][] matsListsNormal = { matsNormal,
 			matsNormal, matsNormal, matsCobble };
+	static final MaterialDataPair[][][] matsListsNether = { matsNether,
+		matsNether, matsNether, matsNether };
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
 			ground, pole;
@@ -102,6 +117,9 @@ public class MaterialManager {
 		case DESERT_HILLS:
 		case BEACH:
 			baseMats = matsListsSandy[r.nextInt(matsListsSandy.length)];
+			break;
+		case HELL:
+			baseMats = matsListsNether[r.nextInt(matsListsNether.length)];
 			break;
 		default:
 			baseMats = matsListsNormal[r.nextInt(matsListsNormal.length)];

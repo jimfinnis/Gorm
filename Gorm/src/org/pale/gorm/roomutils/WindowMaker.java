@@ -17,7 +17,7 @@ import org.pale.gorm.Util;
  * 
  */
 public class WindowMaker {
-	private static final float WINDOW_CHANCE = 0.2f;
+	private static final float WINDOW_CHANCE = 0.3f;
 
 	/**
 	 * Build a window covering the given extent. The key is a random value used
@@ -38,7 +38,7 @@ public class WindowMaker {
 		c.fill(e, Material.AIR, 0);
 
 		// the window is glazed if it is above the floor or one unit in height.
-		boolean glazed = re.miny != e.miny || (e.ysize() == 1);
+		boolean glazed = (re.miny + 1) < e.miny || (e.ysize() == 1);
 		// sometimes, glazing becomes iron bars.
 		boolean ironNotGlass = ((key & 1) == 0);
 
@@ -47,10 +47,9 @@ public class WindowMaker {
 		if (glazed)
 			//If not iron, get material and data of window material
 			c.fill(e, ironNotGlass ? Material.IRON_FENCE : mgr.getWindow().m , ironNotGlass ? 0 : mgr.getWindow().d);
-		else if (re.miny == e.miny) {
-			// this big window is dangerously low! Put some bars in the bottom
-			// part.
-			c.fill(e.getWall(Direction.DOWN), Material.IRON_FENCE, 0);
+		else {
+			// this window isn't going to get filled, lets put some bars in
+			c.fill(e, Material.IRON_FENCE, 0);
 		}
 	}
 
@@ -68,7 +67,7 @@ public class WindowMaker {
 		int y; // base of window within the wall
 
 		// window heights are more common at certain fixed positions
-		switch (c.r.nextInt(4)) {
+		switch (c.r.nextInt(5)) {
 		case 0:
 			y = 1;
 			break; // windows on the floor
@@ -79,7 +78,6 @@ public class WindowMaker {
 			y = roomExt.ysize() - 3;
 			break; // windows near ceiling
 		default:
-		case 3:
 			y = c.r.nextInt(roomExt.ysize() - 4) + 1;
 			break; // random
 		}

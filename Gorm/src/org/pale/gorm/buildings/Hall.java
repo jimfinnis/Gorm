@@ -1,8 +1,14 @@
-package org.pale.gorm;
+package org.pale.gorm.buildings;
 
 import java.util.Random;
 
 import org.bukkit.Material;
+import org.pale.gorm.Building;
+import org.pale.gorm.Castle;
+import org.pale.gorm.Extent;
+import org.pale.gorm.GormPlugin;
+import org.pale.gorm.MaterialManager;
+import org.pale.gorm.Room;
 import org.pale.gorm.rooms.RoofGarden;
 import org.pale.gorm.roomutils.BoxBuilder;
 import org.pale.gorm.roomutils.PitchedRoofBuilder;

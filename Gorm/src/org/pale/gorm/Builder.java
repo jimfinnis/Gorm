@@ -5,6 +5,8 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.material.Sign;
+import org.pale.gorm.buildings.Garden;
+import org.pale.gorm.buildings.Hall;
 
 /**
  * This object actually does the building inside the castle

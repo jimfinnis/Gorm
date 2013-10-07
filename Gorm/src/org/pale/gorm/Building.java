@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
@@ -12,9 +13,13 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
+import org.pale.gorm.rooms.ChestRoom;
+import org.pale.gorm.rooms.SpawnerRoom;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.roomutils.WindowMaker;
 
@@ -125,9 +130,30 @@ public abstract class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = new PlainRoom(mgr, roomExt, this);
+		Room r = chooseRoom(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
+	}
+	
+	
+	//Allows Multiple room types per tall building
+	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld){
+		Random rnd = new Random();
+		GormPlugin plugin = new GormPlugin();
+		if(plugin.getDungeon()){
+			switch (rnd.nextInt(10)) {
+			case 0:
+					return new ChestRoom(mgr, roomExt, bld);
+			case 1:
+			case 2:
+					return new SpawnerRoom(mgr,roomExt,bld);
+			default:
+					return new PlainRoom(mgr, roomExt, bld);
+			}
+		}
+		else{
+			return new PlainRoom(mgr, roomExt, bld);
+		}
 	}
 
 	/**
@@ -197,6 +223,20 @@ public abstract class Building {
 		floor.maxy = floor.miny;
 		c.fill(floor, Material.CARPET, col);
 	}
+	
+	/**
+	 * Block any glass or ironfence with primary, for darkness
+	 * 
+	 * @param room
+	 */
+	public void blockWindows(Extent room) {
+		Castle c = Castle.getInstance();
+		room = new Extent(room);
+		MaterialManager mgr = new MaterialManager(room.getCentre().getBlock().getBiome());
+		c.replace(room, mgr.getPrimary(), mgr.getWindow());
+		c.replace(room, mgr.getPrimary(), new MaterialDataPair(Material.IRON_FENCE, 0));
+	}
+	
 
 	/**
 	 * Lights around the walls if we need them

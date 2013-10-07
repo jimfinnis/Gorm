@@ -12,6 +12,7 @@ import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
+import org.pale.gorm.roomutils.Gardener;
 
 /**
  * A 'garden' area
@@ -56,60 +57,8 @@ public class Garden extends Building {
 
 		makeSingleRoom(mgr).setAllSidesOpen(); // this is a single, exterior
 												// room
-		plant(floor); // plant some things
+		Gardener.plant(floor); // plant some things
 		floorLights(inner); // light the inner region
 	}
 
-	/**
-	 * Plant some stuff
-	 * 
-	 * @param floor
-	 *            INNER extent of floor
-	 */
-	public static void plant(Extent floor) {
-		final Castle c = Castle.getInstance();
-		final World w = c.getWorld();
-
-		// note the hardwired material codes. Probably best change these!
-
-		floor = floor.addvec(0, 1, 0);
-		floor.runOnAllLocations(new Extent.LocationRunner() {
-
-			@Override
-			public void run(int x, int y, int z) {
-				MaterialDataPair mat = null;
-				if (c.r.nextFloat() < 0.1) {
-					switch (c.r.nextInt(10)) {
-					case 0:
-						mat = new MaterialDataPair(Material.YELLOW_FLOWER, 0);
-						break;
-					case 1:
-						mat = new MaterialDataPair(Material.RED_ROSE, 0);
-						break;
-					case 2:
-						if (c.r.nextFloat() < 0.1)
-							mat = new MaterialDataPair(Material.SAPLING, 0);
-						break;
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
-					case 8:
-					case 9:
-						mat = new MaterialDataPair(Material.LONG_GRASS, 1);
-						break;
-					default:
-						break;
-					}
-				}
-				if (mat != null) {
-					Block b = w.getBlockAt(x, y, z);
-					b.setType(mat.m);
-					b.setData((byte) mat.d);
-				}
-			}
-		});
-
-	}
 }

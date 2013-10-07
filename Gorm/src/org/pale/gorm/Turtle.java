@@ -197,8 +197,10 @@ public class Turtle {
 			b.setType(mat);
 
 			return true;
-		} else
+		} else {
+			abort();
 			return false;
+		}
 	}
 
 	public Material getMaterial() {
@@ -336,6 +338,9 @@ public class Turtle {
 			break;
 		case 's':
 			setMaterial(mgr.getStair(), 0);
+			break;
+		case 'S':
+			setMaterial(mgr.getPrimary().toSteps());
 			break;
 		case 'o':
 			setMaterial(mgr.getOrnament());

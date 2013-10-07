@@ -11,7 +11,7 @@ import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
-import org.pale.gorm.buildings.Garden;
+import org.pale.gorm.roomutils.Gardener;
 
 /**
  * A roof garden - must be the last room added to a building. Also changes the
@@ -50,7 +50,7 @@ public class RoofGarden extends Room {
 		// fill in the perimeter
 		perimeter(mgr, c);
 		
-		Garden.plant(floor.expand(-1,Extent.X|Extent.Z));
+		Gardener.plant(floor.expand(-1,Extent.X|Extent.Z));
 		
 		addSignHack();
 

@@ -26,6 +26,7 @@ public class MaterialManager {
 	private static final int GROUND = 7;
 	private static final int POLE = 8;
 	private static final int WINDOW = 9;
+	
 
 	/**
 	 * Each base material has a set of building materials. They're in these

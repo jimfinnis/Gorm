@@ -45,8 +45,8 @@ public class WindowMaker {
 		// so let's fill it
 
 		if (glazed)
-			c.fill(e, ironNotGlass ? Material.IRON_FENCE : Material.THIN_GLASS,
-					0);
+			//If not iron, get material and data of window material
+			c.fill(e, ironNotGlass ? Material.IRON_FENCE : mgr.getWindow().m , ironNotGlass ? 0 : mgr.getWindow().d);
 		else if (re.miny == e.miny) {
 			// this big window is dangerously low! Put some bars in the bottom
 			// part.

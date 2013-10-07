@@ -25,6 +25,7 @@ public class MaterialManager {
 	private static final int ROOFSTEPS = 6;
 	private static final int GROUND = 7;
 	private static final int POLE = 8;
+	private static final int WINDOW = 9;
 
 	/**
 	 * Each base material has a set of building materials. They're in these
@@ -44,7 +45,8 @@ public class MaterialManager {
 					new MaterialDataPair(Material.BIRCH_WOOD_STAIRS, 0) },
 			{ new MaterialDataPair(Material.SAND, 0),
 					new MaterialDataPair(Material.GRAVEL, 0) },
-			{ new MaterialDataPair(Material.WOOD, 0) }, };
+			{ new MaterialDataPair(Material.WOOD, 0) },
+			{ new MaterialDataPair(Material.THIN_GLASS, 0) }, };
 	static final MaterialDataPair[][] matsNether = {
 			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
 			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
@@ -57,7 +59,8 @@ public class MaterialManager {
 					new MaterialDataPair(Material.NETHER_BRICK_STAIRS, 0) },
 			{ new MaterialDataPair(Material.SOUL_SAND, 0),
 					new MaterialDataPair(Material.NETHERRACK, 0) },
-			{ new MaterialDataPair(Material.NETHER_BRICK, 0) }, };
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) }, 
+			{ new MaterialDataPair(Material.IRON_FENCE, 0) }, };
 	static final MaterialDataPair[][] matsNormal = {
 			{ new MaterialDataPair(Material.SMOOTH_BRICK, 0) },
 			{ new MaterialDataPair(Material.STONE, 0) },
@@ -81,7 +84,8 @@ public class MaterialManager {
 					new MaterialDataPair(Material.GRAVEL, 0),
 					new MaterialDataPair(Material.SAND, 0) },
 			{ new MaterialDataPair(Material.WOOD, 0),
-					new MaterialDataPair(Material.COBBLE_WALL, 0) }, };
+					new MaterialDataPair(Material.COBBLE_WALL, 0) }, 
+			{ new MaterialDataPair(Material.THIN_GLASS, 0) }, };
 	static final MaterialDataPair[][] matsCobble = {
 			{ new MaterialDataPair(Material.COBBLESTONE, 0) },
 			{ new MaterialDataPair(Material.COBBLESTONE, 0) },
@@ -96,7 +100,8 @@ public class MaterialManager {
 			{ new MaterialDataPair(Material.GRAVEL, 0),
 					new MaterialDataPair(Material.GRASS, 0) },
 			{ new MaterialDataPair(Material.WOOD, 0),
-					new MaterialDataPair(Material.COBBLE_WALL, 0) }, };
+					new MaterialDataPair(Material.COBBLE_WALL, 0) },
+			{ new MaterialDataPair(Material.THIN_GLASS, 0) },  };
 
 	static final MaterialDataPair[][][] matsListsSandy = { matsSand, matsSand,
 			matsSand, matsNormal };
@@ -106,7 +111,7 @@ public class MaterialManager {
 		matsNether, matsNether, matsNether };
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
-			ground, pole;
+			ground, pole, window;
 	private Material stairs, roofSteps;
 
 	public MaterialManager(Biome b) {
@@ -134,6 +139,7 @@ public class MaterialManager {
 		fence = getRandom(r, baseMats[FENCE]);
 		pole = getRandom(r, baseMats[POLE]);
 		roofSteps = getRandom(r, baseMats[ROOFSTEPS]).m;
+		window = getRandom(r, baseMats[WINDOW]);
 	}
 
 	private MaterialDataPair getRandom(Random r,
@@ -189,5 +195,9 @@ public class MaterialManager {
 
 	public MaterialDataPair getFence() {
 		return fence;
+	}
+	
+	public MaterialDataPair getWindow() {
+		return window;
 	}
 }

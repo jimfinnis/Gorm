@@ -62,8 +62,7 @@ public class ExitDecorator {
 
 		// fill in the hole at the top if there is one
 		x.miny += 2;x.maxy=x.miny;
-		c.fill(x, c.r.nextFloat() < 0.3 ? new MaterialDataPair(
-				Material.GLASS, 0) : mgr.getOrnament());
+		c.fill(x, c.r.nextFloat() < 0.3 ? mgr.getWindow() : mgr.getOrnament());
 
 	}
 
@@ -79,8 +78,8 @@ public class ExitDecorator {
 			else
 				x = x.expand(1, Extent.Y | Extent.Z);
 			x.miny = e.getExtent().miny;
-			// c.fill(x, mgr.getOrnament());
-			c.fill(x, Material.SMOOTH_BRICK, 3);
+			c.fill(x, mgr.getOrnament());
+			// c.fill(x, Material.SMOOTH_BRICK, 3);
 			c.fill(e.getExtent(), Material.AIR, 0);
 		}
 	}

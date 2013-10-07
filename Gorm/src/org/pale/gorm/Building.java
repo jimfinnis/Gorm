@@ -266,8 +266,8 @@ public abstract class Building {
 			dx = 1;
 			dz = 1;
 		} else {
-			dx = extent.xsize() < 8 ? extent.xsize() - 1 : 4;
-			dz = extent.zsize() < 8 ? extent.zsize() - 1 : 4;
+			dx = extent.xsize() <= 8 ? extent.xsize() - 1 : calcUnderfill(extent.xsize()-1);
+			dz = extent.zsize() <= 8 ? extent.zsize() - 1 : calcUnderfill(extent.zsize()-1);
 		}
 
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
@@ -284,6 +284,22 @@ public abstract class Building {
 			}
 		}
 
+	}
+	
+	int calcUnderfill(int size){
+		int dPillar = 4;
+		int count = 2;
+		int finalCount = 0;
+		while (count < 4){
+			if ((count*(Math.ceil(size/count))) == (size)){
+				finalCount = count;
+			}
+			count += 1;
+		}
+		if (finalCount > 0){
+			dPillar = (int)(Math.ceil(size/finalCount));
+		}
+		return dPillar;
 	}
 
 	void addLight(int x, int y, int z) {

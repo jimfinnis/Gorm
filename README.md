@@ -81,6 +81,7 @@ Instructions:
         3   secondary building material, requires support (e.g. gravel)
         f   fence material
         s   stair material
+        S   primary material converted to stair (for architectural purposes)
         o   ornamental block
         g   ground
         p   pole (e.g fencepost or cobble post but not iron bar)

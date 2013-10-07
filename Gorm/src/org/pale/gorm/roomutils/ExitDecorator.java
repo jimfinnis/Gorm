@@ -61,9 +61,9 @@ public class ExitDecorator {
 		c.fill(x.addvec(Direction.UP.vec), Material.WOODEN_DOOR, 8); // then top
 
 		// fill in the hole at the top if there is one
-		x.miny += 2;
+		x.miny += 2;x.maxy=x.miny;
 		c.fill(x, c.r.nextFloat() < 0.3 ? new MaterialDataPair(
-				Material.THIN_GLASS, 0) : mgr.getOrnament());
+				Material.GLASS, 0) : mgr.getOrnament());
 
 	}
 

@@ -56,11 +56,12 @@ public class Builder {
 
 				GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
 			} else {
-				GormPlugin.log("Could not move building "+Integer.toString(b.id)+" to a good place.");
+				GormPlugin.log("Could not move building to a good place.");
 			}
 			makeRandomExit();
 			makeRandomExit();
-			b.update();
+			if(b!=null)
+				b.update();
 		}
 	}
 

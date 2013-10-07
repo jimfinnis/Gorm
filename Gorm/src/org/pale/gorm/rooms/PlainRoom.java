@@ -32,6 +32,7 @@ public class PlainRoom extends Room {
 
 		Extent inner = e.expand(-1, Extent.ALL);
 		b.carpet(inner, c.r.nextInt(14));
+		b.chest(inner, 0.02); //1 in 50 chance of getting a loot chest
 		b.lightWalls(inner);
 		b.floorLights(inner);
 		

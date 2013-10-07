@@ -12,6 +12,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
@@ -196,6 +198,30 @@ public abstract class Building {
 		floor = new Extent(floor);
 		floor.maxy = floor.miny;
 		c.fill(floor, Material.CARPET, col);
+	}
+	
+	/**
+	 * Generates Random Loot Chests
+	 * 
+	 * @param floor - defines the area in which the chest will spawn
+	 * @param chance - how likely each room is to have a chest
+	 */
+	public void chest(Extent floor, double chance) {
+		Castle c = Castle.getInstance();
+		World w = c.getWorld();
+		floor = new Extent(floor);
+		floor.minx = floor.minx + (floor.xsize()/2);
+		floor.minz = floor.minz + (floor.zsize()/2);
+		Block b = w.getBlockAt(floor.minx,floor.miny,floor.minz);
+		if (c.r.nextFloat() <= chance){
+			b.setType(Material.CHEST);
+			Chest chest = (Chest) b.getState();
+			for(int i=1;i<(2+(int)(c.r.nextFloat()*((10-2)+1)));i++){
+				chest.getBlockInventory().addItem(new ItemStack(256+(int)(c.r.nextFloat()*((382-256)+1))));
+			}
+			chest.update();
+			GormPlugin.log("Chest Generated @ " + floor.minx + " " + floor.miny + " " + floor.minz);
+		}
 	}
 
 	/**

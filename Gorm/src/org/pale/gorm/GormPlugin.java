@@ -30,6 +30,7 @@ public final class GormPlugin extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		this.saveDefaultConfig();
 		getLogger().info("Gorm has been enabled");
 		logger = getLogger();
 	}

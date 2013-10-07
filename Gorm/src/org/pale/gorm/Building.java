@@ -134,7 +134,6 @@ public abstract class Building {
 		WindowMaker.buildWindows(mgr, r);
 	}
 	
-	public boolean dungeon = GormPlugin.getDungeon();
 	
 	//Allows Multiple room types per tall building
 	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld){

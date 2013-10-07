@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -23,6 +24,7 @@ public final class GormPlugin extends JavaPlugin {
 	private static Logger logger;
 	private Builder builder = null;
 	private static BukkitTask task=null;
+	static FileConfiguration fc;
 
 	@Override
 	public void onDisable() {
@@ -32,6 +34,7 @@ public final class GormPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		loadConfiguration();
+		fc = this.getConfig();
 		getLogger().info("Gorm has been enabled");
 		logger = getLogger();
 	}
@@ -43,7 +46,7 @@ public final class GormPlugin extends JavaPlugin {
     }
     
     public boolean getDungeon(){
-    	return this.getConfig().getBoolean("dungeon");
+    	return fc.getBoolean("dungeon");
     }
 
 	private boolean playerCheck(CommandSender sender) {

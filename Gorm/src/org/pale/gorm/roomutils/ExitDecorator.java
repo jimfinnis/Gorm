@@ -62,7 +62,9 @@ public class ExitDecorator {
 
 		// fill in the hole at the top if there is one
 		x.miny += 2;x.maxy=x.miny;
-		c.fill(x, c.r.nextFloat() < 0.3 ? mgr.getWindow() : mgr.getOrnament());
+		// note that this is GLASS - not THIN_GLASS or whatever the getWindow() call produces. Annoying, I know,
+		// but thin glass looks dreadful above doors.
+		c.fill(x, c.r.nextFloat() < 0.3 ? new MaterialDataPair(Material.GLASS,0) : mgr.getOrnament());
 
 	}
 

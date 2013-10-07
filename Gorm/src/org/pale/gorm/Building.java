@@ -200,29 +200,6 @@ public abstract class Building {
 		c.fill(floor, Material.CARPET, col);
 	}
 	
-	/**
-	 * Generates Random Loot Chests
-	 * 
-	 * @param floor - defines the area in which the chest will spawn
-	 * @param chance - how likely each room is to have a chest
-	 */
-	public void chest(Extent floor, double chance) {
-		Castle c = Castle.getInstance();
-		World w = c.getWorld();
-		floor = new Extent(floor);
-		floor.minx = floor.minx + (floor.xsize()/2);
-		floor.minz = floor.minz + (floor.zsize()/2);
-		Block b = w.getBlockAt(floor.minx,floor.miny,floor.minz);
-		if (c.r.nextFloat() <= chance){
-			b.setType(Material.CHEST);
-			Chest chest = (Chest) b.getState();
-			for(int i=1;i<(2+(int)(c.r.nextFloat()*((10-2)+1)));i++){
-				chest.getBlockInventory().addItem(new ItemStack(256+(int)(c.r.nextFloat()*((382-256)+1))));
-			}
-			chest.update();
-			GormPlugin.log("Chest Generated @ " + floor.minx + " " + floor.miny + " " + floor.minz);
-		}
-	}
 
 	/**
 	 * Lights around the walls if we need them

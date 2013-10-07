@@ -5,6 +5,8 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.material.Sign;
+import org.pale.gorm.buildings.Garden;
+import org.pale.gorm.buildings.Hall;
 
 /**
  * This object actually does the building inside the castle
@@ -56,11 +58,12 @@ public class Builder {
 
 				GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
 			} else {
-				GormPlugin.log("Could not move building "+Integer.toString(b.id)+" to a good place.");
+				GormPlugin.log("Could not move building to a good place.");
 			}
 			makeRandomExit();
 			makeRandomExit();
-			b.update();
+			if(b!=null)
+				b.update();
 		}
 	}
 

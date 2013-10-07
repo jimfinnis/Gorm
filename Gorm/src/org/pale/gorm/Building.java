@@ -51,7 +51,7 @@ public abstract class Building {
 	 * List of the rooms - vertical sections within the building. DO NOT add rooms directly,
 	 * use addRoom()
 	 */
-	protected LinkedList<Room> rooms = new LinkedList<Room>();
+	public LinkedList<Room> rooms = new LinkedList<Room>();
 	
 	protected void addRoom(Room r){
 		rooms.addFirst(r);
@@ -61,7 +61,7 @@ public abstract class Building {
 	/**
 	 * The extent of the entire building
 	 */
-	Extent extent;
+	public Extent extent;
 
 	/**
 	 * How much of the top of the building is 'roof'
@@ -279,7 +279,7 @@ public abstract class Building {
 	 * 
 	 * @param mgr
 	 */
-	void underfill(MaterialManager mgr, boolean complete) {
+	protected void underfill(MaterialManager mgr, boolean complete) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		int dx, dz;

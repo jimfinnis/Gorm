@@ -216,7 +216,7 @@ public abstract class Room implements Comparable<Room> {
 		// select a height at random depending on the room IDs, hoho.
 		// This will give a degree of consistency for multiple exits
 		int height = 2;
-		if(0==((this.id + that.id)%3))height++;
+		//if(0==((this.id + that.id)%3))height++;
 
 		// shrink the intersection along its longest axis, so we don't end
 		// up sliding the exit into a wall to avoid a window.

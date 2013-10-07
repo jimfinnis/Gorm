@@ -18,7 +18,7 @@ public class DungeonObjects {
 	 * @param floor - defines the area in which the chest will spawn
 	 * @param chance - how likely each room is to have a chest
 	 */
-	public void chest(Extent floor, double chance) {
+	public static void chest(Extent floor, double chance) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		floor = new Extent(floor);

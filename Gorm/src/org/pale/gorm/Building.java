@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 
@@ -17,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
+import org.pale.gorm.rooms.ChestRoom;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.roomutils.WindowMaker;
 
@@ -127,9 +129,21 @@ public abstract class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = new PlainRoom(mgr, roomExt, this);
+		Room r = chooseRoom(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
+	}
+	
+	//Allows Multiple room types per tall building
+	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld){
+		Random rnd = new Random();
+		switch (rnd.nextInt(2)) {
+		case 0:
+			return new ChestRoom(mgr, roomExt, bld);
+		default:
+			return new PlainRoom(mgr, roomExt, bld);
+
+		}
 	}
 
 	/**

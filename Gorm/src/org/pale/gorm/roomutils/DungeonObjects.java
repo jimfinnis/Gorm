@@ -24,7 +24,7 @@ public class DungeonObjects {
 		floor = new Extent(floor);
 		floor.minx = floor.minx + (floor.xsize()/2);
 		floor.minz = floor.minz + (floor.zsize()/2);
-		Block b = w.getBlockAt(floor.minx,floor.miny,floor.minz);
+		Block b = w.getBlockAt(floor.minx,floor.miny + 1,floor.minz);
 		if (c.r.nextFloat() <= chance){
 			b.setType(Material.CHEST);
 			Chest chest = (Chest) b.getState();

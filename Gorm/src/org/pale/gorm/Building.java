@@ -134,12 +134,20 @@ public abstract class Building {
 		WindowMaker.buildWindows(mgr, r);
 	}
 	
+	public boolean dungeon = GormPlugin.getDungeon();
+	
 	//Allows Multiple room types per tall building
 	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld){
 		Random rnd = new Random();
+		GormPlugin plugin = new GormPlugin();
 		switch (rnd.nextInt(2)) {
 		case 0:
-			return new ChestRoom(mgr, roomExt, bld);
+			if (plugin.getDungeon()){
+				return new ChestRoom(mgr, roomExt, bld);
+			}
+			else{
+				return new PlainRoom(mgr, roomExt, bld);
+			}
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 

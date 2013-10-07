@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 public final class GormPlugin extends JavaPlugin {
+	
 
 	public static void log(String msg) {
 		logger.info(msg);
@@ -30,10 +31,20 @@ public final class GormPlugin extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		this.saveDefaultConfig();
+		loadConfiguration();
 		getLogger().info("Gorm has been enabled");
 		logger = getLogger();
 	}
+	
+    public void loadConfiguration(){
+    	this.getConfig().addDefault("dungeon", true);
+    	this.getConfig().options().copyDefaults(true);
+    	this.saveConfig();
+    }
+    
+    public boolean getDungeon(){
+    	return this.getConfig().getBoolean("dungeon");
+    }
 
 	private boolean playerCheck(CommandSender sender) {
 		if (sender instanceof Player)

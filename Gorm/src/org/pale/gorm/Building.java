@@ -155,7 +155,7 @@ public abstract class Building {
 			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
-
+	
 	/**
 	 * Create and add a new room, attempting to build an exit down from this
 	 * room to the one below. Assumes the room list is ordered such new rooms

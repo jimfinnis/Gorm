@@ -605,6 +605,10 @@ public class Extent {
 		return e1.minx >= minx && e1.maxx <= maxx && e1.miny >= miny
 				&& e1.maxy <= maxy && e1.minz >= minz && e1.maxz <= maxz;
 	}
+	
+	public int area(){
+		return (this.xsize()*this.zsize()*this.ysize());
+	}
 
 	/**
 	 * grow the extent along the given direction by the given number of steps;

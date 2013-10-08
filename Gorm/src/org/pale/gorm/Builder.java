@@ -7,6 +7,7 @@ import org.bukkit.World;
 import org.bukkit.material.Sign;
 import org.pale.gorm.buildings.Garden;
 import org.pale.gorm.buildings.Hall;
+import org.pale.gorm.buildings.Path;
 
 /**
  * This object actually does the building inside the castle
@@ -32,17 +33,9 @@ public class Builder {
 	 */
 	public void build(Location loc) {
 		// initial room test
-		IntVector v = new IntVector(loc).subtract(0,1,0);
 		
 		if (castle.getBuildingCount() == 0) {
-			Extent e = new Extent(v, 20, 0, 30).setHeight(10);
-			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
-			Building b = new Garden(e);
-			b.build(mgr);
-			castle.addBuilding(b);
-			// very important - tell the castle to re-sort the room list!
-			castle.sortRooms();
-			b.update();
+			buildFirstBuilding(loc);
 		} else {
 			// first, create the required room, with its extents
 			// set around some other room, and slide it around until it fits
@@ -65,6 +58,28 @@ public class Builder {
 			if(b!=null)
 				b.update();
 		}
+	}
+	
+	/**
+	 * That very special case of the first building
+	 * @param loc
+	 */
+	private void buildFirstBuilding(Location loc){
+		IntVector v = new IntVector(loc).subtract(0,1,0);
+		
+		// get the size
+		Extent e = new Extent(v, 10, 0, 10).setHeight(30);
+		MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
+		
+		// and the type is quite important too.
+		Building b = new Hall(e);
+		
+		b.build(mgr);
+		castle.addBuilding(b);
+		// very important - tell the castle to re-sort the room list!
+		castle.sortRooms();
+
+		b.update();
 	}
 
 	/**
@@ -117,9 +132,12 @@ public class Builder {
 	 * @return
 	 */
 	private Building createBuilding(Building r) {
+		
 		switch (rnd.nextInt(25)) {
 		case 0:
 			return new Garden(r);
+		case 1:
+			return new Path(r); // a long, thin garden.
 		default:
 			return new Hall(r);
 

@@ -3,6 +3,7 @@ package org.pale.gorm.rooms;
 import org.bukkit.Material;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
+import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
@@ -23,9 +24,7 @@ public class PlainRoom extends Room {
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
 		Castle c = Castle.getInstance();
 		// make the actual floor - first layer
-		Extent floor = e.expand(-1, Extent.X | Extent.Z);
-		floor.maxy = floor.miny;
-		
+		Extent floor = e.expand(-1, Extent.X | Extent.Z).getWall(Direction.DOWN);
 		// fill with primary material
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);

@@ -19,6 +19,7 @@ import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.ChestRoom;
+import org.pale.gorm.rooms.ReadingRoom;
 import org.pale.gorm.rooms.SpawnerRoom;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.roomutils.WindowMaker;
@@ -147,12 +148,21 @@ public abstract class Building {
 			case 1:
 			case 2:
 					return new SpawnerRoom(mgr,roomExt,bld);
+			case 3:
+			case 4:
+					return new ReadingRoom(mgr,roomExt,bld);
 			default:
 					return new PlainRoom(mgr, roomExt, bld);
 			}
 		}
 		else{
-			return new PlainRoom(mgr, roomExt, bld);
+			switch (rnd.nextInt(3)){
+			case 0:
+			case 1:
+				return new ReadingRoom(mgr,roomExt,bld);
+			default:
+				return new PlainRoom(mgr, roomExt, bld);
+			}
 		}
 	}
 	

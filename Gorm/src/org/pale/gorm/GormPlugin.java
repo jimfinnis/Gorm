@@ -45,7 +45,7 @@ public final class GormPlugin extends JavaPlugin {
     	this.saveConfig();
     }
     
-    public boolean getDungeon(){
+    public boolean getIsDungeon(){
     	return fc.getBoolean("dungeon");
     }
 

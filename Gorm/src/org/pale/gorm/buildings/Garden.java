@@ -53,9 +53,8 @@ public class Garden extends Building {
 												// already there
 		c.checkFill(floor, ground.m, ground.d);
 
-		underfill(mgr, true);
-
 		makeSingleRoom(mgr).setAllSidesOpen(); // this is a single, exterior
+		underfill(mgr, true);
 												// room
 		Gardener.plant(floor); // plant some things
 		floorLights(inner); // light the inner region

@@ -136,7 +136,7 @@ public abstract class Room implements Comparable<Room> {
 		// I have to convert it to a list before I can sort it.
 		List<Room> rooms = new ArrayList<Room>(adjacentRooms());
 		Collections.sort(rooms);
-		for (Room that : Castle.getInstance().getRooms()) {
+		for (Room that : rooms) {
 			// GormPlugin.log("This: "+e.toString()+" That: "+that.e.toString());
 			// don't try to connect a room to itself or another in the same
 			// building

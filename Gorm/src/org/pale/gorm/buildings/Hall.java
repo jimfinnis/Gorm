@@ -8,6 +8,7 @@ import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
 import org.pale.gorm.MaterialManager;
+import org.pale.gorm.Noise;
 import org.pale.gorm.Room;
 import org.pale.gorm.rooms.RoofGarden;
 import org.pale.gorm.roomutils.BoxBuilder;
@@ -22,6 +23,10 @@ import org.pale.gorm.roomutils.RoofBuilder;
  */
 public class Hall extends Building {
 	
+	public Hall(Extent e) {
+		extent = e;
+	}
+
 	public Hall(Building parent) {
 		Random rnd = Castle.getInstance().r;
 		
@@ -31,16 +36,20 @@ public class Hall extends Building {
 		int x = rnd.nextInt(10) + 5;
 		int z = rnd.nextInt(10) + 5;
 		int y;
+		
+		double height = Noise.noise2Dfractal(x, z, 1, 2, 3, 0.5); //0-1 noise
+		double variance = Noise.noise2Dfractal(x,z,2,2,3,0.5);
 
 		// TODO this is a blatant special case hack.
 		if(parent.rooms.getFirst() instanceof RoofGarden && rnd.nextFloat()<0.8) {
 			// if the top room of the parent has a garden, high chance that we're a good bit taller.
-			y = parent.extent.ysize() + 4 + rnd.nextInt(10);
+			y = parent.extent.ysize() + 4 + rnd.nextInt((int)(height*10.0));
+		} else {
+			y = rnd.nextInt(5+Noise.scale(15, variance))+10;
+			y = Noise.scale(y,height)+5;
 		}
-		else if (rnd.nextFloat() < 0.01)
-			y = rnd.nextInt(20) + 30;
-		else
-			y = rnd.nextInt(20) + 10;
+		
+		
 		setInitialExtent(parent, x, y, z);
 	}
 
@@ -52,9 +61,10 @@ public class Hall extends Building {
 		
 		BoxBuilder.build(mgr, extent); // make the walls
 
-		underfill(mgr,false); // build "stilts" if required
 
 		makeRooms(mgr); // and make the internal rooms
+
+		underfill(mgr,false); // build "stilts" if required
 
 		// is the bit above the building free?
 		// Calculate an extent for a putative pitched roof, the height

@@ -144,14 +144,13 @@ public class Castle {
 	 */
 
 	public void replace(Extent e, Material mat, int data, Material matReplace, int dataReplace) {
-		World w = Castle.getInstance().getWorld();
 		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
 			fillBrickWithCracksAndMoss(e, true);
 		} else {
 			for (int x = e.minx; x <= e.maxx; x++) {
 				for (int y = e.miny; y <= e.maxy; y++) {
 					for (int z = e.minz; z <= e.maxz; z++) {
-						Block b = w.getBlockAt(x, y, z);
+						Block b = world.getBlockAt(x, y, z);
 						if (b.getType() == matReplace){
 							if (b.getData() == (byte) dataReplace){
 								b.setType(mat);

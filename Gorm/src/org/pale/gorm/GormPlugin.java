@@ -1,5 +1,6 @@
 package org.pale.gorm;
 
+import java.util.Random;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -123,25 +124,23 @@ public final class GormPlugin extends JavaPlugin {
 		for(Room q: Castle.getInstance().getRooms())
 			GormPlugin.log("   loop: room "+q.id+" has "+q.exits.size());
 		GormPlugin.log("Done!");
-
-		
-
-/*		
-		for(Building b: c.getBuildingsIntersecting(e)){
-			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
-			b.makeRandomExit(mgr);
-		}
-*/		
 	}
 
 	private void flatten(Player p) {
 		IntVector pos = new IntVector(p.getLocation());
-		int size = 30;
+		int size = 50;
+		Material[] m = {Material.LAPIS_BLOCK,Material.DIAMOND_BLOCK, Material.GOLD_BLOCK,
+				Material.IRON_BLOCK
+		};
+		
 		World w = p.getWorld();
 		for (int dx = -size; dx <= size; dx++) {
 			for (int dz = -size; dz <= size; dz++) {
 				int x = dx + pos.x;
 				int z = dz + pos.z;
+				
+				
+				
 				int y = w.getHighestBlockYAt(x, z);
 				while (y >= pos.y) {
 					Block b = w.getBlockAt(x, y, z);
@@ -149,9 +148,17 @@ public final class GormPlugin extends JavaPlugin {
 					b.setData((byte) 0);
 					y--;
 				}
+				
+				Block b = w.getHighestBlockAt(x, z);
+				int reg = getReg(x,z);
+				b.setType(m[reg]);
 			}
 		}
+	}
 
+	private int getReg(double x,double z){
+		return (Noise.fuzzyBooleanNoise(x,z,1,	1,0.5, 0.1)?2:0) + 
+				(Noise.fuzzyBooleanNoise(x,z,2,	1,0.5, 0.1)?1:0);
 	}
 
 	private void gt(Player p, String str) {

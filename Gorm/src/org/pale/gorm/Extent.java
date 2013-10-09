@@ -10,7 +10,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-
 /**
  * A class to hold an axis-aligned bounding box and manipulate it.
  * 
@@ -18,6 +17,7 @@ import org.bukkit.block.Block;
  * 
  */
 public class Extent {
+
 	public interface LocationRunner {
 		void run(int x,int y,int z);
 

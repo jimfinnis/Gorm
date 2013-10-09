@@ -30,22 +30,23 @@ public class Castle {
 	private static Castle instance;
 	private World world;
 	public Random r = new Random();
-	
+
 	/**
-	 * Each chunk has a list of rooms which intersect it. Naturally, a room is likely
-	 * to belong to more than one chunk
+	 * Each chunk has a list of rooms which intersect it. Naturally, a room is
+	 * likely to belong to more than one chunk
 	 */
-	private Map<Integer,Collection<Room>> roomsByChunk = new HashMap<Integer,Collection<Room>>();
-	
+	private Map<Integer, Collection<Room>> roomsByChunk = new HashMap<Integer, Collection<Room>>();
+
 	/**
 	 * Rooms so we can sort by number of exits.
 	 */
-	private ArrayList<Room> rooms =  new ArrayList<Room>();
+	private ArrayList<Room> rooms = new ArrayList<Room>();
 
 	/**
 	 * Private ctor so this is a singleton
 	 */
-	private Castle() {}
+	private Castle() {
+	}
 
 	/**
 	 * MUST call this before building
@@ -82,19 +83,19 @@ public class Castle {
 	}
 
 	/**
-	 * returns true if e intersects any room at all. This works
-	 * by iterating over the rooms in the chunks for that extent
+	 * returns true if e intersects any room at all. This works by iterating
+	 * over the rooms in the chunks for that extent
 	 * 
 	 * @param e
 	 * @return
 	 */
 	public boolean intersects(Extent e) {
 		Set<Integer> chunks = e.getChunks();
-		for(int c: chunks){
+		for (int c : chunks) {
 			Collection<Room> list = getRoomsByChunk(c);
-			if(list!=null){
-				for(Room r: list){
-					if(r.getExtent().intersects(e))
+			if (list != null) {
+				for (Room r : list) {
+					if (r.getExtent().intersects(e))
 						return true;
 				}
 			}
@@ -112,7 +113,8 @@ public class Castle {
 	 */
 
 	public void checkFill(Extent e, Material mat, int data) {
-		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
+		if (mat == Material.SMOOTH_BRICK && data == 0) {// if this is plain
+														// brick, flash it up!
 			fillBrickWithCracksAndMoss(e, true);
 		} else {
 			for (int x = e.minx; x <= e.maxx; x++) {
@@ -128,11 +130,11 @@ public class Castle {
 			}
 		}
 	}
-	
-	public void checkFill(Extent e, MaterialDataPair mp){
-		checkFill(e,mp.m,mp.d);
+
+	public void checkFill(Extent e, MaterialDataPair mp) {
+		checkFill(e, mp.m, mp.d);
 	}
-	
+
 	/**
 	 * Replace certain blocks within an Extent
 	 * 
@@ -143,30 +145,27 @@ public class Castle {
 	 * @param dataReplace
 	 */
 
-	public void replace(Extent e, Material mat, int data, Material matReplace, int dataReplace) {
-		if (mat == Material.SMOOTH_BRICK && data==0) {// if this is plain brick, flash it up!
-			fillBrickWithCracksAndMoss(e, true);
-		} else {
-			for (int x = e.minx; x <= e.maxx; x++) {
-				for (int y = e.miny; y <= e.maxy; y++) {
-					for (int z = e.minz; z <= e.maxz; z++) {
-						Block b = world.getBlockAt(x, y, z);
-						if (b.getType() == matReplace){
-							if (b.getData() == (byte) dataReplace){
-								b.setType(mat);
-								b.setData((byte) data);
-							}
+	public void replace(Extent e, Material mat, int data, Material matReplace,
+			int dataReplace) {
+		for (int x = e.minx; x <= e.maxx; x++) {
+			for (int y = e.miny; y <= e.maxy; y++) {
+				for (int z = e.minz; z <= e.maxz; z++) {
+					Block b = world.getBlockAt(x, y, z);
+					if (b.getType() == matReplace) {
+						if (b.getData() == (byte) dataReplace) {
+							b.setType(mat);
+							b.setData((byte) data);
 						}
 					}
 				}
 			}
 		}
 	}
-	
-	public void replace(Extent e, MaterialDataPair mp, MaterialDataPair mpReplace){
-		replace(e,mp.m,mp.d,mpReplace.m,mpReplace.d);
-	}
 
+	public void replace(Extent e, MaterialDataPair mp,
+			MaterialDataPair mpReplace) {
+		replace(e, mp.m, mp.d, mpReplace.m, mpReplace.d);
+	}
 
 	/**
 	 * Fill an extent with a material and data DOES NOT CHECK that the stuff
@@ -177,7 +176,8 @@ public class Castle {
 	 * @param data
 	 */
 	public void fill(Extent e, Material mat, int data) {
-		if (mat == Material.SMOOTH_BRICK && data==0) // if this is plain brick, flash it up!
+		if (mat == Material.SMOOTH_BRICK && data == 0) // if this is plain
+														// brick, flash it up!
 			fillBrickWithCracksAndMoss(e, false);
 		else {
 			for (int x = e.minx; x <= e.maxx; x++) {
@@ -191,9 +191,9 @@ public class Castle {
 			}
 		}
 	}
-	
-	public void fill(Extent e, MaterialDataPair mp){
-		fill(e,mp.m,mp.d);
+
+	public void fill(Extent e, MaterialDataPair mp) {
+		fill(e, mp.m, mp.d);
 	}
 
 	/**
@@ -209,8 +209,8 @@ public class Castle {
 		byte data = b.getData();
 		// materials walls can be made of
 		if (m == Material.SMOOTH_BRICK || m == Material.WOOD
-				|| m == Material.BRICK || m==Material.COBBLESTONE || (m==Material.SANDSTONE && data!=0)
-				|| isStairs(m))
+				|| m == Material.BRICK || m == Material.COBBLESTONE
+				|| (m == Material.SANDSTONE && data != 0) || isStairs(m))
 			return false;
 
 		// check for 'inside' air which we can't overwrite
@@ -301,10 +301,12 @@ public class Castle {
 
 	static boolean isStairs(Material m) {
 		return (m == Material.COBBLESTONE_STAIRS || m == Material.WOOD_STAIRS
-				|| m == Material.BIRCH_WOOD_STAIRS || m == Material.SANDSTONE_STAIRS
-				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS || m==Material.QUARTZ_STAIRS
-				|| m == Material.NETHER_BRICK_STAIRS || m == Material.JUNGLE_WOOD_STAIRS || m==Material.SPRUCE_WOOD_STAIRS
-				);
+				|| m == Material.BIRCH_WOOD_STAIRS
+				|| m == Material.SANDSTONE_STAIRS
+				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS
+				|| m == Material.QUARTZ_STAIRS
+				|| m == Material.NETHER_BRICK_STAIRS
+				|| m == Material.JUNGLE_WOOD_STAIRS || m == Material.SPRUCE_WOOD_STAIRS);
 	}
 
 	/**
@@ -316,7 +318,7 @@ public class Castle {
 	 * @param d
 	 * @return
 	 */
-	private boolean dropExitStairs(MaterialManager mgr,Extent e, Direction d) {
+	private boolean dropExitStairs(MaterialManager mgr, Extent e, Direction d) {
 
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
@@ -334,14 +336,14 @@ public class Castle {
 			for (int x = e.minx; x <= e.maxx; x++) {
 				int startz = v.z > 0 ? e.minz : e.maxz;
 				IntVector start = new IntVector(x, floory, startz);
-				done |= stairScan(mgr,start, e, v);
+				done |= stairScan(mgr, start, e, v);
 			}
 		} else {
 			// the north-south case
 			for (int z = e.minz; z <= e.maxz; z++) {
 				int startx = v.x > 0 ? e.minx : e.maxx;
 				IntVector start = new IntVector(startx, floory, z);
-				done |= stairScan(mgr,start, e, v);
+				done |= stairScan(mgr, start, e, v);
 			}
 		}
 
@@ -358,7 +360,8 @@ public class Castle {
 	 * @param v
 	 * @return
 	 */
-	private boolean stairScan(MaterialManager mgr, IntVector start, Extent e, IntVector v) {
+	private boolean stairScan(MaterialManager mgr, IntVector start, Extent e,
+			IntVector v) {
 		boolean done = false;
 		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
@@ -418,18 +421,15 @@ public class Castle {
 		}
 	}
 
-
-	public void postProcessExit(MaterialManager mgr,Exit e) {
-		dropExitStairs(mgr,e.getExtent(), e.getDirection());
-		ExitDecorator.decorate(mgr,e);
+	public void postProcessExit(MaterialManager mgr, Exit e) {
+		dropExitStairs(mgr, e.getExtent(), e.getDirection());
+		ExitDecorator.decorate(mgr, e);
 	}
-	
+
 	public static boolean requiresLight(int x, int y, int z) {
 		Block b = Castle.getInstance().getWorld().getBlockAt(x, y, z);
 		return b.getLightLevel() < 7;
 	}
-
-
 
 	public void raze() {
 		for (Building r : buildings) {
@@ -448,14 +448,16 @@ public class Castle {
 
 	/**
 	 * add a room to both the room list and the rooms-by-chunk map
+	 * 
 	 * @param r
 	 */
 	public void addRoom(Room r) {
-		GormPlugin.log("Adding room "+Integer.toString(r.id)+" with extent "+r.getExtent().toString());
+		GormPlugin.log("Adding room " + Integer.toString(r.id)
+				+ " with extent " + r.getExtent().toString());
 		rooms.add(r);
-		for(int c: r.getChunks()){
+		for (int c : r.getChunks()) {
 			Collection<Room> list;
-			if(!roomsByChunk.containsKey(c)) {
+			if (!roomsByChunk.containsKey(c)) {
 				list = new ArrayList<Room>();
 				roomsByChunk.put(c, list);
 			} else
@@ -463,19 +465,20 @@ public class Castle {
 			list.add(r);
 		}
 	}
-	
+
 	/**
 	 * This will return null if a chunk isn't in the map yet
+	 * 
 	 * @return
 	 */
-	public Collection<Room> getRoomsByChunk(int key){
+	public Collection<Room> getRoomsByChunk(int key) {
 		return roomsByChunk.get(key);
 	}
-	
+
 	public Collection<Room> getRooms() {
 		return rooms;
 	}
-	
+
 	/**
 	 * make sure the rooms list is sorted by number of exits
 	 */
@@ -485,10 +488,11 @@ public class Castle {
 
 	/**
 	 * Useful shortcut for getting a block in the world.
+	 * 
 	 * @param pos
 	 * @return
 	 */
 	public Block getBlockAt(IntVector pos) {
-		return world.getBlockAt(pos.x,pos.y,pos.z);
+		return world.getBlockAt(pos.x, pos.y, pos.z);
 	}
 }

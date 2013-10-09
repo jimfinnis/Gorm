@@ -383,8 +383,10 @@ public class Extent {
 
 	public boolean intersects(Extent e) {
 
-		return e.minx <= maxx && e.maxx >= minx && e.miny <= maxy
-				&& e.maxy >= miny && e.minz <= maxz && e.maxz >= minz;
+            return
+                  e.minx <= maxx && e.maxx >= minx && 
+                  e.miny <= maxy && e.maxy >= miny &&
+                  e.minz <= maxz && e.maxz >= minz;
 	}
 
 	/**

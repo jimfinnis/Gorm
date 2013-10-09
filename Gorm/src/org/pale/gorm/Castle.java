@@ -36,6 +36,10 @@ public class Castle {
 	 * likely to belong to more than one chunk
 	 */
 	private Map<Integer, Collection<Room>> roomsByChunk = new HashMap<Integer, Collection<Room>>();
+	/**
+	 * This is a similar map to roomsByChunk, but for buildings.
+	 */
+	private Map<Integer, Collection<Building>> buildingsByChunk = new HashMap<Integer, Collection<Building>>();
 
 	/**
 	 * Rooms so we can sort by number of exits.
@@ -78,8 +82,17 @@ public class Castle {
 	 * 
 	 * @param r
 	 */
-	void addBuilding(Building r) {
-		buildings.add(r);
+	void addBuilding(Building b) {
+		for (int c : b.getExtent().getChunks()) {
+			Collection<Building> list;
+			if (!buildingsByChunk.containsKey(c)) {
+				list = new ArrayList<Building>();
+				buildingsByChunk.put(c, list);
+			} else
+				list = buildingsByChunk.get(c);
+			list.add(b);
+		}
+		buildings.add(b);
 	}
 
 	/**
@@ -90,12 +103,11 @@ public class Castle {
 	 * @return
 	 */
 	public boolean intersects(Extent e) {
-		Set<Integer> chunks = e.getChunks();
-		for (int c : chunks) {
-			Collection<Room> list = getRoomsByChunk(c);
-			if (list != null) {
-				for (Room r : list) {
-					if (r.getExtent().intersects(e))
+		for(int c: e.getChunks()){
+			Collection<Building> list = buildingsByChunk.get(c);
+			if(list!=null){
+				for(Building b: list){
+					if(b.getExtent().intersects(e))
 						return true;
 				}
 			}
@@ -103,6 +115,7 @@ public class Castle {
 		return false;
 	}
 
+	
 	/**
 	 * Fill an extent with a material and data, checking we don't overwrite
 	 * certain things

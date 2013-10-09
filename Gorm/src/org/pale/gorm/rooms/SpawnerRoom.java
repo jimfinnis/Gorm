@@ -12,8 +12,8 @@ import org.pale.gorm.roomutils.DungeonObjects;
 import org.bukkit.entity.EntityType;
 
 /**
- * A plain, carpeted room.
- * @author white
+ * A Dark room to spawn mobs.
+ * @author domos
  *
  */
 public class SpawnerRoom extends Room {

@@ -12,7 +12,7 @@ import org.pale.gorm.roomutils.DungeonObjects;
 import org.bukkit.entity.EntityType;
 
 /**
- * A plain, carpeted room.
+ * Dark Dungeon room with a spawner.
  * @author white
  *
  */

@@ -9,8 +9,8 @@ import org.pale.gorm.Room;
 import org.pale.gorm.roomutils.Furniture;
 
 /**
- * A plain, carpeted room.
- * @author white
+ * because every castle needs books.
+ * @author domos
  *
  */
 public class ReadingRoom extends Room {

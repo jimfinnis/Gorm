@@ -9,8 +9,8 @@ import org.pale.gorm.Room;
 import org.pale.gorm.roomutils.DungeonObjects;
 
 /**
- * A plain, carpeted room.
- * @author white
+ * A loot chest with random stuff.
+ * @author domos
  *
  */
 public class ChestRoom extends Room {

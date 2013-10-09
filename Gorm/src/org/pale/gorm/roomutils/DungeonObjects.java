@@ -8,8 +8,10 @@ import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.pale.gorm.Castle;
+import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
+import org.pale.gorm.IntVector;
 
 public class DungeonObjects {
 
@@ -23,10 +25,12 @@ public class DungeonObjects {
 	public static void chest(Extent floor, double chance) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
-		floor = new Extent(floor);
-		floor.minx = floor.minx + (floor.xsize()/2);
-		floor.minz = floor.minz + (floor.zsize()/2);
-		Block b = w.getBlockAt(floor.minx,floor.miny + 1,floor.minz);
+		
+		// I've tidied this up a bit using IntVector. The call to getWall is probably
+		// unnecessary - jcf
+		IntVector centreFloor = floor.getWall(Direction.DOWN).getCentre().add(0, 1, 0);
+		Block b = c.getBlockAt(centreFloor);
+		
 		if (c.r.nextFloat() <= chance){
 			b.setType(Material.CHEST);
 			Chest chest = (Chest) b.getState();

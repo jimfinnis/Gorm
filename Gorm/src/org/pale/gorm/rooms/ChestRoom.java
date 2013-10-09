@@ -21,7 +21,6 @@ public class ChestRoom extends Room {
 
 	@Override
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		DungeonObjects dObj = new DungeonObjects();
 		Castle c = Castle.getInstance();
 		// make the actual floor - first layer
 		Extent floor = e.expand(-1, Extent.X | Extent.Z);
@@ -35,7 +34,7 @@ public class ChestRoom extends Room {
 		b.carpet(inner, c.r.nextInt(14));
 		b.lightWalls(inner);
 		b.floorLights(inner);
-		dObj.chest(floor, 1);
+		DungeonObjects.chest(floor, 1);
 		
 		addSignHack();
 		

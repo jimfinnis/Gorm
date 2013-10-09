@@ -103,11 +103,30 @@ public class MaterialManager {
 			{ new MaterialDataPair(Material.WOOD, 0),
 					new MaterialDataPair(Material.COBBLE_WALL, 0) },
 			{ new MaterialDataPair(Material.THIN_GLASS, 0) },  };
+	static final MaterialDataPair[][] matsTaiga = {
+		{ new MaterialDataPair(Material.SMOOTH_BRICK, 0) },
+		{ new MaterialDataPair(Material.STONE, 0) },
+		{ new MaterialDataPair(Material.GRAVEL, 0) },
+		{ new MaterialDataPair(Material.SMOOTH_BRICK, 3) },
+		{ new MaterialDataPair(Material.SPRUCE_WOOD_STAIRS, 0),
+				new MaterialDataPair(Material.SMOOTH_STAIRS, 0), },
+		{ new MaterialDataPair(Material.COBBLE_WALL, 0),
+				new MaterialDataPair(Material.COBBLE_WALL, 1),
+				new MaterialDataPair(Material.IRON_FENCE, 0), },
+		{ new MaterialDataPair(Material.SPRUCE_WOOD_STAIRS, 0),
+				new MaterialDataPair(Material.SMOOTH_STAIRS, 0), },
+		{ new MaterialDataPair(Material.SNOW_BLOCK, 0),
+				new MaterialDataPair(Material.GRASS, 0),},
+		{ new MaterialDataPair(Material.WOOD, 1),
+				new MaterialDataPair(Material.COBBLE_WALL, 0) }, 
+		{ new MaterialDataPair(Material.THIN_GLASS, 0) }, };
 
 	static final MaterialDataPair[][][] matsListsSandy = { matsSand, matsSand,
 			matsSand, matsNormal };
 	static final MaterialDataPair[][][] matsListsNormal = { matsNormal,
 			matsNormal, matsNormal, matsCobble };
+	static final MaterialDataPair[][][] matsListsTaiga = { matsTaiga,
+		matsTaiga, matsTaiga, matsNormal };
 	static final MaterialDataPair[][][] matsListsNether = { matsNether,
 		matsNether, matsNether, matsNether };
 
@@ -123,6 +142,12 @@ public class MaterialManager {
 		case DESERT_HILLS:
 		case BEACH:
 			baseMats = matsListsSandy[r.nextInt(matsListsSandy.length)];
+			break;
+		case TAIGA:
+		case ICE_PLAINS:
+		case FROZEN_OCEAN:
+		case FROZEN_RIVER:
+			baseMats = matsListsTaiga[r.nextInt(matsListsTaiga.length)];
 			break;
 		case HELL:
 			baseMats = matsListsNether[r.nextInt(matsListsNether.length)];

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
@@ -604,6 +605,26 @@ public class Extent {
 	public boolean contains(Extent e1) {
 		return e1.minx >= minx && e1.maxx <= maxx && e1.miny >= miny
 				&& e1.maxy <= maxy && e1.minz >= minz && e1.maxz <= maxz;
+	}
+	
+	public boolean containsThis(Material m) {
+		World w = Castle.getInstance().getWorld();
+		boolean contains = false;
+		for (int x=this.minx; x<=this.maxx; x++){
+			for (int z=this.minz; z<=this.maxz; z++){
+				for (int y=this.miny; y<=this.maxy; y++){
+					Block thisBlock = w.getBlockAt(x,y,z);
+					if (thisBlock.getType() == m){
+						contains = true;
+					}
+				}
+			}
+		}
+		return contains;
+	}
+	
+	public int area(){
+		return (this.xsize()*this.zsize()*this.ysize());
 	}
 
 	/**

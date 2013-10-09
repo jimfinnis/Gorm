@@ -34,7 +34,7 @@ public class ChestRoom extends Room {
 		b.carpet(inner, c.r.nextInt(14));
 		b.lightWalls(inner);
 		b.floorLights(inner);
-		DungeonObjects.chest(floor, 1);
+		DungeonObjects.chest(inner, 1);
 		
 		addSignHack();
 		

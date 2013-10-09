@@ -22,13 +22,13 @@ public class DungeonObjects {
 	 * @param floor - defines the area in which the chest will spawn
 	 * @param chance - how likely each room is to have a chest
 	 */
-	public static void chest(Extent floor, double chance) {
+	public static void chest(Extent inner, double chance) {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		
 		// I've tidied this up a bit using IntVector. The call to getWall is probably
 		// unnecessary - jcf
-		IntVector centreFloor = floor.getWall(Direction.DOWN).getCentre().add(0, 1, 0);
+		IntVector centreFloor = inner.getWall(Direction.DOWN).getCentre();
 		Block b = c.getBlockAt(centreFloor);
 		
 		if (c.r.nextFloat() <= chance){
@@ -38,23 +38,20 @@ public class DungeonObjects {
 				chest.getBlockInventory().addItem(new ItemStack(256+(int)(c.r.nextFloat()*((382-256)+1))));
 			}
 			chest.update();
-			GormPlugin.log("Chest Generated @ " + floor.minx + " " + floor.miny + " " + floor.minz);
+			GormPlugin.log("Chest Generated @ " + centreFloor);
 		}
 	}
 	
-	public static void spawner(Extent floor, EntityType spawnEntity, double chance) {
+	public static void spawner(Extent inner, EntityType spawnEntity, double chance) {
 		Castle c = Castle.getInstance();
-		World w = c.getWorld();
-		floor = new Extent(floor);
-		floor.minx = floor.minx + (floor.xsize()/2);
-		floor.minz = floor.minz + (floor.zsize()/2);
-		Block b = w.getBlockAt(floor.minx,floor.miny + 1,floor.minz);
+		IntVector centreFloor = inner.getWall(Direction.DOWN).getCentre();
+		Block b = c.getBlockAt(centreFloor);
 		if (c.r.nextFloat() <= chance){
 			b.setType(Material.MOB_SPAWNER);
 			CreatureSpawner spawner = (CreatureSpawner) b.getState();
 			spawner.setSpawnedType(spawnEntity);
 			spawner.update();
-			GormPlugin.log("Spawner Generated @ " + floor.minx + " " + floor.miny + " " + floor.minz);
+			GormPlugin.log("Spawner Generated @ " + centreFloor);
 		}
 	}
 	

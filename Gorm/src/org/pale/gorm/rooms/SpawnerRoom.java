@@ -24,7 +24,6 @@ public class SpawnerRoom extends Room {
 
 	@Override
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		DungeonObjects dObj = new DungeonObjects();
 		Castle c = Castle.getInstance();
 		// make the actual floor - first layer
 		Extent floor = e.expand(-1, Extent.X | Extent.Z);
@@ -33,8 +32,7 @@ public class SpawnerRoom extends Room {
 		// fill with primary material
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
-
-		Extent inner = e.expand(-1, Extent.ALL);
+		
 		b.blockWindows(e);
 		ArrayList<EntityType> entities = new ArrayList<EntityType>();
 		entities.add(EntityType.CAVE_SPIDER);
@@ -43,7 +41,8 @@ public class SpawnerRoom extends Room {
 		entities.add(EntityType.ZOMBIE);
 		entities.add(EntityType.WITCH);
 		
-		dObj.spawner(floor,entities.get(c.r.nextInt(entities.size())), 1);
+		Extent inner = e.expand(-1, Extent.ALL);
+		DungeonObjects.spawner(inner,entities.get(c.r.nextInt(entities.size())), 1);
 		
 		addSignHack();
 		

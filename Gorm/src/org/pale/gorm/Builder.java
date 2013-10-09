@@ -192,10 +192,18 @@ public class Builder {
 			Building parentRoom) {
 		Extent e = moved.addvec(0, yslide, 0);
 		Extent eOuter = e.expand(1, Extent.ALL);
-		if (!castle.intersects(e) && !e.intersectsWorld()) {
-			if (e.getMinHeightAboveWorld() < 3 && parentRoom.intersects(eOuter)) {
+		// we allow a building to be positioned if it is (a) not intersecting the castle
+		// and (b) is not too buried in the earth. For this check, we only use the bottom
+		// three layers (to avoid problems with gardens and paths)
+		double filled=e.setHeight(3).amountOfSoil();
+		if (filled<0.25 && !castle.intersects(e)){
+			
+			if (e.getMinHeightAboveWorld() < 3 && 
+					e.getMaxHeightAboveWorld() < 10 && // stupid stilt avoidance!
+					parentRoom.intersects(eOuter)) {
 				// that'll do!
 				b.setExtent(eOuter);
+				GormPlugin.log("amount in ground: "+Double.toString(filled));
 				GormPlugin.log("building "+Integer.toString(b.id)+" moved to: " + b.getExtent().toString());
 				return true;
 			}

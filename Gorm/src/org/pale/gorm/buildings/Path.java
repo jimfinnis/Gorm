@@ -21,6 +21,6 @@ public class Path extends Garden {
 			x = z;
 			z = t;
 		}
-		setInitialExtent(parent, x, 40, z);
+		setInitialExtent(parent, x, 10, z);
 	}
 }

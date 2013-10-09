@@ -326,6 +326,7 @@ public abstract class Building {
 		World w = c.getWorld();
 		int dx, dz;
 
+		// try to build a basement down here!
 		if (attemptNewRoomUnder(mgr))
 			return;
 

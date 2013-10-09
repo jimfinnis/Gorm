@@ -19,7 +19,7 @@ import org.bukkit.block.Block;
 public class Extent {
 
 	public interface LocationRunner {
-		void run(int x,int y,int z);
+		void run(int x, int y, int z);
 
 	}
 
@@ -382,8 +382,7 @@ public class Extent {
 	}
 
 	public boolean intersects(Extent e) {
-		
-		
+
 		return e.minx <= maxx && e.maxx >= minx && e.miny <= maxy
 				&& e.maxy >= miny && e.minz <= maxz && e.maxz >= minz;
 	}
@@ -410,6 +409,30 @@ public class Extent {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Returns how much of this extent is filled with dirt
+	 * @return
+	 */
+	public double amountOfSoil() {
+		World w = Castle.getInstance().getWorld();
+		// basically we down until we find a block with greater than a certain
+		// number of natural solids in it
+		int count = 0; // count of natural blocks
+		for (int y = maxy; y >= miny; y--) {
+			for (int x = minx; x <= maxx; x++) {
+				for (int z = minz; z <= maxz; z++) {
+					int typeId = w.getBlockAt(x, y, z).getTypeId();
+					// avoid anything less than block 17 except for 5 (which is
+					// wood, so roofs are ok)
+					if (typeId > 0 && typeId < 17 && typeId != 5)
+						count++;
+				}
+			}
+		}
+		
+		return ((double)count)/((double)volume());
 	}
 
 	public IntVector getCentre() {
@@ -468,7 +491,7 @@ public class Extent {
 	}
 
 	/**
-	 * Find the maximum height of this extent above the ground
+	 * Find the minimum height of this extent above the ground
 	 * 
 	 * @return
 	 */
@@ -606,15 +629,15 @@ public class Extent {
 		return e1.minx >= minx && e1.maxx <= maxx && e1.miny >= miny
 				&& e1.maxy <= maxy && e1.minz >= minz && e1.maxz <= maxz;
 	}
-	
+
 	public boolean containsThis(Material m) {
 		World w = Castle.getInstance().getWorld();
 		boolean contains = false;
-		for (int x=this.minx; x<=this.maxx; x++){
-			for (int z=this.minz; z<=this.maxz; z++){
-				for (int y=this.miny; y<=this.maxy; y++){
-					Block thisBlock = w.getBlockAt(x,y,z);
-					if (thisBlock.getType() == m){
+		for (int x = this.minx; x <= this.maxx; x++) {
+			for (int z = this.minz; z <= this.maxz; z++) {
+				for (int y = this.miny; y <= this.maxy; y++) {
+					Block thisBlock = w.getBlockAt(x, y, z);
+					if (thisBlock.getType() == m) {
 						contains = true;
 					}
 				}
@@ -622,9 +645,9 @@ public class Extent {
 		}
 		return contains;
 	}
-	
-	public int area(){
-		return (this.xsize()*this.zsize()*this.ysize());
+
+	public int volume() {
+		return (this.xsize() * this.zsize() * this.ysize());
 	}
 
 	/**
@@ -665,19 +688,21 @@ public class Extent {
 			boolean xzOnly) {
 		return new VectorIterable(step, offset, xzOnly);
 	}
-	
+
 	static final int INTERNAL_CHUNK_SIZE = 32;
+
 	/**
 	 * Return a 'chunk code' for a given pixel. Nothing to do with MC's chunks,
 	 * although it was once.
+	 * 
 	 * @param x
 	 * @param z
 	 * @return
 	 */
-	private static int getChunkCode(int x,int z){
-		x/=INTERNAL_CHUNK_SIZE;
-		z/=INTERNAL_CHUNK_SIZE;
-		return x + z*INTERNAL_CHUNK_SIZE;
+	private static int getChunkCode(int x, int z) {
+		x /= INTERNAL_CHUNK_SIZE;
+		z /= INTERNAL_CHUNK_SIZE;
+		return x + z * INTERNAL_CHUNK_SIZE;
 	}
 
 	/**
@@ -688,20 +713,20 @@ public class Extent {
 	 */
 	public Set<Integer> getChunks() {
 		Set<Integer> chunks = new HashSet<Integer>();
-		for (int x = minx; x < maxx + INTERNAL_CHUNK_SIZE; x+=INTERNAL_CHUNK_SIZE) {
-			for (int z = minz; z < maxz + INTERNAL_CHUNK_SIZE; z+=INTERNAL_CHUNK_SIZE) {
-				
-				chunks.add(getChunkCode(x,z));
+		for (int x = minx; x < maxx + INTERNAL_CHUNK_SIZE; x += INTERNAL_CHUNK_SIZE/2) {
+			for (int z = minz; z < maxz + INTERNAL_CHUNK_SIZE; z += INTERNAL_CHUNK_SIZE/2) {
+
+				chunks.add(getChunkCode(x, z));
 			}
 		}
 		return chunks;
 	}
-	
-	public void runOnAllLocations(LocationRunner e){
+
+	public void runOnAllLocations(LocationRunner e) {
 		for (int x = minx; x <= maxx; x++) {
 			for (int y = miny; y <= maxy; y++) {
 				for (int z = minz; z <= maxz; z++) {
-					e.run(x,y,z);
+					e.run(x, y, z);
 				}
 			}
 		}

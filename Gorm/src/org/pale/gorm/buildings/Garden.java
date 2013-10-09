@@ -31,7 +31,7 @@ public class Garden extends Building {
 	public Garden(Building parent) {
 		Random rnd = Castle.getInstance().r;
 
-		setInitialExtent(parent, rnd.nextInt(10) + 10, 20, rnd.nextInt(10) + 10);
+		setInitialExtent(parent, rnd.nextInt(10) + 10, 10, rnd.nextInt(10) + 10);
 	}
 
 	@Override
@@ -46,11 +46,16 @@ public class Garden extends Building {
 		else
 			ground = mgr.getGround();
 
-		// fill the floor with a random material
-		Extent floor = extent.getWall(Direction.DOWN);
 		c.fill(inner, Material.AIR, 0); // fill the inner area unconditionally
 		c.checkFill(extent, Material.AIR, 0); // but avoid filling in walls
 												// already there
+		Extent floor = extent.getWall(Direction.DOWN);
+
+		// fill the underfloor with a foundation material, otherwise
+		// we can end up unroofing things
+		c.fill(floor.subvec(0,1,0), mgr.getSecondary());
+		
+		// fill the floor with a random material
 		c.checkFill(floor, ground.m, ground.d);
 
 		makeSingleRoom(mgr).setAllSidesOpen(); // this is a single, exterior

@@ -136,7 +136,7 @@ public abstract class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = chooseRoom(mgr, roomExt, this);
+		Room r = chooseRoomNoise(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
 	}
@@ -154,7 +154,7 @@ public abstract class Building {
 				return new SpawnerRoom(mgr, roomExt, bld);
 			case 3:
 			case 4:
-					return new ReadingRoom(mgr,roomExt,bld);
+				return new ReadingRoom(mgr,roomExt,bld);
 			default:
 				return new PlainRoom(mgr, roomExt, bld);
 			}
@@ -166,6 +166,35 @@ public abstract class Building {
 			default:
 				return new PlainRoom(mgr, roomExt, bld);
 			}
+		}
+	}
+	
+	/**
+	 * Get the noise determined grade value for this building, in order
+	 * to determine the 'level of upkeep' of this section of the castle.
+	 * @return grade level of the current building, from 0 to 1
+	 */
+	
+	public double grade(){
+		IntVector centre = this.extent.getCentre();
+		double grade = Noise.noise2Dfractal(centre.x,centre.z, 3, 3, 3, 0.8);
+		return grade;
+	}
+	
+	private Room chooseRoomNoise(MaterialManager mgr, Extent roomExt, Building bld){
+		GormPlugin plugin = new GormPlugin();
+		double grade = bld.grade();
+		if ((grade <= 0.35) && plugin.getIsDungeon()){
+			return new SpawnerRoom(mgr, roomExt, bld);
+		}
+		else if ((grade <= 0.5) && plugin.getIsDungeon()){
+			return new ChestRoom(mgr, roomExt, bld);
+		}
+		else if (grade <= 0.65){
+			return new ReadingRoom(mgr,roomExt,bld);
+		}
+		else {
+			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
 

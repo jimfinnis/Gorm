@@ -57,6 +57,7 @@ public class Builder {
 			makeRandomExit();
 			if(b!=null)
 				b.update();
+			//castle.roomSanityCheck();
 		}
 	}
 	

@@ -66,7 +66,7 @@ public abstract class Room implements Comparable<Room> {
 	 * which sides of the room are to be considered 'open'
 	 */
 	private Set<Direction> openSides = new HashSet<Direction>();
-	private static int idCounter = 0;
+	public static int idCounter = 0;
 	int id = idCounter++;
 
 	int getExitCount() {

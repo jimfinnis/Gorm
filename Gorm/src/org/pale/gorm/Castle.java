@@ -508,4 +508,32 @@ public class Castle {
 	public Block getBlockAt(IntVector pos) {
 		return world.getBlockAt(pos.x, pos.y, pos.z);
 	}
+	
+	
+	public void roomSanityCheck(){
+		for(int i=0;i<Room.idCounter;i++){
+			//GormPlugin.log("looking for room "+Integer.toString(i));
+			boolean found = false;
+			for(Room r: rooms){
+				if(r.id == i){
+					found = true;break;
+				}
+			}
+			if(!found)
+				GormPlugin.log("ROOM NOT FOUND IN MAIN LIST: "+Integer.toString(i));
+
+			found = false;
+			outer:for(Collection<Room> col: roomsByChunk.values()){
+				for(Room r: rooms){
+					if(r.id == i){
+						found = true;
+						break outer;
+					}
+				}
+			}
+			if(!found)
+				GormPlugin.log("ROOM NOT FOUND IN CHUNK LISTS: "+Integer.toString(i));
+			
+		}
+	}
 }

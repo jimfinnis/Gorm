@@ -136,36 +136,117 @@ public abstract class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = chooseRoom(mgr, roomExt, this);
+		Room r = roomByGrade(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
 	}
-
-	// Allows Multiple room types per tall building
-	private Room chooseRoom(MaterialManager mgr, Extent roomExt, Building bld) {
-		Random rnd = new Random();
+	
+	/**
+	 * Get the noise determined grade value for this building, in order
+	 * to determine the 'level of upkeep' of this section of the castle.
+	 * @return grade level of the current building, from 0 to 1
+	 */
+	
+	public double grade(){
+		IntVector centre = this.extent.getCentre();
 		GormPlugin plugin = new GormPlugin();
-		if (plugin.getIsDungeon()) {
-			switch (rnd.nextInt(10)) {
-			case 0:
-				return new ChestRoom(mgr, roomExt, bld);
-			case 1:
-			case 2:
-				return new SpawnerRoom(mgr, roomExt, bld);
-			case 3:
-			case 4:
-					return new ReadingRoom(mgr,roomExt,bld);
-			default:
-				return new PlainRoom(mgr, roomExt, bld);
-			}
-		} else {
-			switch (rnd.nextInt(3)){
-			case 0:
-			case 1:
-				return new ReadingRoom(mgr,roomExt,bld);
-			default:
-				return new PlainRoom(mgr, roomExt, bld);
-			}
+		double grade = Noise.noise2Dfractal(centre.x,centre.z, 3, 3, 3, 0.8);
+		// rebalance such that non-dungeon castles are friendlier and higher-grade
+		if((plugin.getIsDungeon() == false) && (grade < 0.35)){
+			grade += 0.5;
+		}
+		return grade;
+	}
+	
+	/**
+	 * Get the grade level for this building, in order to
+	 * determine the 'level of upkeep' of this section of the castle.
+	 * @return grade level of the current building, from 1 to 4
+	 */
+	
+	public int gradeInt(){
+		double grade = this.grade();
+		if (grade <= 0.35){
+			return 1;
+		}
+		else if (grade <= 0.5){
+			return 2;
+		}
+		else if (grade <= 0.65){
+			return 3;
+		}
+		else {
+			return 4;
+		}
+	}
+	
+	/**
+	 * Delegate generation of new room to 1 of 4 grade sets
+	 * @param mgr
+	 * @param roomExt
+	 * @param bld
+	 * @return Room
+	 */
+	
+	private Room roomByGrade(MaterialManager mgr, Extent roomExt, Building bld){
+		double grade = bld.grade();
+		if (grade <= 0.35){
+			return gradeLow(mgr, roomExt, bld);
+		}
+		else if (grade <= 0.5){
+			return gradeMidLow(mgr, roomExt, bld);
+		}
+		else if (grade <= 0.65){
+			return gradeMidHigh(mgr,roomExt,bld);
+		}
+		else {
+			return gradeHigh(mgr, roomExt, bld);
+		}
+	}
+	
+	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
+		Random rnd = new Random();
+		switch (rnd.nextInt(3)) {
+		case 0:
+			return new ChestRoom(mgr, roomExt, bld);
+		default:
+			return new SpawnerRoom(mgr, roomExt, bld);
+		}
+	}
+	
+	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
+		Random rnd = new Random();
+		switch (rnd.nextInt(3)) {
+		case 0:
+		case 1:
+			return new ChestRoom(mgr, roomExt, bld);
+		default:
+			return new PlainRoom(mgr, roomExt, bld);
+		}
+	}
+	
+	private Room gradeMidHigh(MaterialManager mgr, Extent roomExt, Building bld) {
+		Random rnd = new Random();
+		switch (rnd.nextInt(5)) {
+		case 0:
+			return new ChestRoom(mgr, roomExt, bld);
+		case 1:
+			return new ReadingRoom(mgr,roomExt,bld);
+		default:
+			return new PlainRoom(mgr, roomExt, bld);
+		}
+	}
+	
+	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
+		Random rnd = new Random();
+		switch (rnd.nextInt(5)) {
+		case 0:
+			return new ChestRoom(mgr, roomExt, bld);
+		case 1:
+		case 2:
+			return new ReadingRoom(mgr,roomExt,bld);
+		default:
+			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
 

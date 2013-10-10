@@ -1,5 +1,7 @@
 package org.pale.gorm;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -40,14 +42,47 @@ public final class GormPlugin extends JavaPlugin {
 		logger = getLogger();
 	}
 	
+	/**
+	 * Set up configuration file if one does not exist
+	 */
     public void loadConfiguration(){
     	this.getConfig().addDefault("dungeon", true);
+    	ArrayList<Integer> lootGrade1 = new ArrayList<Integer>(Arrays.asList(256,257,258,261,264,265,266,
+    			267,276,277,278,279,282,283,284,285,286,297,302,303,304,305,306,307,308,309,310,311,312,313,
+    			314,315,316,317,320,322,329,345,347,354,364,366,368,369,370,372,378,379,380,381,384,386,388,
+    			395,417,418,419,420,421,2256,2257,2258,2259,2260,2261,2262,2263,2264,2265,2266,2267));
+    	this.getConfig().addDefault("loot.grade1", lootGrade1);
+    	ArrayList<Integer> lootGrade2 = new ArrayList<Integer>(Arrays.asList(261,265,267,272,273,274,275,282,
+    			289,291,292,297,298,299,300,301,302,303,304,305,306,307,308,309,329,357,368,386,391,392,395,
+    			400,420,421,2256,2257,2258,2259,2260,2261,2262,2263,2264,2265,2266,2267));
+    	this.getConfig().addDefault("loot.grade2", lootGrade2);
+    	ArrayList<Integer> lootGrade3 = new ArrayList<Integer>(Arrays.asList(268,269,270,271,281,282,290,297,
+    			298,299,300,301,302,303,304,305,334,357,360,365,395,2256,2257,2258,2259,2260,2261,2262,2263,
+    			2264,2265,2266,2267));
+    	this.getConfig().addDefault("loot.grade3", lootGrade3);
+    	ArrayList<Integer> lootGrade4 = new ArrayList<Integer>(Arrays.asList(265,268,269,270,271,272,273,274,
+    			275,281,282,291,297,298,299,300,301,334,357,360,365,395,2256,2257,2258,2259,2260,2261,2262,2263,
+    			2264,2265,2266,2267));
+    	this.getConfig().addDefault("loot.grade4", lootGrade4);
     	this.getConfig().options().copyDefaults(true);
     	this.saveConfig();
     }
     
     public boolean getIsDungeon(){
     	return fc.getBoolean("dungeon");
+    }
+    
+    public ArrayList<Integer> getLoot(int grade){
+    	switch(grade){
+    	case 1:
+    		return (ArrayList<Integer>) fc.get("loot.grade1");
+    	case 2:
+    		return (ArrayList<Integer>) fc.get("loot.grade2");
+    	case 3:
+    		return (ArrayList<Integer>) fc.get("loot.grade3");
+    	default:
+    		return (ArrayList<Integer>) fc.get("loot.grade4");
+    	}
     }
 
 	private boolean playerCheck(CommandSender sender) {

@@ -3,6 +3,7 @@ package org.pale.gorm.rooms;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
+import org.pale.gorm.GormPlugin;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
@@ -34,7 +35,7 @@ public class ChestRoom extends Room {
 		b.carpet(inner, c.r.nextInt(14));
 		b.lightWalls(inner);
 		b.floorLights(inner);
-		DungeonObjects.chest(floor, 1);
+		DungeonObjects.chest(inner, 1);
 		
 		addSignHack();
 		

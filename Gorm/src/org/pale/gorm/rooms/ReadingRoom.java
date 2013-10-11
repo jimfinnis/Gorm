@@ -29,13 +29,9 @@ public class ReadingRoom extends Room {
 		// fill with primary material
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
-		Furniture f = new Furniture();
 		Extent inner = e.expand(-1, Extent.ALL);
-		int carpetCol = c.r.nextInt(14);
-		b.carpet(inner, carpetCol);
-		b.lightWalls(inner);
-		b.floorLights(inner);
-		f.cornerShelves(inner,mgr,carpetCol);
+		int carpetCol = lightsAndCarpets(true);
+		Furniture.cornerShelves(inner,mgr,carpetCol);
 		
 		addSignHack();
 		return null; // we don't modify the building extent

@@ -83,7 +83,7 @@ public class Hall extends Building {
 			if (c.r.nextFloat() < 0.5 || extent.ysize()<24) {
 				buildRoofGarden(mgr,e);
 			} else {
-				RoofBuilder.randomRoof(mgr,extent);
+				roofHeight = RoofBuilder.randomRoof(mgr,extent);
 			}
 		}
 	}

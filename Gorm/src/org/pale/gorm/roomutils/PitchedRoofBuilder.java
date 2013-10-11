@@ -18,7 +18,7 @@ import org.pale.gorm.Turtle;
 public class PitchedRoofBuilder extends RoofBuilder {
 
 	@Override
-	public void buildRoof(MaterialManager mgr,Extent buildingExtent) {
+	public int buildRoof(MaterialManager mgr,Extent buildingExtent) {
 		// simple ridged roof
 		// get extent
 		Extent roof = new Extent(buildingExtent);
@@ -42,6 +42,7 @@ public class PitchedRoofBuilder extends RoofBuilder {
 			longEdge = roof.zsize();
 			shortEdge = roof.xsize();
 		}
+		int maxy=0;
 		
 		Material mat = mgr.getRoofSteps();
 		MaterialDataPair fillMat = MaterialDataPair.fromSteps(mat);
@@ -52,6 +53,8 @@ public class PitchedRoofBuilder extends RoofBuilder {
 		
 		for(int i=0;i<shortEdge/2;i++){
 			IntVector pos = base1.add(dir.vec.scale(i)).add(0,i,0);
+			if(pos.y>maxy)
+				maxy=pos.y;
 			t.moveAbsolute(pos);
 			t.clrModeFlag(Turtle.BACKSTAIRS);
 			for(int j=0;j<longEdge;j++){
@@ -87,6 +90,8 @@ public class PitchedRoofBuilder extends RoofBuilder {
 				t.right();
 			}
 		}
+		
+		return 1 + (maxy - buildingExtent.maxy); 
 
 	}
 

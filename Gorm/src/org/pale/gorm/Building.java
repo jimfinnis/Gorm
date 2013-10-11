@@ -17,6 +17,8 @@ import org.bukkit.block.Chest;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
+import org.bukkit.material.Vine;
+import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.ChestRoom;
 import org.pale.gorm.rooms.ReadingRoom;
@@ -48,10 +50,18 @@ public abstract class Building {
 
 	private static int idCounter = 0;
 	int id = idCounter++;
+	
+	/**
+	 * If a roof has been added (NOT a roof garden - roofs are separate entities which can be overwritten)
+	 * this is its height.
+	 */
+	protected int roofHeight = 0;
+
+
 
 	/**
 	 * List of the rooms - vertical sections within the building. DO NOT add
-	 * rooms directly, use addRoom()
+	 * rooms directly, use addRoom() 
 	 */
 	public LinkedList<Room> rooms = new LinkedList<Room>();
 
@@ -59,21 +69,16 @@ public abstract class Building {
 		rooms.addFirst(r);
 		Castle.getInstance().addRoom(r);
 	}
-	
-	protected void addRoomBasement(Room r){
+
+	protected void addRoomBasement(Room r) {
 		rooms.addLast(r);
-		Castle.getInstance().addRoom(r);		
+		Castle.getInstance().addRoom(r);
 	}
 
 	/**
 	 * The extent of the entire building
 	 */
 	public Extent extent;
-
-	/**
-	 * How much of the top of the building is 'roof'
-	 */
-	int roofDepth = 1;
 
 	/**
 	 * Return the bounding box of the building, including the walls
@@ -140,70 +145,68 @@ public abstract class Building {
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
 	}
-	
+
 	/**
-	 * Get the noise determined grade value for this building, in order
-	 * to determine the 'level of upkeep' of this section of the castle.
+	 * Get the noise determined grade value for this building, in order to
+	 * determine the 'level of upkeep' of this section of the castle.
+	 * 
 	 * @return grade level of the current building, from 0 to 1
 	 */
-	
-	public double grade(){
+
+	public double grade() {
 		IntVector centre = this.extent.getCentre();
-		GormPlugin plugin = new GormPlugin();
-		double grade = Noise.noise2Dfractal(centre.x,centre.z, 3, 3, 3, 0.8);
-		// rebalance such that non-dungeon castles are friendlier and higher-grade
-		if((plugin.getIsDungeon() == false) && (grade < 0.35)){
+		double grade = Noise.noise2Dfractal(centre.x, centre.z, 3, 3, 3, 0.8);
+		// rebalance such that non-dungeon castles are friendlier and
+		// higher-grade
+		if ((GormPlugin.getInstance().getIsDungeon() == false)
+				&& (grade < 0.35)) {
 			grade += 0.5;
 		}
 		return grade;
 	}
-	
+
 	/**
-	 * Get the grade level for this building, in order to
-	 * determine the 'level of upkeep' of this section of the castle.
+	 * Get the grade level for this building, in order to determine the 'level
+	 * of upkeep' of this section of the castle.
+	 * 
 	 * @return grade level of the current building, from 1 to 4
 	 */
-	
-	public int gradeInt(){
+
+	public int gradeInt() {
 		double grade = this.grade();
-		if (grade <= 0.35){
+		if (grade <= 0.35) {
 			return 1;
-		}
-		else if (grade <= 0.5){
+		} else if (grade <= 0.5) {
 			return 2;
-		}
-		else if (grade <= 0.65){
+		} else if (grade <= 0.65) {
 			return 3;
-		}
-		else {
+		} else {
 			return 4;
 		}
 	}
-	
+
 	/**
 	 * Delegate generation of new room to 1 of 4 grade sets
+	 * 
 	 * @param mgr
 	 * @param roomExt
 	 * @param bld
 	 * @return Room
 	 */
-	
-	private Room roomByGrade(MaterialManager mgr, Extent roomExt, Building bld){
+
+	private Room roomByGrade(MaterialManager mgr, Extent roomExt, Building bld) {
 		double grade = bld.grade();
-		if (grade <= 0.35){
+		if (grade <= 0.35) {
 			return gradeLow(mgr, roomExt, bld);
-		}
-		else if (grade <= 0.5){
+		} else if (grade <= 0.5) {
 			return gradeMidLow(mgr, roomExt, bld);
-		}
-		else if (grade <= 0.65){
-			return gradeMidHigh(mgr,roomExt,bld);
-		}
-		else {
+		} else if (grade <= 0.65) {
+			return gradeMidHigh(mgr, roomExt, bld);
+		} else {
 			return gradeHigh(mgr, roomExt, bld);
 		}
 	}
-	
+
 	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(3)) {
@@ -213,7 +216,7 @@ public abstract class Building {
 			return new SpawnerRoom(mgr, roomExt, bld);
 		}
 	}
-	
+
 	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(3)) {
@@ -224,19 +227,19 @@ public abstract class Building {
 			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
-	
+
 	private Room gradeMidHigh(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(5)) {
 		case 0:
 			return new ChestRoom(mgr, roomExt, bld);
 		case 1:
-			return new ReadingRoom(mgr,roomExt,bld);
+			return new ReadingRoom(mgr, roomExt, bld);
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
-	
+
 	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(5)) {
@@ -244,16 +247,16 @@ public abstract class Building {
 			return new ChestRoom(mgr, roomExt, bld);
 		case 1:
 		case 2:
-			return new ReadingRoom(mgr,roomExt,bld);
+			return new ReadingRoom(mgr, roomExt, bld);
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
 
 	/**
-	 * add a new room, attempting to build an exit down from this
-	 * room to the one below. Assumes the room list is ordered such new rooms
-	 * added are higher up.
+	 * add a new room, attempting to build an exit down from this room to the
+	 * one below. Assumes the room list is ordered such new rooms added are
+	 * higher up.
 	 * 
 	 * @param newRoomExtent
 	 * @param outside
@@ -268,18 +271,19 @@ public abstract class Building {
 			buildVerticalExit(lowerFloor, r);
 		}
 	}
-	
+
 	/**
 	 * Add a new room, attempting to build an exit up from it to the next floor.
 	 */
-	protected void addRoomAndBuildExitUp(Room r, boolean outside){
-		Room upperFloor = rooms.peekLast(); // any prior floor will be the last item
+	protected void addRoomAndBuildExitUp(Room r, boolean outside) {
+		Room upperFloor = rooms.peekLast(); // any prior floor will be the last
+											// item
 		addRoomBasement(r); // adds to head
 		if (upperFloor != null) {
 			// there is a floor below - try to build some kind of link down
-			buildVerticalExit(r,upperFloor);
+			buildVerticalExit(r, upperFloor);
 		}
-		
+
 	}
 
 	/**
@@ -328,21 +332,6 @@ public abstract class Building {
 		floor = new Extent(floor);
 		floor.maxy = floor.miny;
 		c.fill(floor, Material.CARPET, col);
-	}
-
-	/**
-	 * Block any glass or ironfence with primary, for darkness
-	 * 
-	 * @param room
-	 */
-	public void blockWindows(Extent room) {
-		Castle c = Castle.getInstance();
-		room = new Extent(room);
-		MaterialManager mgr = new MaterialManager(room.getCentre().getBlock()
-				.getBiome());
-		c.replace(room, mgr.getPrimary(), mgr.getWindow());
-		c.replace(room, mgr.getPrimary(), new MaterialDataPair(
-				Material.IRON_FENCE, 0));
 	}
 
 	/**
@@ -449,43 +438,46 @@ public abstract class Building {
 	 * @return
 	 */
 	private boolean attemptNewRoomUnder(MaterialManager mgr) {
-		
+
 		GormPlugin.log("attempting basement");
 		Castle c = Castle.getInstance();
 		// get the floor, without the walls
-		Extent e = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z); 
+		Extent e = extent.getWall(Direction.DOWN).expand(-1,
+				Extent.X | Extent.Z);
 		// decrease the floor y until we either hit a room or we're completely
 		// underground
 
 		for (;;) {
 			e = e.subvec(0, 1, 0);
-			if (c.intersects(e)){
+			if (c.intersects(e)) {
 				GormPlugin.log("basement failed, castle in the way");
 				return false; // no can do - there's a building down there
 			}
 			for (int x = e.minx; x <= e.maxx; x++) {
 				// no y, we assume y=miny=maxy
 				for (int z = e.minz; z <= e.maxz; z++) {
-					Block b = c.getWorld().getBlockAt(x,e.miny,z);
-					if(!b.getType().isSolid())
+					Block b = c.getWorld().getBlockAt(x, e.miny, z);
+					if (!b.getType().isSolid())
 						continue;
 				}
 			}
-			// but we need to go a bit deeper than that to make sure of headroom!
+			// but we need to go a bit deeper than that to make sure of
+			// headroom!
 			// Also put the walls back on
-			e=e.subvec(0,5,0).expand(1,Extent.X|Extent.Z);
-			
+			e = e.subvec(0, 5, 0).expand(1, Extent.X | Extent.Z);
+
 			// this is the total extent of the new room
 			e = extent.getWall(Direction.DOWN).union(e);
-			c.fill(e,mgr.getPrimary()); // make the walls
-			c.fill(e.expand(-1,Extent.ALL),Material.AIR,0); // clear the contents
-			
-			
+			c.fill(e, mgr.getPrimary()); // make the walls
+			c.fill(e.expand(-1, Extent.ALL), Material.AIR, 0); // clear the
+																// contents
+
 			// we'll succeed eventually unless the world has gone very strange
-			// now we add a new room onto the bottom of the building (i.e. at the start)
-			Room r = new PlainRoom(mgr, e,this);
+			// now we add a new room onto the bottom of the building (i.e. at
+			// the start)
+			Room r = new PlainRoom(mgr, e, this);
 			addRoomAndBuildExitUp(r, false);
-			GormPlugin.log("basement done! "+e.toString());
+			GormPlugin.log("basement done! " + e.toString());
 			extent = extent.union(e);
 			return true;
 		}
@@ -550,5 +542,109 @@ public abstract class Building {
 		}
 		return false;
 	}
+
+	public void ruin() {
+		final Castle c = Castle.getInstance();
+		if (gradeInt() > 1)
+			return;
+		
+		// we also want to ruin the roof!
+		Extent ruinExtent = new Extent(extent);
+		ruinExtent.maxy += roofHeight;
+		
+		GormPlugin.log("RUINING "+ruinExtent.toString());
+
+		final double chance = grade()*1.5;
+		final World w = c.getWorld();
+		final Random rnd = c.r;
+		final int minx = ruinExtent.minx;
+		final int miny = ruinExtent.miny;
+		final int minz = ruinExtent.minz;
+		final double xsize = ruinExtent.xsize();
+		final double ysize = ruinExtent.ysize();
+		final double zsize = ruinExtent.zsize();
+
+		// one side will be badly hit.
+		Direction rd;
+		final Direction ruinDir;
+		do {
+			rd = Direction.values()[rnd.nextInt(Direction.values().length)];
+		} while (rd.vec.y != 0); // but not UP or DOWN!
+		ruinDir = rd;
+
+		ruinExtent.runOnAllLocations(new LocationRunner() {
+			@Override
+			public void run(int x, int y, int z) {
+				Block b = w.getBlockAt(x, y, z);
+				if (b.getType() != Material.AIR
+						&& b.getType() != Material.WATER) {
+					// less chance of ruinage further down
+					double yInExt = ((double) (y - miny)) / ysize;
+					double heightFactor = yInExt*yInExt;
+					
+					if(y>=extent.maxy)
+						heightFactor *= 2; // make roofs even worse
+					
+					// and we also work out some kind of factor across the
+					// building
+					double edgeFactor;
+					double xInExt = ((double) (x - minx)) / xsize;
+					double zInExt = ((double) (z - minz)) / zsize;
+					switch (ruinDir) {
+					case SOUTH:
+						edgeFactor = 1.0 - (zInExt + 1.0) * 0.5;
+						break;
+					case NORTH:
+						edgeFactor = (zInExt + 1.0) * 0.5;
+						break;
+					case EAST:
+						edgeFactor = 1.0 - (xInExt + 1.0) * 0.5;
+						break;
+					case WEST:
+						edgeFactor = (xInExt + 1.0) * 0.5;
+						break;
+					default:
+						edgeFactor = 0;
+					}
+
+					if (rnd.nextDouble() < heightFactor * chance
+							* edgeFactor * edgeFactor) {
+						int holeh = rnd.nextInt(5)+1;
+						Extent e = new Extent(x, y, z, x, y+holeh, z).intersect(extent);
+						if(e!=null)
+							c.fill(e, Material.AIR, 0);
+					} else if (rnd.nextDouble() < 0.1
+							&& b.getType().isSolid()) {
+						// if that didn't work, what about vines? The list above
+						// is a list
+						// of things we can slap vines onto.
+						// really these should be in a random order.
+						for (Direction d : Direction.values()) {
+							if (d.vec.y == 0) {
+								IntVector v = new IntVector(x, y, z).add(d.vec);
+								Block b2 = c.getBlockAt(v);
+								if (b2.getType() == Material.AIR) {
+									// that'll do.
+									b2.setType(Material.VINE);
+									// if this is right, this is *horrible*
+									BlockState bs = b2.getState();
+									Vine vine = (Vine) bs.getData();
+									vine.removeFromFace(BlockFace.NORTH);
+									vine.removeFromFace(BlockFace.SOUTH);
+									vine.removeFromFace(BlockFace.EAST);
+									vine.removeFromFace(BlockFace.WEST);
+									vine.putOnFace(d.opposite().vec
+											.toBlockFace());
+									bs.setData(vine);
+									bs.update();
+								}
+							}
+						}
+					}
+				}
+			}
+		});		
+	}
+
 
 }

@@ -16,15 +16,15 @@ import org.pale.gorm.MaterialManager;
  * 
  */
 public abstract class RoofBuilder {
-	public abstract void buildRoof(MaterialManager mgr, Extent buildingExtent);
+	public abstract int buildRoof(MaterialManager mgr, Extent buildingExtent);
 
-	public static void randomRoof(MaterialManager mgr, Extent extent) {
+	public static int randomRoof(MaterialManager mgr, Extent extent) {
 		switch (Castle.getInstance().r.nextInt(4)) {
 		case 0:
-			new PitchedRoofBuilder().buildRoof(mgr, extent);
+			return new PitchedRoofBuilder().buildRoof(mgr, extent);
 		case 1:
 		default:
-			new RoofCrenellationBuilder().buildRoof(mgr, extent);
+			return new RoofCrenellationBuilder().buildRoof(mgr, extent);
 		}
 	}
 }

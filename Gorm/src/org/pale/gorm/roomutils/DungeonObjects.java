@@ -38,8 +38,8 @@ public class DungeonObjects {
 		if (c.r.nextFloat() <= chance){
 			b.setType(Material.CHEST);
 			Chest chest = (Chest) b.getState();
-			GormPlugin plugin = new GormPlugin();
-			ArrayList<Integer> loot = plugin.getLoot(grade);
+			
+			ArrayList<Integer> loot = GormPlugin.getInstance().getLoot(grade);
 			//How many items should the chest contain? Lower grade (more dangerous) areas get more
 			int items = (int) ((10 + c.r.nextInt(10)) / grade);
 			for(int i=1;i<items;i++){

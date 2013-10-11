@@ -60,6 +60,9 @@ public class WindowMaker {
 	 * @param e
 	 */
 	public static void buildWindows(MaterialManager mgr, Room r) {
+		
+		if(!r.hasWindows())return; // no windows in this room!
+		
 		Castle c = Castle.getInstance();
 		int key = c.r.nextInt();
 		Extent roomExt = r.getExtent();

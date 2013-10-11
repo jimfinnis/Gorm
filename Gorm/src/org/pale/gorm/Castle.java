@@ -103,11 +103,11 @@ public class Castle {
 	 * @return
 	 */
 	public boolean intersects(Extent e) {
-		for(int c: e.getChunks()){
+		for (int c : e.getChunks()) {
 			Collection<Building> list = buildingsByChunk.get(c);
-			if(list!=null){
-				for(Building b: list){
-					if(b.getExtent().intersects(e))
+			if (list != null) {
+				for (Building b : list) {
+					if (b.getExtent().intersects(e))
 						return true;
 				}
 			}
@@ -115,48 +115,63 @@ public class Castle {
 		return false;
 	}
 	
+	public Collection<Building> getIntersectingBuildings(Extent e){
+		Collection<Building> blist = new ArrayList<Building>();
+		for (int c : e.getChunks()) {
+			Collection<Building> list = buildingsByChunk.get(c);
+			if (list != null) {
+				for (Building b : blist) {
+					if (b.getExtent().intersects(e))
+						list.add(b);
+				}
+			}
+		}
+		return blist;
+		
+	}
+
 	/**
-	 * Get the noise determined grade value for the given extent, in order
-	 * to determine the 'level of upkeep' of this section of the castle.
-	 * Use this when we do not have access to the current building.
+	 * Get the noise determined grade value for the given extent, in order to
+	 * determine the 'level of upkeep' of this section of the castle. Use this
+	 * when we do not have access to the current building.
+	 * 
 	 * @return grade level of the current building, from 0 to 1
 	 */
-	
-	public double grade(Extent e){
+
+	public double grade(Extent e) {
 		IntVector centre = e.getCentre();
-		double grade = Noise.noise2Dfractal(centre.x,centre.z, 3, 3, 3, 0.8);
-		// rebalance such that non-dungeon castles are friendlier and higher-grade
-		if((GormPlugin.getInstance().getIsDungeon() == false) && (grade < 0.35)){
+		double grade = Noise.noise2Dfractal(centre.x, centre.z, 3, 3, 3, 0.8);
+		// rebalance such that non-dungeon castles are friendlier and
+		// higher-grade
+		if ((GormPlugin.getInstance().getIsDungeon() == false)
+				&& (grade < 0.35)) {
 			grade += 0.5;
 		}
 		return grade;
 	}
-	
+
 	/**
-	 * Get the grade level for the given extent, in order to
-	 * determine the 'level of upkeep' of this section of the castle.
-	 * Use this when we do not have access to the current building.
-	 * @return grade level of the current building, from 1 to 4
+	 * Get the grade level for the given extent, in order to determine the
+	 * 'level of upkeep' of this section of the castle. Use this when we do not
+	 * have access to the current building.
+	 * 
+	 * @return grade level of the given extent, from 1 to 4
 	 */
-	
-	public int gradeInt(Extent e){
+
+	public int gradeInt(Extent e) {
 		Castle c = Castle.getInstance();
 		double grade = c.grade(e);
-		if (grade <= 0.35){
+		if (grade <= 0.35) {
 			return 1;
-		}
-		else if (grade <= 0.5){
+		} else if (grade <= 0.5) {
 			return 2;
-		}
-		else if (grade <= 0.65){
+		} else if (grade <= 0.65) {
 			return 3;
-		}
-		else {
+		} else {
 			return 4;
 		}
 	}
 
-	
 	/**
 	 * Fill an extent with a material and data, checking we don't overwrite
 	 * certain things
@@ -549,32 +564,34 @@ public class Castle {
 	public Block getBlockAt(IntVector pos) {
 		return world.getBlockAt(pos.x, pos.y, pos.z);
 	}
-	
-	
-	public void roomSanityCheck(){
-		for(int i=0;i<Room.idCounter;i++){
-			//GormPlugin.log("looking for room "+Integer.toString(i));
+
+	public void roomSanityCheck() {
+		for (int i = 0; i < Room.idCounter; i++) {
+			// GormPlugin.log("looking for room "+Integer.toString(i));
 			boolean found = false;
-			for(Room r: rooms){
-				if(r.id == i){
-					found = true;break;
+			for (Room r : rooms) {
+				if (r.id == i) {
+					found = true;
+					break;
 				}
 			}
-			if(!found)
-				GormPlugin.log("ROOM NOT FOUND IN MAIN LIST: "+Integer.toString(i));
+			if (!found)
+				GormPlugin.log("ROOM NOT FOUND IN MAIN LIST: "
+						+ Integer.toString(i));
 
 			found = false;
-			outer:for(Collection<Room> col: roomsByChunk.values()){
-				for(Room r: rooms){
-					if(r.id == i){
+			outer: for (Collection<Room> col : roomsByChunk.values()) {
+				for (Room r : rooms) {
+					if (r.id == i) {
 						found = true;
 						break outer;
 					}
 				}
 			}
-			if(!found)
-				GormPlugin.log("ROOM NOT FOUND IN CHUNK LISTS: "+Integer.toString(i));
-			
+			if (!found)
+				GormPlugin.log("ROOM NOT FOUND IN CHUNK LISTS: "
+						+ Integer.toString(i));
+
 		}
 	}
 }

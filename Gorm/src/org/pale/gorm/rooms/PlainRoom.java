@@ -29,11 +29,7 @@ public class PlainRoom extends Room {
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
 
-		Extent inner = e.expand(-1, Extent.ALL);
-		b.carpet(inner, c.r.nextInt(14));
-		b.lightWalls(inner);
-		b.floorLights(inner);
-		
+		lightsAndCarpets(true);
 		addSignHack();
 
 		return null; // we don't modify the building extent

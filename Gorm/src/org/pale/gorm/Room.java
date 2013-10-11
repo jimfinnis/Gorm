@@ -34,7 +34,7 @@ public abstract class Room implements Comparable<Room> {
 			return 1;
 		return 0;
 	}
-
+	
 	/**
 	 * The extent of the room including walls, floor and ceiling - which will
 	 * overlap with adjacent rooms.
@@ -72,6 +72,16 @@ public abstract class Room implements Comparable<Room> {
 	int getExitCount() {
 		return exits.size();
 	}
+	
+	/**
+	 * Most rooms have windows - override this value to prevent their creation
+	 * @return
+	 */
+	public boolean hasWindows(){
+		return true;
+	}
+
+
 
 	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
@@ -117,14 +127,38 @@ public abstract class Room implements Comparable<Room> {
 	public void addWindow(Extent e) {
 		windows.add(new Extent(e));
 	}
+	
+	/**
+	 * add carpets (if this room should be carpeted) and lights to a standard room,
+	 * taking into a account the state of repair of the building.
+	 * @param hasCarpets
+	 * @return carpet colour code or -1 for no carpet
+	 */
+	public int lightsAndCarpets(boolean hasCarpets) {
+		Extent inner = e.expand(-1, Extent.ALL);
+		int carpetCol;
+		if(b.gradeInt()>2){
+			carpetCol = Castle.getInstance().r.nextInt(14);
+			b.carpet(inner, carpetCol);
+		}else
+			carpetCol=-1;
+		if(b.gradeInt()>1){
+			b.lightWalls(inner);
+			b.floorLights(inner);
+		}
+		return carpetCol;
+	}
+
+
 
 	public Extent getExtent() {
 		return e;
 	}
+	
+	
 
 	/**
-	 * try to make an exit with another room with few exits. THIS IS GOING TO BE
-	 * A MAJOR BOTTLENECK. We need to narrow down the candidates.
+	 * try to make an exit with another room with few exits. 
 	 * 
 	 * @return
 	 */
@@ -323,16 +357,18 @@ public abstract class Room implements Comparable<Room> {
 	 * Hack for adding a sign to the room giving the ID. Useful
 	 * for linkage/placement debugging.
 	 */
-	protected void addSignHack() {/*
-		IntVector pos = e.getCentre();
+	protected void addSignHack() {
+/*		IntVector pos = e.getCentre();
 		pos.y=e.miny+1;
 		
-		Block b = Castle.getInstance().getBlockAt(pos);
-		b.setType(Material.SIGN_POST);
-		Sign s = (Sign)b.getState();
+		Block blk = Castle.getInstance().getBlockAt(pos);
+		blk.setType(Material.SIGN_POST);
+		Sign s = (Sign)blk.getState();
 		s.setLine(0,"Room "+Integer.toString(id));
-		s.update();*/
-	}
+		s.setLine(1,String.format("Grade %d (%.2f)",b.gradeInt(),b.grade()));
+		s.setLine(2, getClass().getSimpleName()+"/"+b.getClass().getSimpleName());
+		s.update();
+*/	}
 	
 	/**
 	 * Force updates of the modified chunk to be sent to all players.

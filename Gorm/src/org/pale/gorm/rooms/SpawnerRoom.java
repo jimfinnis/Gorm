@@ -21,6 +21,14 @@ public class SpawnerRoom extends Room {
 	public SpawnerRoom(MaterialManager mgr,Extent e, Building b) {
 		super(mgr, e, b);
 	}
+	
+	/**
+	 * The spawner room has no windows
+	 * @return
+	 */
+	public boolean hasWindows(){
+		return false;
+	}
 
 	@Override
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
@@ -33,7 +41,6 @@ public class SpawnerRoom extends Room {
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
 		
-		b.blockWindows(e);
 		ArrayList<EntityType> entities = new ArrayList<EntityType>();
 		entities.add(EntityType.CAVE_SPIDER);
 		entities.add(EntityType.SKELETON);

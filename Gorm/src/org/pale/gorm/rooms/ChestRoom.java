@@ -31,11 +31,9 @@ public class ChestRoom extends Room {
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
 
-		Extent inner = e.expand(-1, Extent.ALL);
-		b.carpet(inner, c.r.nextInt(14));
-		b.lightWalls(inner);
-		b.floorLights(inner);
-		DungeonObjects.chest(inner, 1);
+		lightsAndCarpets(true);
+		
+		DungeonObjects.chest(e.expand(-1, Extent.ALL), 1);
 		
 		addSignHack();
 		

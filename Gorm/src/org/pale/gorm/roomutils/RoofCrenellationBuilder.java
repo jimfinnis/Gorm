@@ -20,11 +20,12 @@ public class RoofCrenellationBuilder {
 
 	Extent e;
 
-	public void buildRoof(MaterialManager mgr, Extent extent) {
+	public int buildRoof(MaterialManager mgr, Extent extent) {
 		e = extent.getWall(Direction.UP);
 		e.setHeight(5);
 		e.addvec(0, 1, 0);
 		perimeter(mgr,Castle.getInstance());
+		return 5;
 	}
 
 	private void perimeter(MaterialManager mgr, Castle c) {

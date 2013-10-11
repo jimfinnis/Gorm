@@ -124,10 +124,9 @@ public class Castle {
 	
 	public double grade(Extent e){
 		IntVector centre = e.getCentre();
-		GormPlugin plugin = new GormPlugin();
 		double grade = Noise.noise2Dfractal(centre.x,centre.z, 3, 3, 3, 0.8);
 		// rebalance such that non-dungeon castles are friendlier and higher-grade
-		if((plugin.getIsDungeon() == false) && (grade < 0.35)){
+		if((GormPlugin.getInstance().getIsDungeon() == false) && (grade < 0.35)){
 			grade += 0.5;
 		}
 		return grade;

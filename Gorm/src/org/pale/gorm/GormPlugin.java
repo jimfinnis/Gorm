@@ -27,17 +27,31 @@ public final class GormPlugin extends JavaPlugin {
 	private static Logger logger;
 	private Builder builder = null;
 	private static BukkitTask task=null;
-	static FileConfiguration fc;
+	
+	/**
+	 * Make the plugin a weird singleton.
+	 */
+	static GormPlugin instance = null;
+	
+	/**
+	 * Use this to get plugin instances - don't play silly buggers creating new ones all over the place!
+	 */
+	public static GormPlugin getInstance(){
+		if(instance == null)
+			throw new RuntimeException("Attempt to get plugin when it's not enabled");
+		return instance;
+	}
 
 	@Override
 	public void onDisable() {
+		instance = null;
 		getLogger().info("Gorm has been disabled");
 	}
 
 	@Override
 	public void onEnable() {
+		instance = this;
 		loadConfiguration();
-		fc = this.getConfig();
 		getLogger().info("Gorm has been enabled");
 		logger = getLogger();
 	}
@@ -69,19 +83,19 @@ public final class GormPlugin extends JavaPlugin {
     }
     
     public boolean getIsDungeon(){
-    	return fc.getBoolean("dungeon");
+    	return getConfig().getBoolean("dungeon");
     }
     
     public ArrayList<Integer> getLoot(int grade){
     	switch(grade){
     	case 1:
-    		return (ArrayList<Integer>) fc.get("loot.grade1");
+    		return (ArrayList<Integer>) getConfig().get("loot.grade1");
     	case 2:
-    		return (ArrayList<Integer>) fc.get("loot.grade2");
+    		return (ArrayList<Integer>) getConfig().get("loot.grade2");
     	case 3:
-    		return (ArrayList<Integer>) fc.get("loot.grade3");
+    		return (ArrayList<Integer>) getConfig().get("loot.grade3");
     	default:
-    		return (ArrayList<Integer>) fc.get("loot.grade4");
+    		return (ArrayList<Integer>) getConfig().get("loot.grade4");
     	}
     }
 

@@ -383,11 +383,12 @@ public class Castle {
 	 * stairs until we hit the floor. We start one step out from the floor block
 	 * of the exit.
 	 * 
-	 * @param e
-	 * @param d
-	 * @return
+	 * @param mgr material manager
+	 * @param e extent of exit where the stairs come from
+	 * @param d direction of stairs
+	 * @return null if no stairs, else extent of stairs
 	 */
-	private boolean dropExitStairs(MaterialManager mgr, Extent e, Direction d) {
+	Extent dropExitStairs(MaterialManager mgr, Extent e, Direction d) {
 
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
@@ -398,6 +399,8 @@ public class Castle {
 		e.miny -= 100; // so that getHeightWithin() will read heights lower than
 						// the current floor
 
+		Extent stairExtent = new Extent(); // the extent of the stairs gets put in this
+		
 		boolean done = false;
 		// we need to iterate over the 'stripes' within a multi-block-wide exit
 		if (v.x == 0) {
@@ -405,18 +408,18 @@ public class Castle {
 			for (int x = e.minx; x <= e.maxx; x++) {
 				int startz = v.z > 0 ? e.minz : e.maxz;
 				IntVector start = new IntVector(x, floory, startz);
-				done |= stairScan(mgr, start, e, v);
+				done |= stairScan(mgr, start, e, v, stairExtent);
 			}
 		} else {
 			// the north-south case
 			for (int z = e.minz; z <= e.maxz; z++) {
 				int startx = v.x > 0 ? e.minx : e.maxx;
 				IntVector start = new IntVector(startx, floory, z);
-				done |= stairScan(mgr, start, e, v);
+				done |= stairScan(mgr, start, e, v, stairExtent);
 			}
 		}
 
-		return done;
+		return done ? stairExtent : null;
 	}
 
 	/**
@@ -424,13 +427,15 @@ public class Castle {
 	 * filling in drops with stairs as necessary. Return true if we did
 	 * anything.
 	 * 
-	 * @param start
-	 * @param e
-	 * @param v
+	 * @param mgr material manager
+	 * @param start the starting point
+	 * @param e the extent of the containing area
+	 * @param v the direction of the stairs
+	 * @param stairExtent output area containing the generated stairs
 	 * @return
 	 */
 	private boolean stairScan(MaterialManager mgr, IntVector start, Extent e,
-			IntVector v) {
+			IntVector v, Extent stairExtent) {
 		boolean done = false;
 		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
@@ -456,6 +461,7 @@ public class Castle {
 				// we've gone down, so build up, saving the old block state
 				undoBuffer.add(world.getBlockAt(pt.x, y, pt.z).getState());
 				setStairs(pt.x, y, pt.z, bf, mat);
+				stairExtent.union(pt.x,y,pt.z);
 
 				Block b = world.getBlockAt(pt.x, y - 1, pt.z); // check we
 																// landed!
@@ -488,11 +494,6 @@ public class Castle {
 				}
 			}
 		}
-	}
-
-	public void postProcessExit(MaterialManager mgr, Exit e) {
-		dropExitStairs(mgr, e.getExtent(), e.getDirection());
-		ExitDecorator.decorate(mgr, e);
 	}
 
 	public static boolean requiresLight(int x, int y, int z) {

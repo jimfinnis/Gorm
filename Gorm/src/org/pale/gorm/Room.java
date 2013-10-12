@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.pale.gorm.roomutils.ExitDecorator;
 
 /**
  * A room is a level of a building. Typically it's indoors, but the roof can
@@ -71,6 +72,33 @@ public abstract class Room implements Comparable<Room> {
 
 	int getExitCount() {
 		return exits.size();
+	}
+	
+	/**
+	 * This is a list of the extents which are blocked by furniture or exits (such as
+	 * steps). Add to it with addBlock() and check with isBlocked().
+	 */
+	private Collection<Extent> blocks = new ArrayList<Extent>();
+	
+	/**
+	 * Add a new extent to the list of blocked extents.
+	 * @param e
+	 */
+	public void addBlock(Extent e){
+		blocks.add(new Extent(e));
+	}
+	
+	/**
+	 * See whether an extent inside the room is blocked by furniture or something.
+	 * Such extents should not have more furniture added here!
+	 * @param e
+	 * @return
+	 */
+	public boolean isBlocked(Extent e){
+		for(Extent x: blocks){
+			if(e.intersects(x))return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -274,6 +302,10 @@ public abstract class Room implements Comparable<Room> {
 			Extent e = new Extent(centreOfIntersection.x, this.e.miny + 1,
 					centreOfIntersection.z, centreOfIntersection.x, this.e.miny
 							+ height, centreOfIntersection.z);
+			
+			// don't allow an exit if it is hits the top of either room 
+			if(e.maxy+1 >= this.e.maxy || e.maxy >= that.e.maxy)
+				continue;
 
 			// don't allow an exit if there's a window in the way!
 			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,
@@ -289,6 +321,11 @@ public abstract class Room implements Comparable<Room> {
 			// grab an appropriate material manager
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
 					.getBiome());
+			
+			// add the space on either side of the exit to the block lists
+			Extent blockExtent = e.expand(1, dir.vec.x==0 ? Extent.Z : Extent.X);
+			this.addBlock(blockExtent);
+			that.addBlock(blockExtent);
 
 			// create the two exit structures
 			Exit src = new Exit(e, dir, this, that);
@@ -303,7 +340,15 @@ public abstract class Room implements Comparable<Room> {
 			Castle c = Castle.getInstance();
 			c.fill(src.getExtent(), Material.AIR, 1);
 //			GormPlugin.log("hole blown: " + src.getExtent().toString());
-			c.postProcessExit(mgr, src);
+			
+			// make stairs and add them to the blocked list if successful
+			Extent stairExtent = c.dropExitStairs(mgr, src.getExtent(), src.getDirection());
+			if(stairExtent != null){
+				addBlock(stairExtent);
+			}
+			// and decorate the exit
+			ExitDecorator.decorate(mgr, src);
+
 			return true;
 		}
 		return false;
@@ -372,8 +417,10 @@ public abstract class Room implements Comparable<Room> {
 	
 	/**
 	 * Force updates of the modified chunk to be sent to all players.
+	 * Not sure it helps.
 	 */
 	public void update(){
+		/*
 		World w = Castle.getInstance().getWorld();
 		Set<Chunk> chunks = new HashSet<Chunk>();
 		chunks.add(w.getChunkAt(e.minx, e.minz));
@@ -384,8 +431,9 @@ public abstract class Room implements Comparable<Room> {
 		chunks.add(w.getChunkAt(p.x,p.z));
 		for(Chunk c:chunks)
 			w.refreshChunk(c.getX(), c.getZ());
+		*/
 	}
-
+	
 	/**
 	 * actually make the room's walls and contents (the building's outer walls
 	 * should already exist.) Note that roof gardens may modify the building's

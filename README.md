@@ -69,6 +69,7 @@ Instructions:
             w   WRITEONMOVE
             c   CHECKWRITE
             S   BACKSTAIRS (writes stairs facing away from us, rather than towards)
+            t   TEST (do not write, just test we can - and abort if we can't)
     -   clear a flag
     :   mark the repeat point - we loop back here at the end of the string, until we abort
     ?x  check the condition 'x', where x is:

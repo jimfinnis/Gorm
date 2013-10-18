@@ -9,9 +9,12 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.pale.gorm.Builder;
 import org.pale.gorm.Castle;
+import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
+import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialManager;
+import org.pale.gorm.Turtle;
 
 public class Furniture {
 	public static void cornerShelves(Extent e, MaterialManager mgr, int carpet) {
@@ -45,6 +48,23 @@ public class Furniture {
 			c.fill(cookieCutter2, Material.CARPET, carpet);
 		GormPlugin.log("Shelves at " + corner2.maxx + " " + corner2.maxy + " "
 				+ corner2.maxz);
+	}
+	
+	/**
+	 * Given a furniture description string, test to see if we can place it within the given
+	 * extent
+	 * @param mgr material manager
+	 * @param pos the initial position of the centre back of the furniture
+	 * @param d the direction facing towards the back of the furniture from the front
+	 * @param e the limiting extent, beyond which we definitely can't write
+	 * @param s the string to test
+	 * @return an integer which is -1 if we can't place it, and some other value if 
+	 * 			we can - the higher the value, the better
+	 */
+	public static int testPlacement(MaterialManager mgr,IntVector pos, Direction d, Extent e, String s){
+		Turtle t = new Turtle(mgr,Castle.getInstance().getWorld(),pos,d);
+		t.setModeFlag(Turtle.TEST);
+		return -1;
 	}
 
 }

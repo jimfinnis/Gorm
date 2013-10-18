@@ -1,5 +1,7 @@
 package org.pale.gorm;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Material;
@@ -15,6 +17,17 @@ import org.bukkit.material.Stairs;
  * 
  */
 public class Turtle {
+	/**
+	 * This interface is used for custom writers, which are invoked up with the
+	 * Mn command where n is a number. There can be 10 of them.
+	 * 
+	 * @author white
+	 * 
+	 */
+	public interface TurtleWriter {
+		abstract void write(Turtle t, Block b);
+	}
+
 	private World world;
 	private IntVector pos;
 	private IntVector dir;
@@ -23,6 +36,16 @@ public class Turtle {
 	private Random r = new Random();
 	private int mode = CHECKWRITE; // by default, we abort if we're going
 									// overwrite solid
+
+	/**
+	 * Array of custom writers.
+	 */
+	private TurtleWriter customWriters[] = new TurtleWriter[10];
+	/**
+	 * The custom writer we are currently using, or -1 if we're using a standard
+	 * material
+	 */
+	private int currentCustomWriter = -1;
 
 	int cur = 0;
 	private String string;
@@ -34,9 +57,16 @@ public class Turtle {
 	 */
 	private boolean status; // status variable for conditions
 	private boolean lastMoveCausedTurn; // true if the last follow we did caused
+										// a turn
 	private MaterialManager mgr;
 
-	// a turn
+	/**
+	 * Set a custom writer which can later be invoked with 'Mn' where n is a
+	 * number
+	 */
+	public void setWriter(int i, TurtleWriter w) {
+		customWriters[i] = w;
+	}
 
 	public boolean isModeFlag(int f) {
 		return (mode & f) != 0;
@@ -69,6 +99,9 @@ public class Turtle {
 	// non-air block (on by default)
 	public static final int BACKSTAIRS = 128; // write stairs as facing away
 												// from us
+
+	public static final int TEST = 256; // test mode only - do not write, just
+										// check we can and abort if not
 
 	char getNext() {
 		if (cur >= string.length())
@@ -105,7 +138,7 @@ public class Turtle {
 		char c;
 		string = s;
 		aborted = false;
-//		dumpMap();
+		// dumpMap();
 		for (;;) {
 			c = getNext();
 			if (c == 0) {
@@ -159,7 +192,7 @@ public class Turtle {
 	}
 
 	public void rotate(int turns) {
-		dir=dir.rotate(turns);
+		dir = dir.rotate(turns);
 	}
 
 	public void setMaterial(Material m) {
@@ -182,7 +215,15 @@ public class Turtle {
 
 	public boolean write() {
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
+			if (isModeFlag(TEST))
+				return true;
 			Block b = get();
+
+			if (currentCustomWriter >= 0) {
+				customWriters[currentCustomWriter].write(this, b);
+				return true;
+			}
+
 			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
 										// facing
 										// upwards away from us
@@ -190,8 +231,7 @@ public class Turtle {
 				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
 				s.setFacingDirection(d.toBlockFace());
 				b.setData(s.getData());
-			}
-			else
+			} else
 				b.setData((byte) data);
 
 			b.setType(mat);
@@ -263,10 +303,10 @@ public class Turtle {
 			mode &= ~getNextMode();
 			break;
 		case 'm':
-			setMaterial(getNext());
+			setMaterial();
 			break;
 		case 'M':
-			setMaterialDirect(getNext());
+			setMaterialDirect();
 			break;
 		case ':': // mark the repeat point - we loop back here until we abort
 			loopPoint = cur;
@@ -280,7 +320,8 @@ public class Turtle {
 					;
 			}
 			break;
-		default:break;
+		default:
+			break;
 		}
 	}
 
@@ -313,17 +354,18 @@ public class Turtle {
 			return CHECKWRITE;
 		case 'S':
 			return BACKSTAIRS;
+		case 't':
+			return TEST;
 		}
 		return 0;
 	}
 
 	/**
 	 * set material via material manager
-	 * 
-	 * @param next
 	 */
-	private void setMaterial(char next) {
-		switch (next) {
+	private void setMaterial() {
+		currentCustomWriter = -1;
+		switch (getNext()) {
 		case '1':
 			setMaterial(mgr.getPrimary());
 			break;
@@ -358,11 +400,11 @@ public class Turtle {
 
 	/**
 	 * set material via a direct abbreviation (try to avoid)
-	 * 
-	 * @param next
 	 */
-	private void setMaterialDirect(char next) {
-		switch (next) {
+	private void setMaterialDirect() {
+		currentCustomWriter = -1;
+		char c = getNext();
+		switch (c) {
 		case 'w':
 			mat = Material.WOOD;
 			data = 0;
@@ -405,19 +447,27 @@ public class Turtle {
 			break;
 		case 'g':
 			mat = Material.THIN_GLASS;
-			data=0;
+			data = 0;
 			break;
 		case 'G':
 			mat = Material.GLASS;
-			data=0;
+			data = 0;
 			break;
 		case 'i':
 			mat = Material.IRON_FENCE;
-			data=0;
+			data = 0;
 			break;
-			
-		default:
-			setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
+
+		default: {
+			int n = Character.getNumericValue(c);
+			if (n >= 10 || n < 0) {
+				GormPlugin.log("cannot decipher turtle direct material code "
+						+ c);
+				setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
+			} else {
+				currentCustomWriter = n;
+			}
+		}
 		}
 	}
 
@@ -519,7 +569,7 @@ public class Turtle {
 			dir = dir.rotate(3);
 			return true;
 		} else {
-//			dumpMap();
+			// dumpMap();
 			return false;
 		}
 	}
@@ -532,7 +582,7 @@ public class Turtle {
 			dir = dir.rotate(1);
 			return true;
 		} else {
-//			dumpMap();
+			// dumpMap();
 			return false;
 		}
 	}
@@ -574,8 +624,8 @@ public class Turtle {
 	 * End the run
 	 */
 	private void abort() {
-//		GormPlugin.log("aborted");
-//		dumpMap();
+		// GormPlugin.log("aborted");
+		// dumpMap();
 		aborted = true;
 	}
 

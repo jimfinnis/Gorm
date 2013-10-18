@@ -121,6 +121,15 @@ public abstract class Building {
 							// the air space - of the building
 		}
 	}
+	
+	/**
+	 * Furnish rooms after building
+	 */
+	public void furnish(MaterialManager mgr){
+		for(Room r:rooms){
+			r.furnish(mgr);
+		}
+	}
 
 	/**
 	 * Place a floor at height h above the building base. Floors are one deep,
@@ -319,6 +328,10 @@ public abstract class Building {
 			b.setType(Material.LADDER);
 			b.setData(ladder.getData());
 		}
+		// create an extent a bit wider
+		Extent e = new Extent(ladderPos,4,4,4).setHeight(innerLower.ysize());
+		// and block that off in the lower room, so we don't block the ladder
+		lower.addBlock(e);
 	}
 
 	/**

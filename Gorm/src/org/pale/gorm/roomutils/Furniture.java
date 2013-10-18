@@ -54,6 +54,12 @@ public class Furniture {
 				+ corner2.maxz);
 	}
 	
+	
+	/**
+	 * Private class used to store placement candidates for furniture placement
+	 * @author white
+	 *
+	 */
 	private static class PlacementCandidate {
 		IntVector p;
 		Direction d;

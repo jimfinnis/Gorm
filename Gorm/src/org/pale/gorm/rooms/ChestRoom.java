@@ -33,11 +33,15 @@ public class ChestRoom extends Room {
 
 		lightsAndCarpets(true);
 		
-		DungeonObjects.chest(e.expand(-1, Extent.ALL), 1);
-		
 		addSignHack();
 		
 		return null; // we don't modify the building extent
+	}
+
+	@Override
+	public void furnish(MaterialManager mgr) {
+		DungeonObjects.chest(e.expand(-1, Extent.ALL), 1);
+		
 	}
 
 }

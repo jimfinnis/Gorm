@@ -45,6 +45,7 @@ public class Builder {
 				b.build(mgr);
 				
 				castle.addBuilding(b);
+				b.furnish(mgr);
 				b.ruin();
 				// very important - tell the castle to re-sort the room list!
 				castle.sortRooms();

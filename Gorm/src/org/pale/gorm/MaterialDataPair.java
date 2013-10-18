@@ -72,6 +72,7 @@ public class MaterialDataPair {
 		case COBBLESTONE_STAIRS:
 			return new MaterialDataPair(Material.COBBLESTONE, 0);
 		default:
+			GormPlugin.log("cannot get steps for material "+m.toString());
 			return null;
 
 		}

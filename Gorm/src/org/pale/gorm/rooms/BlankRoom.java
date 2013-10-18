@@ -22,4 +22,10 @@ public class BlankRoom extends Room {
 		return null; // we don't modify the building extent
 	}
 
+	@Override
+	public void furnish(MaterialManager mgr) {
+	}
+	
+
+
 }

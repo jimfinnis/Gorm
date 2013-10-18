@@ -50,8 +50,6 @@ public class RoofGarden extends Room {
 		// fill in the perimeter
 		perimeter(mgr, c);
 		
-		Gardener.plant(floor.expand(-1,Extent.X|Extent.Z));
-		
 		addSignHack();
 
 		// set the new building extent
@@ -185,6 +183,12 @@ public class RoofGarden extends Room {
 			t.run("m1wu.m2wu.m1wu.m2w.Mt.fwbbwfLwRRw");
 			break;
 		}
+	}
+
+	@Override
+	public void furnish(MaterialManager mgr) {
+		Extent floor = e.getWall(Direction.DOWN); 
+		Gardener.plant(floor.expand(-1,Extent.X|Extent.Z));		
 	}
 
 }

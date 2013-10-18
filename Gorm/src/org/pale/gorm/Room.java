@@ -438,10 +438,18 @@ public abstract class Room implements Comparable<Room> {
 	}
 
 	/**
-	 * actually make the room's walls and contents (the building's outer walls
+	 * actually make the room's walls (the building's outer walls
 	 * should already exist.) Note that roof gardens may modify the building's
-	 * extent; the new building extent is returned.
+	 * extent; the new building extent is returned. Furniture should be added
+	 * in furnish() although carpets should be added here.
 	 */
 	public abstract Extent build(MaterialManager mgr, Extent buildingExtent);
+	
+	/**
+	 * Furnish a room after all exits and windows have been made - this should be
+	 * the last thing done to a room
+	 */
+	public abstract void furnish(MaterialManager mgr); 
+	 
 
 }

@@ -7,6 +7,8 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.material.Sign;
 import org.bukkit.material.Stairs;
 
 /**
@@ -279,14 +281,22 @@ public class Turtle {
 			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
 										// facing
 										// upwards away from us
+				b.setType(mat);
 				Stairs s = new Stairs(mat);
 				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
 				s.setFacingDirection(d.toBlockFace());
 				b.setData(s.getData());
-			} else
+			} else if(mat == Material.WALL_SIGN){
+				b.setType(mat);
+				BlockState bs =b.getState(); 
+				Sign s = (Sign)bs.getData();
+				s.setFacingDirection(dir.negate().toBlockFace());
+				bs.update(true);
+			} else {
 				b.setData((byte) data);
+				b.setType(mat);
+			}
 
-			b.setType(mat);
 
 			return true;
 		} else {
@@ -490,6 +500,14 @@ public class Turtle {
 			mat = Material.SMOOTH_STAIRS;
 			data = 0;
 			break;
+		case 'j':
+			mat = Material.WOOD_STAIRS;
+			data =0;
+			break;
+		case 'q':
+			mat = Material.WALL_SIGN;
+			data = 0;
+			break;
 		case 'L':
 			mat = Material.LAPIS_BLOCK;
 			data = 0; // for fun
@@ -514,6 +532,15 @@ public class Turtle {
 			mat = Material.IRON_FENCE;
 			data = 0;
 			break;
+		case 'B':
+			mat = Material.BOOKSHELF;
+			data =0;
+			break;
+		case 'D':
+			mat = Material.BED_BLOCK;
+			data = 0;
+			break;
+			
 
 		default: {
 			int n = Character.getNumericValue(c);

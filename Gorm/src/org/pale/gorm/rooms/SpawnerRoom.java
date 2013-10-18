@@ -41,6 +41,15 @@ public class SpawnerRoom extends Room {
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
 		
+		
+		addSignHack();
+		
+		return null; // we don't modify the building extent
+	}
+
+	@Override
+	public void furnish(MaterialManager mgr) {
+		Castle c = Castle.getInstance();
 		ArrayList<EntityType> entities = new ArrayList<EntityType>();
 		entities.add(EntityType.CAVE_SPIDER);
 		entities.add(EntityType.SKELETON);
@@ -50,10 +59,6 @@ public class SpawnerRoom extends Room {
 		
 		Extent inner = e.expand(-1, Extent.ALL);
 		DungeonObjects.spawner(inner,entities.get(c.r.nextInt(entities.size())), 1);
-		
-		addSignHack();
-		
-		return null; // we don't modify the building extent
 	}
 
 }

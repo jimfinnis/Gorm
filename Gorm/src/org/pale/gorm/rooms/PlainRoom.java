@@ -9,6 +9,7 @@ import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.roomutils.Furniture;
+import org.pale.gorm.roomutils.FurnitureItems;
 
 /**
  * A room which requires no extra walls or contents to be built.
@@ -32,9 +33,17 @@ public class PlainRoom extends Room {
 
 		lightsAndCarpets(true);
 		addSignHack();
-		Furniture.placeFurniture(mgr,this, "ms.LwRwRw.bTLTLTbTRTRTbTLTLT");
-
+		
 		return null; // we don't modify the building extent
+	}
+
+	@Override
+	public void furnish(MaterialManager mgr) {
+		for(int i=0;i<e.xsize()*e.ysize()/10;i++){
+			String f = FurnitureItems.random(FurnitureItems.defaultChoices);
+			Furniture.placeFurniture(mgr,this, f);
+		}
+
 	}
 
 }

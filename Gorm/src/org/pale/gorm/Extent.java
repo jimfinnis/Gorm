@@ -220,6 +220,17 @@ public class Extent {
 				maxz = z;
 		}
 	}
+	
+	/**
+	 * produce a vector from the extent, with some fields set to the minimum, and some set
+	 * to the maximum. 
+	 */
+	public IntVector getCorner(int minFields){
+		int x = ((minFields & X)!=0) ? minx : maxx;
+		int y = ((minFields & Y)!=0) ? miny : maxy;
+		int z = ((minFields & Z)!=0) ? minz : maxz;
+		return new IntVector(x,y,z);
+	}
 
 	/**
 	 * Function taking an extent and (x,y,z), returning a new extent

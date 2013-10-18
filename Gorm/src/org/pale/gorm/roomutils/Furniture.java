@@ -1,5 +1,8 @@
 package org.pale.gorm.roomutils;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -14,6 +17,7 @@ import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialManager;
+import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
 
 public class Furniture {
@@ -50,21 +54,80 @@ public class Furniture {
 				+ corner2.maxz);
 	}
 	
+	private static class PlacementCandidate {
+		IntVector p;
+		Direction d;
+		int score;
+		
+		PlacementCandidate(IntVector p,Direction d,int score){
+			this.score = score;
+			this.d = d;
+			this.p = p;
+		}
+	}
+	
 	/**
-	 * Given a furniture description string, test to see if we can place it within the given
-	 * extent
-	 * @param mgr material manager
-	 * @param pos the initial position of the centre back of the furniture
-	 * @param d the direction facing towards the back of the furniture from the front
-	 * @param e the limiting extent, beyond which we definitely can't write
-	 * @param s the string to test
-	 * @return an integer which is -1 if we can't place it, and some other value if 
-	 * 			we can - the higher the value, the better
+	 * Try to place a given bit of furniture - defined by a string - into a room
+	 * The string defines the furniture as seen from the centre of its back, facing towards the back.
 	 */
-	public static int testPlacement(MaterialManager mgr,IntVector pos, Direction d, Extent e, String s){
-		Turtle t = new Turtle(mgr,Castle.getInstance().getWorld(),pos,d);
-		t.setModeFlag(Turtle.TEST);
-		return -1;
+	public static void placeFurniture(MaterialManager mgr,Room r,String s){
+		Castle c = Castle.getInstance();
+		// we keep a list of candidates
+		ArrayList<PlacementCandidate> candidates = new ArrayList<PlacementCandidate>();
+		
+		int maxScore = 0; // candidate max score
+		
+		// now we iterate through each wall of the inner space
+		Extent inner = r.getExtent().expand(-1, Extent.ALL); 
+		for(Direction wallDir: Direction.values()){
+			if(wallDir.vec.y == 0){ // disregard floor/ceiling
+				Extent wall = inner.getWall(wallDir);
+				// and we move into the room along the opposite vector
+				IntVector moveInwardsDir = wallDir.opposite().vec;
+				IntVector moveAlongDir = (wallDir.vec.x==0)?Direction.EAST.vec : Direction.SOUTH.vec;
+				int maxMovesInwards = (wallDir.vec.x == 0 ? inner.zsize() : inner.xsize())/2;
+				int maxMovesAlong = (wallDir.vec.x == 0 ? inner.xsize() : inner.zsize());
+
+				IntVector posStart = wall.getCorner(Extent.ALL); // get minimum
+				for(int movesInwards=0;movesInwards<maxMovesInwards;movesInwards++){
+					IntVector pos = posStart.add(moveInwardsDir.scale(movesInwards));
+					// trying each position along that wall
+					for(int movesAlong=0;movesAlong<maxMovesAlong;movesAlong++){
+						//c.getBlockAt(pos).setType(Material.EMERALD_BLOCK);
+						// now try to position the furniture there
+						Turtle t = new Turtle(mgr,c.getWorld(),pos,wallDir);
+						t.setRoom(r).setModeFlag(Turtle.TEST); //we're just testing, not building, initially
+						
+						// try putting the furniture here; if it fits add it as a candidate with its score
+						if(t.run(s)){
+							// if the score is lower than the current max score, discard;
+							// if the max score has increased, restart the list (throwing away
+							// all those lower-scoring candidates
+							int score = t.getTestScore();
+							if(movesInwards==0)
+								score+=4; // add score to those near the edge
+							if(score>=maxScore){
+								if(score>maxScore){
+									candidates.clear();
+									maxScore = score;
+								}
+								GormPlugin.log("adding candidate "+pos.toString()+":"+wallDir.toString()+" score "+t.getTestScore()); 
+								PlacementCandidate pc = new PlacementCandidate(pos, wallDir, t.getTestScore());
+								candidates.add(pc);
+							}
+						}
+						pos = pos.add(moveAlongDir);
+					}
+				}
+			}
+		}
+		
+		// and we're done - pick at random from the candidates
+		PlacementCandidate pc = candidates.get(c.r.nextInt(candidates.size()));
+		GormPlugin.log("PICKED candidate "+pc.p.toString()+":"+pc.d.toString()+" score "+pc.score); 
+		// and run a turtle to actually build the furniture
+		Turtle t = new Turtle(mgr,c.getWorld(),pc.p,pc.d);
+		t.run(s);
 	}
 
 }

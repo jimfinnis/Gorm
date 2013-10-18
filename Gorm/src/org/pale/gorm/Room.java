@@ -35,7 +35,7 @@ public abstract class Room implements Comparable<Room> {
 			return 1;
 		return 0;
 	}
-	
+
 	/**
 	 * The extent of the room including walls, floor and ceiling - which will
 	 * overlap with adjacent rooms.
@@ -73,43 +73,48 @@ public abstract class Room implements Comparable<Room> {
 	int getExitCount() {
 		return exits.size();
 	}
-	
+
 	/**
-	 * This is a list of the extents which are blocked by furniture or exits (such as
-	 * steps). Add to it with addBlock() and check with isBlocked().
+	 * This is a list of the extents which are blocked by furniture or exits
+	 * (such as steps). Add to it with addBlock() and check with isBlocked().
 	 */
 	private Collection<Extent> blocks = new ArrayList<Extent>();
-	
+
 	/**
 	 * Add a new extent to the list of blocked extents.
+	 * 
 	 * @param e
 	 */
-	public void addBlock(Extent e){
+	public void addBlock(Extent e) {
 		blocks.add(new Extent(e));
 	}
-	
+
 	/**
-	 * See whether an extent inside the room is blocked by furniture or something.
-	 * Such extents should not have more furniture added here!
+	 * See whether an extent inside the room is blocked by furniture or
+	 * something. Such extents should not have more furniture added here! We
+	 * also check the extent is inside the actual room extent!
+	 * 
 	 * @param e
 	 * @return
 	 */
-	public boolean isBlocked(Extent e){
-		for(Extent x: blocks){
-			if(e.intersects(x))return true;
+	public boolean isBlocked(Extent e1) {
+		if (e.contains(e1)) {
+			for (Extent x : blocks) {
+				if (e.intersects(x))
+					return true;
+			}
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Most rooms have windows - override this value to prevent their creation
+	 * 
 	 * @return
 	 */
-	public boolean hasWindows(){
+	public boolean hasWindows() {
 		return true;
 	}
-
-
 
 	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
@@ -155,38 +160,35 @@ public abstract class Room implements Comparable<Room> {
 	public void addWindow(Extent e) {
 		windows.add(new Extent(e));
 	}
-	
+
 	/**
-	 * add carpets (if this room should be carpeted) and lights to a standard room,
-	 * taking into a account the state of repair of the building.
+	 * add carpets (if this room should be carpeted) and lights to a standard
+	 * room, taking into a account the state of repair of the building.
+	 * 
 	 * @param hasCarpets
 	 * @return carpet colour code or -1 for no carpet
 	 */
 	public int lightsAndCarpets(boolean hasCarpets) {
 		Extent inner = e.expand(-1, Extent.ALL);
 		int carpetCol;
-		if(b.gradeInt()>2){
+		if (b.gradeInt() > 2) {
 			carpetCol = Castle.getInstance().r.nextInt(14);
 			b.carpet(inner, carpetCol);
-		}else
-			carpetCol=-1;
-		if(b.gradeInt()>1){
+		} else
+			carpetCol = -1;
+		if (b.gradeInt() > 1) {
 			b.lightWalls(inner);
 			b.floorLights(inner);
 		}
 		return carpetCol;
 	}
 
-
-
 	public Extent getExtent() {
 		return e;
 	}
-	
-	
 
 	/**
-	 * try to make an exit with another room with few exits. 
+	 * try to make an exit with another room with few exits.
 	 * 
 	 * @return
 	 */
@@ -205,19 +207,23 @@ public abstract class Room implements Comparable<Room> {
 			if (that == this || that.b == this.b)
 				continue;
 			if (e.intersects(that.e)) {
-				// if the rooms intersect, do a quick sanity check. It's OK if the Y intersect
-				// depth is 1 - that just means we've build a room on top or under another. We should
+				// if the rooms intersect, do a quick sanity check. It's OK if
+				// the Y intersect
+				// depth is 1 - that just means we've build a room on top or
+				// under another. We should
 				// skip in this case.
 				Extent inter = e.intersect(that.e);
-				if (inter.xsize() != 1 && inter.zsize() != 1 && inter.ysize()>1)
+				if (inter.xsize() != 1 && inter.zsize() != 1
+						&& inter.ysize() > 1)
 					continue;
 				// only make a link if the two have similar floor heights, and
 				// the zone of intersection
 				// is large in XZ.
-/*				GormPlugin.log(String.format("floor diff: %d, intersect: %d",
-						Math.abs(this.e.miny - that.e.miny),
-						Math.max(inter.xsize(), inter.zsize())));
-*/
+				/*
+				 * GormPlugin.log(String.format("floor diff: %d, intersect: %d",
+				 * Math.abs(this.e.miny - that.e.miny), Math.max(inter.xsize(),
+				 * inter.zsize())));
+				 */
 				if (Math.abs(this.e.miny - that.e.miny) < 5
 						&& Math.max(inter.xsize(), inter.zsize()) > 5) {
 					if (makeRandomExit(that))
@@ -257,16 +263,14 @@ public abstract class Room implements Comparable<Room> {
 	private boolean makeExitBetweenRooms(Room that) {
 		Extent intersection = this.e.intersect(that.e);
 		Direction dir;
-/*
-		GormPlugin.log(String.format(
-				"attempting to create exit between %d/%d and %d/%d", this.b.id,
-				this.id, that.b.id, that.id));
-
-		if (this.exitMap.containsKey(that)) {
-			GormPlugin.log(String.format("exit already exists"));
-			return false;
-		}
-*/
+		/*
+		 * GormPlugin.log(String.format(
+		 * "attempting to create exit between %d/%d and %d/%d", this.b.id,
+		 * this.id, that.b.id, that.id));
+		 * 
+		 * if (this.exitMap.containsKey(that)) {
+		 * GormPlugin.log(String.format("exit already exists")); return false; }
+		 */
 		// work out the orientation of the exit
 		if (intersection.xsize() > intersection.zsize()) {
 			dir = that.e.minz == this.e.maxz ? Direction.SOUTH
@@ -278,7 +282,7 @@ public abstract class Room implements Comparable<Room> {
 		// select a height at random depending on the room IDs, hoho.
 		// This will give a degree of consistency for multiple exits
 		int height = 2;
-		//if(0==((this.id + that.id)%3))height++;
+		// if(0==((this.id + that.id)%3))height++;
 
 		// shrink the intersection along its longest axis, so we don't end
 		// up sliding the exit into a wall to avoid a window.
@@ -302,9 +306,9 @@ public abstract class Room implements Comparable<Room> {
 			Extent e = new Extent(centreOfIntersection.x, this.e.miny + 1,
 					centreOfIntersection.z, centreOfIntersection.x, this.e.miny
 							+ height, centreOfIntersection.z);
-			
-			// don't allow an exit if it is hits the top of either room 
-			if(e.maxy+1 >= this.e.maxy || e.maxy >= that.e.maxy)
+
+			// don't allow an exit if it is hits the top of either room
+			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy)
 				continue;
 
 			// don't allow an exit if there's a window in the way!
@@ -321,9 +325,10 @@ public abstract class Room implements Comparable<Room> {
 			// grab an appropriate material manager
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
 					.getBiome());
-			
+
 			// add the space on either side of the exit to the block lists
-			Extent blockExtent = e.expand(1, dir.vec.x==0 ? Extent.Z : Extent.X);
+			Extent blockExtent = e.expand(1, dir.vec.x == 0 ? Extent.Z
+					: Extent.X);
 			this.addBlock(blockExtent);
 			that.addBlock(blockExtent);
 
@@ -339,11 +344,12 @@ public abstract class Room implements Comparable<Room> {
 			// blow the hole
 			Castle c = Castle.getInstance();
 			c.fill(src.getExtent(), Material.AIR, 1);
-//			GormPlugin.log("hole blown: " + src.getExtent().toString());
-			
+			// GormPlugin.log("hole blown: " + src.getExtent().toString());
+
 			// make stairs and add them to the blocked list if successful
-			Extent stairExtent = c.dropExitStairs(mgr, src.getExtent(), src.getDirection());
-			if(stairExtent != null){
+			Extent stairExtent = c.dropExitStairs(mgr, src.getExtent(),
+					src.getDirection());
+			if (stairExtent != null) {
 				addBlock(stairExtent);
 			}
 			// and decorate the exit
@@ -399,41 +405,38 @@ public abstract class Room implements Comparable<Room> {
 	}
 
 	/**
-	 * Hack for adding a sign to the room giving the ID. Useful
-	 * for linkage/placement debugging.
+	 * Hack for adding a sign to the room giving the ID. Useful for
+	 * linkage/placement debugging.
 	 */
 	protected void addSignHack() {
-/*		IntVector pos = e.getCentre();
-		pos.y=e.miny+1;
-		
-		Block blk = Castle.getInstance().getBlockAt(pos);
-		blk.setType(Material.SIGN_POST);
-		Sign s = (Sign)blk.getState();
-		s.setLine(0,"Room "+Integer.toString(id));
-		s.setLine(1,String.format("Grade %d (%.2f)",b.gradeInt(),b.grade()));
-		s.setLine(2, getClass().getSimpleName()+"/"+b.getClass().getSimpleName());
-		s.update();
-*/	}
-	
-	/**
-	 * Force updates of the modified chunk to be sent to all players.
-	 * Not sure it helps.
-	 */
-	public void update(){
 		/*
-		World w = Castle.getInstance().getWorld();
-		Set<Chunk> chunks = new HashSet<Chunk>();
-		chunks.add(w.getChunkAt(e.minx, e.minz));
-		chunks.add(w.getChunkAt(e.minx, e.maxz));
-		chunks.add(w.getChunkAt(e.maxx, e.minz));
-		chunks.add(w.getChunkAt(e.maxx, e.maxz));
-		IntVector p = e.getCentre();
-		chunks.add(w.getChunkAt(p.x,p.z));
-		for(Chunk c:chunks)
-			w.refreshChunk(c.getX(), c.getZ());
-		*/
+		 * IntVector pos = e.getCentre(); pos.y=e.miny+1;
+		 * 
+		 * Block blk = Castle.getInstance().getBlockAt(pos);
+		 * blk.setType(Material.SIGN_POST); Sign s = (Sign)blk.getState();
+		 * s.setLine(0,"Room "+Integer.toString(id));
+		 * s.setLine(1,String.format("Grade %d (%.2f)",b.gradeInt(),b.grade()));
+		 * s.setLine(2,
+		 * getClass().getSimpleName()+"/"+b.getClass().getSimpleName());
+		 * s.update();
+		 */}
+
+	/**
+	 * Force updates of the modified chunk to be sent to all players. Not sure
+	 * it helps.
+	 */
+	public void update() {
+		/*
+		 * World w = Castle.getInstance().getWorld(); Set<Chunk> chunks = new
+		 * HashSet<Chunk>(); chunks.add(w.getChunkAt(e.minx, e.minz));
+		 * chunks.add(w.getChunkAt(e.minx, e.maxz));
+		 * chunks.add(w.getChunkAt(e.maxx, e.minz));
+		 * chunks.add(w.getChunkAt(e.maxx, e.maxz)); IntVector p =
+		 * e.getCentre(); chunks.add(w.getChunkAt(p.x,p.z)); for(Chunk c:chunks)
+		 * w.refreshChunk(c.getX(), c.getZ());
+		 */
 	}
-	
+
 	/**
 	 * actually make the room's walls and contents (the building's outer walls
 	 * should already exist.) Note that roof gardens may modify the building's

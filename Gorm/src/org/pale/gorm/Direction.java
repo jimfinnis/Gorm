@@ -20,6 +20,6 @@ public enum Direction {
 	public Direction opposite(){
 		return vec.rotate(2).toDirection();
 	}
-
+	
 	public final IntVector vec;
 }

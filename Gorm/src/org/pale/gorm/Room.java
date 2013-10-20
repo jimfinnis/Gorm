@@ -100,11 +100,12 @@ public abstract class Room implements Comparable<Room> {
 	public boolean isBlocked(Extent e1) {
 		if (e.contains(e1)) {
 			for (Extent x : blocks) {
-				if (e.intersects(x))
+				if (e1.intersects(x))
 					return true;
 			}
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	/**

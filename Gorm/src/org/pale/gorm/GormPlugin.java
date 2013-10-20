@@ -2,7 +2,6 @@ package org.pale.gorm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -11,7 +10,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -179,17 +177,33 @@ public final class GormPlugin extends JavaPlugin {
 		}
 		return false;
 	}
+	
+	private void testRoom(final Room r){
+		final Castle c = Castle.getInstance();
+		r.getExtent().runOnAllLocations(new Extent.LocationRunner(){
+
+			@Override
+			public void run(int x, int y, int z) {
+				if(r.isBlocked(new Extent(x,y,z))){
+					c.getWorld().getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK);
+				}
+				
+			}});
+		
+	}
 
 	private void test(Player p) {
 		// IntVector pos = new IntVector(p.getLocation());
 		Castle c = Castle.getInstance();
 		c.setWorld(p.getWorld());
-
-		Extent e = new Extent(p.getLocation());
-
-		for (Room q : Castle.getInstance().getRooms())
-			GormPlugin.log("   loop: room " + q.id + " has " + q.exits.size());
-		GormPlugin.log("Done!");
+		
+		IntVector pos = new IntVector(p.getLocation());
+		
+		for(Room r: c.getRooms()){
+			if(r.getExtent().contains(pos))
+				testRoom(r);
+			
+		}
 	}
 
 	private void flatten(Player p) {

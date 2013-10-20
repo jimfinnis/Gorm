@@ -354,9 +354,14 @@ public class Turtle {
 		case 'd':// go up
 			down();
 			break;
-		case 'T': // test the block, adding 1 to the score if it is empty
+		case 't': // test the block, adding 1 to the score if it is empty
 			if(isEmpty(0,0,0)){
 				testScore++;
+			}
+			break;
+		case 'T':
+			if(!isEmpty(0,0,0)){
+				abort();
 			}
 			break;
 		case 'w': // write the material to the current block - but abort if we

@@ -1,3 +1,4 @@
+
 Gorm
 ====
 
@@ -60,6 +61,11 @@ Instructions:
     d   go down - if WRITEONMOVE is set, then write
     w   write the current material to the current block. If CHECKWRITE is set and this
         would overwrite a man-made block, do not write, and abort.
+    t   test the block - if it is empty, add 1 to the test score
+    T   test the block - if it is not empty, abort
+    B   add a permanent block (will NOT work if setRoom has not been called,
+        i.e. we are not placing furniture.) Will not work in test mode,
+        or if the block is not empty and checkwrite is on.
     +   set a flag
             f   FOLLOW
             s   SUPPORTFOLLOW
@@ -89,6 +95,8 @@ Instructions:
         The actual materials are set randomly for each building.
     Mx  set material directly, where x is:
         w   wood
+        q   wall sign, facing towards player
+        j   wooden stairs
         f   wooden fence
         W   cobble fence
         l   log
@@ -101,4 +109,7 @@ Instructions:
         g   glass pane
         G   glass block
         i   iron bars
+        B   bookshelf
+        D   bed
+        0-9 custom writer 0-9
         Try to avoid this and use 'm' instead

@@ -50,18 +50,16 @@ public abstract class Building {
 
 	private static int idCounter = 0;
 	int id = idCounter++;
-	
+
 	/**
-	 * If a roof has been added (NOT a roof garden - roofs are separate entities which can be overwritten)
-	 * this is its height.
+	 * If a roof has been added (NOT a roof garden - roofs are separate entities
+	 * which can be overwritten) this is its height.
 	 */
 	protected int roofHeight = 0;
 
-
-
 	/**
 	 * List of the rooms - vertical sections within the building. DO NOT add
-	 * rooms directly, use addRoom() 
+	 * rooms directly, use addRoom()
 	 */
 	public LinkedList<Room> rooms = new LinkedList<Room>();
 
@@ -121,12 +119,12 @@ public abstract class Building {
 							// the air space - of the building
 		}
 	}
-	
+
 	/**
 	 * Furnish rooms after building
 	 */
-	public void furnish(MaterialManager mgr){
-		for(Room r:rooms){
+	public void furnish(MaterialManager mgr) {
+		for (Room r : rooms) {
 			r.furnish(mgr);
 		}
 	}
@@ -329,7 +327,8 @@ public abstract class Building {
 			b.setData(ladder.getData());
 		}
 		// create an extent a bit wider
-		Extent e = new Extent(ladderPos,4,4,4).setHeight(innerLower.ysize());
+		Extent e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
+				.expand(1, Extent.ALL).setHeight(innerLower.ysize());
 		// and block that off in the lower room, so we don't block the ladder
 		lower.addBlock(e);
 	}
@@ -560,14 +559,14 @@ public abstract class Building {
 		final Castle c = Castle.getInstance();
 		if (gradeInt() > 1)
 			return;
-		
+
 		// we also want to ruin the roof!
 		Extent ruinExtent = new Extent(extent);
 		ruinExtent.maxy += roofHeight;
-		
-		GormPlugin.log("RUINING "+ruinExtent.toString());
 
-		final double chance = grade()*1.5;
+		GormPlugin.log("RUINING " + ruinExtent.toString());
+
+		final double chance = grade() * 1.5;
 		final World w = c.getWorld();
 		final Random rnd = c.r;
 		final int minx = ruinExtent.minx;
@@ -593,11 +592,11 @@ public abstract class Building {
 						&& b.getType() != Material.WATER) {
 					// less chance of ruinage further down
 					double yInExt = ((double) (y - miny)) / ysize;
-					double heightFactor = yInExt*yInExt;
-					
-					if(y>=extent.maxy)
+					double heightFactor = yInExt * yInExt;
+
+					if (y >= extent.maxy)
 						heightFactor *= 2; // make roofs even worse
-					
+
 					// and we also work out some kind of factor across the
 					// building
 					double edgeFactor;
@@ -620,14 +619,14 @@ public abstract class Building {
 						edgeFactor = 0;
 					}
 
-					if (rnd.nextDouble() < heightFactor * chance
-							* edgeFactor * edgeFactor) {
-						int holeh = rnd.nextInt(5)+1;
-						Extent e = new Extent(x, y, z, x, y+holeh, z).intersect(extent);
-						if(e!=null)
+					if (rnd.nextDouble() < heightFactor * chance * edgeFactor
+							* edgeFactor) {
+						int holeh = rnd.nextInt(5) + 1;
+						Extent e = new Extent(x, y, z, x, y + holeh, z)
+								.intersect(extent);
+						if (e != null)
 							c.fill(e, Material.AIR, 0);
-					} else if (rnd.nextDouble() < 0.1
-							&& b.getType().isSolid()) {
+					} else if (rnd.nextDouble() < 0.1 && b.getType().isSolid()) {
 						// if that didn't work, what about vines? The list above
 						// is a list
 						// of things we can slap vines onto.
@@ -656,8 +655,7 @@ public abstract class Building {
 					}
 				}
 			}
-		});		
+		});
 	}
-
 
 }

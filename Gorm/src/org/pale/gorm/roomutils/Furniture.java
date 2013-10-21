@@ -81,7 +81,7 @@ public class Furniture {
 		Castle c = Castle.getInstance();
 		// we keep a list of candidates
 		ArrayList<PlacementCandidate> candidates = new ArrayList<PlacementCandidate>();
-
+		
 		int maxScore = 0; // candidate max score
 
 		// now we iterate through each wall of the inner space
@@ -128,11 +128,11 @@ public class Furniture {
 									candidates.clear();
 									maxScore = score;
 								}
-								GormPlugin.log("adding candidate "
+/*								GormPlugin.log("adding candidate "
 										+ pos.toString() + ":"
 										+ wallDir.toString() + " score "
 										+ t.getTestScore());
-								PlacementCandidate pc = new PlacementCandidate(
+*/								PlacementCandidate pc = new PlacementCandidate(
 										pos, wallDir, t.getTestScore());
 								candidates.add(pc);
 							}
@@ -147,12 +147,12 @@ public class Furniture {
 			// and we're done - pick at random from the candidates
 			PlacementCandidate pc = candidates.get(c.r.nextInt(candidates
 					.size()));
-			GormPlugin.log("PICKED candidate " + pc.p.toString() + ":"
-					+ pc.d.toString() + " score " + pc.score);
+//			GormPlugin.log("PICKED candidate " + pc.p.toString() + ":"
+//					+ pc.d.toString() + " score " + pc.score);
 			// and run a turtle to actually build the furniture
-			Turtle t = new Turtle(mgr, c.getWorld(), pc.p, pc.d);
+			Turtle t = new Turtle(mgr, c.getWorld(), pc.p, pc.d).setRoom(r);
 			t.run(s);
-		} else GormPlugin.log("No candidates found!");
+		} //else GormPlugin.log("No candidates found!");
 	}
 
 }

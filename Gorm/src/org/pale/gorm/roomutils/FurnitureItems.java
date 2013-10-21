@@ -10,13 +10,13 @@ import org.pale.gorm.Castle;
  */
 public class FurnitureItems {
 	/** a chair using signs as arms */
-	private static final String chair1 = "Mjw.Mq.rbw.rrbbw.rb.TLTLTbTRTRT";
+	private static final String chair1 = "Mjw.Mq.rbw.rrbbw.rb.tLTBLtbtRtRt";
 	/** a sofa using signs as arms */
-	private static final String sofa1 = "MjwRw.Mq.rbbw.rrbbbw.rb.TLTLTLTbTRTRTRT";
+	private static final String sofa1 = "MjwRw.Mq.rbbw.rrbbbw.rb.TBLTBLTBLTbtRtRtRt";
 	/** some bookshelves 2x2*/
-	private static final String shelves1 = "MB.wuwdR.wuwd.bTLTbTRT";
+	private static final String shelves1 = "MB.wuwdR.wuwd.bTBLTBbtRt";
 	/** some bookshelves 2x3*/
-	private static final String shelves2 = "MB.wuwuwddR.wuwuwdd.bTLTbTRT";
+	private static final String shelves2 = "MB.wuwuwddR.wuwuwdd.bTBLTBbtRt";
 	
 	public static final String[] defaultChoices = {
 		chair1,sofa1,shelves1,shelves2

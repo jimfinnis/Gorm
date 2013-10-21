@@ -78,7 +78,7 @@ public abstract class Room implements Comparable<Room> {
 	 * This is a list of the extents which are blocked by furniture or exits
 	 * (such as steps). Add to it with addBlock() and check with isBlocked().
 	 */
-	private Collection<Extent> blocks = new ArrayList<Extent>();
+	Collection<Extent> blocks = new ArrayList<Extent>();
 
 	/**
 	 * Add a new extent to the list of blocked extents.
@@ -107,6 +107,27 @@ public abstract class Room implements Comparable<Room> {
 		}
 		return true;
 	}
+	
+	/**
+	 * See whether an position inside the room is blocked by furniture or
+	 * something. Such positions should not have more furniture added here! We
+	 * also check the pos is inside the actual room extent!
+	 * 
+	 * @param e
+	 * @return
+	 */
+	public boolean isBlocked(IntVector pos) {
+		if (e.contains(pos)) {
+			for (Extent x : blocks) {
+				if (x.contains(pos))
+					return true;
+			}
+			return false;
+		}
+		return true;
+	} 
+	 
+
 
 	/**
 	 * Most rooms have windows - override this value to prevent their creation
@@ -450,7 +471,7 @@ public abstract class Room implements Comparable<Room> {
 	 * Furnish a room after all exits and windows have been made - this should be
 	 * the last thing done to a room
 	 */
-	public abstract void furnish(MaterialManager mgr); 
-	 
+	public abstract void furnish(MaterialManager mgr);
+
 
 }

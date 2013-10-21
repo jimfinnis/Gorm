@@ -271,6 +271,9 @@ public class Turtle {
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
 			if (isModeFlag(TEST))
 				return true;
+			if(containingRoom!=null && containingRoom.isBlocked(pos))
+				return false;
+			
 			Block b = get();
 
 			if (currentCustomWriter >= 0) {
@@ -362,6 +365,14 @@ public class Turtle {
 		case 'T':
 			if(!isEmpty(0,0,0)){
 				abort();
+			}
+			break;
+		case 'B':
+			if (containingRoom != null && (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0))) {
+				if (!isModeFlag(TEST)){
+					containingRoom.addBlock(new Extent(pos.x,pos.y,pos.z));
+//					GormPlugin.log("adding block at "+pos.toString());
+				}
 			}
 			break;
 		case 'w': // write the material to the current block - but abort if we
@@ -705,11 +716,11 @@ public class Turtle {
 		IntVector p = pos.add(v);
 		// check for a containing room
 		if(containingRoom!=null){
-			if(containingRoom.isBlocked(new Extent(x,y,z)))return false;
+			if(containingRoom.isBlocked(p)){
+				return false;
+			}
 		}
 		Block b = world.getBlockAt(p.x, p.y, p.z);
-		// GormPlugin.log("  block at "+v.toString()+" is "+b.getType().toString());
-
 		return !b.getType().isSolid();
 	}
 

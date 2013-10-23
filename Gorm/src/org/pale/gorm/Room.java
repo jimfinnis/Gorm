@@ -15,6 +15,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.pale.gorm.roomutils.ExitDecorator;
+import org.pale.gorm.roomutils.StairBuilder;
 
 /**
  * A room is a level of a building. Typically it's indoors, but the roof can
@@ -283,6 +284,8 @@ public abstract class Room implements Comparable<Room> {
 	 *            destination room
 	 */
 	private boolean makeExitBetweenRooms(Room that) {
+		StairBuilder sb=new StairBuilder();
+		
 		Extent intersection = this.e.intersect(that.e);
 		Direction dir;
 		/*
@@ -360,12 +363,30 @@ public abstract class Room implements Comparable<Room> {
 					that.isBlocked(blockExtent.intersect(that.e)))
 				continue;
 			
-			this.addBlock(blockExtent);
-			that.addBlock(blockExtent);
 
 			// create the two exit structures
 			Exit src = new Exit(e, dir, this, that);
 			Exit dest = new Exit(e, dir.opposite(), that, this);
+
+			Castle c = Castle.getInstance();
+
+			// make stairs and add them to the blocked list if successful
+			Extent stairExtent = sb.dropExitStairs(mgr, src.getExtent(),
+					src.getDirection(),this);
+
+			// if the stairs didn't get made because of a blockage, don't create any exit data at all.
+			if (sb.isStairsBlocked())
+				continue;
+
+			// don't allow anything to subsequently be made in the stairs
+			if(stairExtent!=null)
+				addBlock(stairExtent);
+
+			// add the exits to the blocks
+			this.addBlock(blockExtent);
+			that.addBlock(blockExtent);
+
+			// add the exit structures to the rooms
 			this.exits.add(src);
 			this.exitMap.put(that, src); // exit 'src' leads to room
 											// 'r'
@@ -373,16 +394,9 @@ public abstract class Room implements Comparable<Room> {
 			that.exitMap.put(this, dest); // exit 'dest' leads back
 											// here
 			// blow the hole
-			Castle c = Castle.getInstance();
 			c.fill(src.getExtent(), Material.AIR, 1);
 			// GormPlugin.log("hole blown: " + src.getExtent().toString());
 
-			// make stairs and add them to the blocked list if successful
-			Extent stairExtent = c.dropExitStairs(mgr, src.getExtent(),
-					src.getDirection());
-			if (stairExtent != null) {
-				addBlock(stairExtent);
-			}
 			// and decorate the exit
 			ExitDecorator.decorate(mgr, src);
 

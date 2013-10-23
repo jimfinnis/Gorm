@@ -348,9 +348,18 @@ public abstract class Room implements Comparable<Room> {
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
 					.getBiome());
 
-			// add the space on either side of the exit to the block lists
+			// add the space on either side of the exit to the block lists -
+			// we actually build two extents, one protruding into the other room,
+			// one into this. We can't just add an exit extent across both rooms,
+			// because isBlocked would always trigger on that because it is partially outside
+			// the room!
 			Extent blockExtent = e.expand(1, dir.vec.x == 0 ? Extent.Z
 					: Extent.X);
+			// make sure it doesn't clash with existing blocks
+			if(this.isBlocked(blockExtent.intersect(this.e)) || 
+					that.isBlocked(blockExtent.intersect(that.e)))
+				continue;
+			
 			this.addBlock(blockExtent);
 			that.addBlock(blockExtent);
 

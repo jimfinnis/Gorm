@@ -120,7 +120,26 @@ public class Turtle {
 	public static final int TEST = 256; // test mode only - do not write, just
 										// check we can and abort if not
 
+	/**
+	 * An extent containing all the blocks written by this turtle
+	 */
+	private Extent written = new Extent();
 	
+	/**
+	 * Get the extent of all the blocks written
+	 * @return
+	 */
+	public Extent getWritten(){
+		return new Extent(written);
+	}
+	
+	/**
+	 * Clear the extent of all blocks written
+	 * @return
+	 */
+	public void clearWritten(){
+		written = new Extent();
+	}
 	
 	char getNext() {
 		if (cur >= string.length())
@@ -299,6 +318,8 @@ public class Turtle {
 				b.setData((byte) data);
 				b.setType(mat);
 			}
+			
+			written = written.union(pos);
 
 
 			return true;

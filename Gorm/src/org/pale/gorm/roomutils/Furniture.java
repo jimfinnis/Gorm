@@ -152,6 +152,7 @@ public class Furniture {
 			// and run a turtle to actually build the furniture
 			Turtle t = new Turtle(mgr, c.getWorld(), pc.p, pc.d).setRoom(r);
 			t.run(s);
+			r.addBlock(t.getWritten()); // add all written blocks to blocked off area
 		} //else GormPlugin.log("No candidates found!");
 	}
 

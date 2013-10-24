@@ -281,7 +281,7 @@ public abstract class Room implements Comparable<Room> {
 	 * intersects enough with us
 	 * 
 	 * @param that
-	 *            destination room
+	 *            destination room, whose floor is LOWER than us.
 	 */
 	private boolean makeExitBetweenRooms(Room that) {
 		StairBuilder sb=new StairBuilder();
@@ -361,8 +361,9 @@ public abstract class Room implements Comparable<Room> {
 			// make sure it doesn't clash with existing blocks
 			if(this.isBlocked(blockExtent.intersect(this.e)) || 
 					that.isBlocked(blockExtent.intersect(that.e)))
+			{
 				continue;
-			
+			}
 
 			// create the two exit structures
 			Exit src = new Exit(e, dir, this, that);
@@ -371,13 +372,15 @@ public abstract class Room implements Comparable<Room> {
 			Castle c = Castle.getInstance();
 
 			// make stairs and add them to the blocked list if successful
-			Extent stairExtent = sb.dropExitStairs(mgr, src.getExtent(),
-					src.getDirection(),this);
+			Extent stairExtent =
+				sb.dropExitStairs(mgr, src.getExtent(),
+					src.getDirection(),that);
 
 			// if the stairs didn't get made because of a blockage, don't create any exit data at all.
-			if (sb.isStairsBlocked())
+			if (sb.isStairsBlocked()){
 				continue;
-
+			}
+			
 			// don't allow anything to subsequently be made in the stairs
 			if(stairExtent!=null)
 				addBlock(stairExtent);

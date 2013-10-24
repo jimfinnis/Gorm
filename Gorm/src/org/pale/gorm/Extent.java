@@ -102,8 +102,11 @@ public class Extent {
 
 	@Override
 	public String toString() {
+		if(isset)
 		return String.format("[%d - %d, %d - %d, %d - %d]", minx, maxx, miny,
 				maxy, minz, maxz);
+		else
+			return "[invalid]";
 	}
 
 	public Extent(int x1, int y1, int z1, int x2, int y2, int z2) {

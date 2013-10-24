@@ -12,6 +12,7 @@ import org.bukkit.material.Stairs;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
+import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
@@ -57,6 +58,8 @@ public class StairBuilder {
 		
 		boolean done = false;
 		// we need to iterate over the 'stripes' within a multi-block-wide exit
+		// and we add the direction to the start position so we don't start inside the wall
+		// (the exit hasn't been "blown" yet)
 		if (v.x == 0) {
 			// the north-south case
 			for (int x = e.minx; x <= e.maxx; x++) {
@@ -96,18 +99,30 @@ public class StairBuilder {
 
 		boolean done = false;
 		
+		// move out one, because we don't blow the hole yet, and down one because that's where steps go
+		
+		start = start.add(v).add(0,-1,0);
+		// preliminary check
+		Block b = castle.getBlockAt(start);
+		if(b.getType().isSolid()){
+			return true; // we land early with no need for stairs
+		}
+		
 		BlockFace bf = new IntVector(-v.x, 0, -v.z).toBlockFace();
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
 
 		int y = start.y;
 		Material mat = mgr.getStair();
-
+		
+		GormPlugin.log("Start="+start.toString());
+		
+/*		
 		// steps starting from blind walls can happen.. but are stupid.
 		IntVector startWall = start.subtract(v).add(0, 1, 0);
 		if (world.getBlockAt(startWall.x, startWall.y, startWall.z).getType()
 				.isSolid())
 			return false;
-
+*/
 		for (IntVector pt = new IntVector(start); e
 				.contains(pt.x, e.miny, pt.z); pt = pt.add(v)) {
 			int newy = e.getHeightWithin(pt.x, pt.z);
@@ -115,7 +130,7 @@ public class StairBuilder {
 				break;
 			if (newy > y) {
 				// if we've gone UP, exit the loop. We only work down.
-				stairsBlocked = true;
+				//stairsBlocked = true;
 				break;
 			} else if (newy < y) {
 				// we've gone down, so build up, saving the old block state
@@ -130,7 +145,7 @@ public class StairBuilder {
 				stairExtent.union(pt.x,y,pt.z);
 				
 
-				Block b = world.getBlockAt(pt.x, y - 1, pt.z); // check we
+				b = world.getBlockAt(pt.x, y - 1, pt.z); // check we
 																// landed!
 				if (b.getType().isSolid()){
 					done = true;

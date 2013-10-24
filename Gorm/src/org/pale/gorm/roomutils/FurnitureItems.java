@@ -10,9 +10,9 @@ import org.pale.gorm.Castle;
  */
 public class FurnitureItems {
 	/** a chair using signs as arms */
-	private static final String chair1 = "Mjw.Mq.rbw.rrbbw.rb.tLTBLtbtRtRt";
+	private static final String chair1 = "Mjw.uBLBRRBLd.Mq.rbw.rrbbw.rb.tLTBLtbtRtRt";
 	/** a sofa using signs as arms */
-	private static final String sofa1 = "MjwRw.Mq.rbbw.rrbbbw.rb.TBLTBLTBLTbtRtRtRt";
+	private static final String sofa1 = "MjwRw.uBLBRRBRBLLd.Mq.rbbw.rrbbbw.rb.TBLTBLTBLTbtRtRtRt";
 	/** some bookshelves 2x2*/
 	private static final String shelves1 = "MB.wuwdR.wuwd.bTBLTBbtRt";
 	/** some bookshelves 2x3*/

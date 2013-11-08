@@ -275,7 +275,7 @@ public abstract class Building {
 		addRoomTop(r); // adds to head
 		if (lowerFloor != null) {
 			// there is a floor below - try to build some kind of link down
-			buildVerticalExit(lowerFloor, r);
+			lowerFloor.buildVerticalExitUpTo(r);
 		}
 	}
 
@@ -288,49 +288,9 @@ public abstract class Building {
 		addRoomBasement(r); // adds to head
 		if (upperFloor != null) {
 			// there is a floor below - try to build some kind of link down
-			buildVerticalExit(r, upperFloor);
+			r.buildVerticalExitUpTo(upperFloor);
 		}
 
-	}
-
-	/**
-	 * Build a vertical exit between two rooms
-	 * 
-	 * @param lower
-	 *            lower room
-	 * @param upper
-	 *            upper room
-	 */
-	private void buildVerticalExit(Room lower, Room upper) {
-		World w = Castle.getInstance().getWorld();
-
-		// get the inner extent of the lower room
-		Extent innerLower = lower.e.expand(-1, Extent.ALL);
-
-		// get one corner of that room (but go up one so we don't overwrite the
-		// carpet)
-		IntVector ladderPos = new IntVector(innerLower.minx,
-				innerLower.miny + 1, innerLower.minz);
-
-		Ladder ladder = new Ladder();
-		ladder.setFacingDirection(BlockFace.NORTH);
-
-		// build up, placing a ladder until we get to the floor above, and go
-		// one square into the room
-		// to clear the carpet too.
-		for (int y = ladderPos.y; y <= upper.e.miny + 1; y++) {
-			Block b = w.getBlockAt(ladderPos.x, y, ladderPos.z);
-			// BlockState s = b.getState();
-			// s.setData((MaterialData)ladder);
-			// s.update();
-			b.setType(Material.LADDER);
-			b.setData(ladder.getData());
-		}
-		// create an extent a bit wider
-		Extent e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
-				.expand(1, Extent.ALL).setHeight(innerLower.ysize());
-		// and block that off in the lower room, so we don't block the ladder
-		lower.addBlock(e);
 	}
 
 	/**

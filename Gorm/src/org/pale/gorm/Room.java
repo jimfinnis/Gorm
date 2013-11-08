@@ -13,7 +13,9 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.material.Ladder;
 import org.pale.gorm.roomutils.ExitDecorator;
 import org.pale.gorm.roomutils.StairBuilder;
 
@@ -484,6 +486,56 @@ public abstract class Room implements Comparable<Room> {
 		 * w.refreshChunk(c.getX(), c.getZ());
 		 */
 	}
+	
+	/**
+	 * Build an exit up to another room; sometimes stairs, sometimes a ladder.
+	 * @param upper
+	 */
+	public void buildVerticalExitUpTo(Room upper){
+		buildCornerLadderUpTo(upper);
+	}
+	
+	/**
+	 * Builds a ladder from this room up to another room, in the corner
+	 * @param upper
+	 */
+	public void buildCornerLadderUpTo(Room upper){
+		World w = Castle.getInstance().getWorld();
+
+		// get the inner extent of the lower room
+		Extent innerLower = e.expand(-1, Extent.ALL);
+
+		// get one corner of that room (but go up one so we don't overwrite the
+		// carpet)
+		IntVector ladderPos = new IntVector(innerLower.minx,
+				innerLower.miny + 1, innerLower.minz);
+
+		Ladder ladder = new Ladder();
+		ladder.setFacingDirection(BlockFace.NORTH);
+
+		// build up, placing a ladder until we get to the floor above, and go
+		// one square into the room
+		// to clear the carpet too.
+		for (int y = ladderPos.y; y <= upper.e.miny + 1; y++) {
+			Block b = w.getBlockAt(ladderPos.x, y, ladderPos.z);
+			// BlockState s = b.getState();
+			// s.setData((MaterialData)ladder);
+			// s.update();
+			b.setType(Material.LADDER);
+			b.setData(ladder.getData());
+		}
+		// create an extent a bit wider
+		Extent e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
+				.expand(1, Extent.ALL).setHeight(innerLower.ysize());
+		// and block that off in the lower room, so we don't block the ladder
+		addBlock(e);
+		// now block off the same area in the room above
+		e.miny = upper.e.miny+1;
+		e.maxy = upper.e.maxy-1;
+		upper.addBlock(e);
+	}
+	
+	
 
 	/**
 	 * actually make the room's walls (the building's outer walls

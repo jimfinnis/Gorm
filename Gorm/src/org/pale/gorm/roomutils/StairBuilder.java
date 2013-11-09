@@ -23,7 +23,17 @@ import org.pale.gorm.Room;
  *
  */
 public class StairBuilder {
-	boolean stairsBlocked;
+	boolean stairsBlocked=false;
+	MaterialManager mgr;
+	
+	/// set this to a value that will get subtracted from the extent used
+	/// to check for height increase during a stair run; it's used to deal
+	/// with building stairs down inside buildings where there might be a ceiling. 
+	public int heightCheckSubtract=0;
+	
+	public StairBuilder(MaterialManager m){
+		mgr = m;
+	}
 	
 	
 	public boolean isStairsBlocked() {
@@ -39,16 +49,17 @@ public class StairBuilder {
 	 * @param e extent of exit where the stairs come from
 	 * @param d direction of stairs
 	 * @param room the room we're creating the stairs within, or null if there isn't one. Used for blocking checks.
+	 * @param scanLength we abandon the stairs if they're going to have more than this number of blocks
 	 * @return null if no stairs, else extent of stairs
 	 */
-	public Extent dropExitStairs(MaterialManager mgr, Extent e, Direction d, Room room) {
+	public Extent dropExitStairs(Extent e, Direction d, Room room, int scanLength) {
 		
 		stairsBlocked = false;
 
 		IntVector v = d.vec;
 		int floory = e.miny; // get the floor of the exit
 
-		e = e.growDirection(d, 5); // stretch out the extent for scanning
+		e = e.growDirection(d, scanLength); // stretch out the extent for scanning
 									// purposes
 
 		e.miny -= 100; // so that getHeightWithin() will read heights lower than
@@ -96,6 +107,11 @@ public class StairBuilder {
 			IntVector v, Extent stairExtent, Room room) {
 		Castle castle = Castle.getInstance();
 		World world = Castle.getInstance().getWorld();
+		
+		// the extent we use to check for up-and-down slopes is less high
+		// than the main extent, to make internal stairs work.
+		Extent checkSolidExtent = new Extent(e);
+		checkSolidExtent.maxy-=heightCheckSubtract;
 
 		boolean done = false;
 		
@@ -125,7 +141,8 @@ public class StairBuilder {
 */
 		for (IntVector pt = new IntVector(start); e
 				.contains(pt.x, e.miny, pt.z); pt = pt.add(v)) {
-			int newy = e.getHeightWithin(pt.x, pt.z);
+			int newy = 
+					checkSolidExtent.getHeightWithin(pt.x, pt.z);
 			if (Castle.isStairs(world.getBlockAt(pt.x, newy, pt.z).getType()))
 				break;
 			if (newy > y) {
@@ -142,7 +159,7 @@ public class StairBuilder {
 					break;
 				}
 				castle.setStairs(pt.x, y, pt.z, bf, mat);
-				stairExtent.union(pt.x,y,pt.z);
+				stairExtent.addPoint(pt.x,y,pt.z);
 				
 
 				b = world.getBlockAt(pt.x, y - 1, pt.z); // check we

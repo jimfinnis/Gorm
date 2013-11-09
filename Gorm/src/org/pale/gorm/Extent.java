@@ -109,13 +109,39 @@ public class Extent {
 			return "[invalid]";
 	}
 
+	/**
+	 * Construct an extent from corners of rectangles. It doesn't matter which
+	 * is the max or min corner, the system will sort it out.
+	 * @param x1
+	 * @param y1
+	 * @param z1
+	 * @param x2
+	 * @param y2
+	 * @param z2
+	 */
 	public Extent(int x1, int y1, int z1, int x2, int y2, int z2) {
-		minx = x1;
-		miny = y1;
-		minz = z1;
-		maxx = x2;
-		maxy = y2;
-		maxz = z2;
+		if(x1<x2){
+			minx = x1;
+			maxx = x2;			
+		} else {
+			minx = x2;
+			maxx = x1;			
+		}
+		
+		if(y1<y2){
+			miny = y1;
+			maxy = y2;			
+		} else {			
+			miny = y2;
+			maxy = y1;			
+		}
+		if(z1<z2){
+			minz = z1;
+			maxz = z2;
+		} else {
+			minz = z2;
+			maxz = z1;			
+		}
 		isset = true;
 	}
 
@@ -199,7 +225,13 @@ public class Extent {
 		return (maxz - minz) + 1;
 	}
 
-	private void addPoint(int x, int y, int z) {
+	/**
+	 * Similar to union with a point, but acts in place.
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public void addPoint(int x, int y, int z) {
 		if (!isset) {
 			minx = x;
 			maxx = x;

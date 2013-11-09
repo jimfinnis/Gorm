@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.bukkit.Chunk;
@@ -286,8 +287,6 @@ public abstract class Room implements Comparable<Room> {
 	 *            destination room, whose floor is LOWER than us.
 	 */
 	private boolean makeExitBetweenRooms(Room that) {
-		StairBuilder sb=new StairBuilder();
-		
 		Extent intersection = this.e.intersect(that.e);
 		Direction dir;
 		/*
@@ -374,9 +373,11 @@ public abstract class Room implements Comparable<Room> {
 			Castle c = Castle.getInstance();
 
 			// make stairs and add them to the blocked list if successful
+			StairBuilder sb=new StairBuilder(mgr);
+			
 			Extent stairExtent =
-				sb.dropExitStairs(mgr, src.getExtent(),
-					src.getDirection(),that);
+				sb.dropExitStairs(src.getExtent(),
+					src.getDirection(),that,5);
 
 			// if the stairs didn't get made because of a blockage, don't create any exit data at all.
 			if (sb.isStairsBlocked()){
@@ -492,14 +493,145 @@ public abstract class Room implements Comparable<Room> {
 	 * @param upper
 	 */
 	public void buildVerticalExitUpTo(Room upper){
+		// sometimes, try to build stairs. If it fails after a certain
+		// number of tries, give up and go with the ladder.
+		if(Castle.getInstance().r.nextFloat()<0.7){
+			for(int tries=0;tries<10;tries++){
+				if(buildStairsUpTo(upper))
+					return;
+			}
+		}
 		buildCornerLadderUpTo(upper);
+	}
+	
+	private boolean buildStairsUpTo(Room upper){
+		Castle c = Castle.getInstance();
+		Random r = c.r;
+		
+		// firstly, find the length of the stairs. We need to have at least 
+		// 1 clearance at each end.
+		int steps = upper.e.miny - e.miny;
+		boolean stepsAlongXAxis;
+		
+		// select an alignment. Why -4 in these tests? Because we're not only
+		// taking the 1 block clearance at the end of each staircase into account,
+		// but also the fact that steps are delimited by the inner extent, and we're
+		// working directly with the outer extent.
+		if(upper.e.xsize()-4<=steps){
+			// X isn't valid; is Z?
+			if(upper.e.zsize()-4<=steps)
+				return false; // no room
+			// only Z is valid
+			stepsAlongXAxis = false;
+		} else {
+			// X is valid
+			if(upper.e.zsize()-4<=steps)
+				stepsAlongXAxis = true; // only X is valid
+			else
+				stepsAlongXAxis = r.nextBoolean(); // either
+		}
+		GormPlugin.log(String.format("xsize: %d, zsize: %d, steps: %d, xaxis?: %d",
+				upper.e.xsize(),upper.e.zsize(),steps,stepsAlongXAxis?1:0));
+		
+		// now we have to find a position to build down from, and place the stairs
+		
+		Extent ex;
+		if(stepsAlongXAxis){
+			// 4 here to account for both using only the inner extent and
+			// also the clearance at the end
+			int startx = r.nextInt(upper.e.xsize()-(steps+4));
+			// and get a z in the inner extent somewhere.
+			int z;
+			z = r.nextBoolean()?upper.e.minz+1 : upper.e.maxz-1;
+//			int z = r.nextInt(upper.e.zsize()-2)+upper.e.minz+1;
+			
+			startx += upper.e.minx+2;
+			ex = new Extent(startx,e.miny+1,z,
+								    startx+steps,upper.e.miny,z);
+			if(isBlocked(ex))
+				return false;
+			
+		} else {
+			int startz = r.nextInt(upper.e.zsize()-(steps+4));
+			startz += upper.e.minz+2;
+			// and get an x in the inner extent somewhere.
+			int x;
+			x = r.nextBoolean()?upper.e.minx+1 : upper.e.maxx-1;
+//			int x = r.nextInt(upper.e.xsize()-2)+upper.e.minx+1;
+			ex = new Extent(x,e.miny+1,startz,
+									x,upper.e.miny,startz+steps);
+			if(isBlocked(ex))
+				return false;
+		}
+		
+	
+		MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
+				.getBiome());
+		StairBuilder sb = new StairBuilder(mgr);
+		
+		
+		// now we need to convert the extent of the stairs
+		// into the extent of an "exit" at the top of the stairs.
+
+		// First, pick an end and a direction. Move the end so that it's just
+		// above the block before the stairs start down.
+		
+		IntVector base;
+		Direction d;
+		if(stepsAlongXAxis){
+			if(r.nextBoolean()){
+				d = Direction.EAST;
+				base = ex.getCorner(Extent.X);
+			} else {
+				d = Direction.WEST;
+				base = ex.getCorner(0);
+			}
+		} else {
+			if(r.nextBoolean()){
+				d = Direction.SOUTH;
+				base = ex.getCorner(Extent.Z);
+			} else {
+				d = Direction.NORTH;
+				base = ex.getCorner(0);
+			}
+		}
+		
+		// clear a hole big enough to provide headroom
+		Extent ex2 = new Extent(base,0,0,0);
+		ex2.maxy+=2; // deal with carpet carpet etc.
+		ex2= ex2.union(base.add(d.vec.scale(3)));
+		c.fill(ex2,Material.AIR,0);
+		
+		
+		// we have the corner inside the stairs extent, now move out and up one.
+		base = base.subtract(d.vec).add(0,1,0);
+		// turn this into an "exit extent"
+		ex = new Extent(base,0,0,0).setHeight(2);
+
+//		c.fill(ex, Material.LAPIS_BLOCK,0);
+		sb.heightCheckSubtract = 5; // so we don't end up stopping too early
+		Extent result = sb.dropExitStairs(ex, d, this,30);// allow pretty much any length of flight
+		
+		if(result==null){
+			// shouldn't happen, but just in case
+			c.fill(ex2,Material.STONE,0); // might look a bit weird..
+			return false;
+		} else {
+			// add blocks - the stair extent in the lower room,
+			// and the stair "hole" in the upper.
+			addBlock(result);
+			ex2.miny = upper.e.miny;
+			ex2.maxy = upper.e.maxy;
+			upper.addBlock(ex2);
+			return true;
+		}
 	}
 	
 	/**
 	 * Builds a ladder from this room up to another room, in the corner
 	 * @param upper
 	 */
-	public void buildCornerLadderUpTo(Room upper){
+	private void buildCornerLadderUpTo(Room upper){
 		World w = Castle.getInstance().getWorld();
 
 		// get the inner extent of the lower room

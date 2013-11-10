@@ -747,7 +747,7 @@ public class Extent {
 	 * @param z
 	 * @return
 	 */
-	private static int getChunkCode(int x, int z) {
+	public static int getChunkCode(int x, int z) {
 		x /= INTERNAL_CHUNK_SIZE;
 		z /= INTERNAL_CHUNK_SIZE;
 		return x + z * INTERNAL_CHUNK_SIZE;

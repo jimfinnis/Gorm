@@ -30,6 +30,7 @@ public class Turtle {
 		abstract void write(Turtle t, Block b);
 	}
 
+	private Castle castle;
 	private World world;
 	private IntVector pos;
 	private IntVector dir;
@@ -119,6 +120,8 @@ public class Turtle {
 
 	public static final int TEST = 256; // test mode only - do not write, just
 										// check we can and abort if not
+	public static final int NOTINDOORS = 512; // only write if we're not in a room - but don't abort on failure
+	public static final int ABORTINDOORS = 1024; // we abort if we try to write in a room
 
 	/**
 	 * An extent containing all the blocks written by this turtle
@@ -169,6 +172,7 @@ public class Turtle {
 	public Turtle(MaterialManager mgr, World w, IntVector initpos,
 			Direction initdir) {
 		world = w;
+		castle = Castle.getInstance();
 		dir = initdir.vec;
 		pos = initpos;
 		this.mgr = mgr;
@@ -180,6 +184,7 @@ public class Turtle {
 	 * @param t
 	 */
 	public Turtle(Turtle t) {
+		castle = t.castle;
 		world = t.world;
 		dir = t.dir;
 		pos = t.pos;
@@ -292,6 +297,10 @@ public class Turtle {
 				return true;
 			if(containingRoom!=null && containingRoom.isBlocked(pos))
 				return false;
+			if(isModeFlag(NOTINDOORS) && isIndoors())
+				return true;
+			if(isModeFlag(ABORTINDOORS) && isIndoors())
+				return false;
 			
 			Block b = get();
 
@@ -327,6 +336,20 @@ public class Turtle {
 			abort();
 			return false;
 		}
+	}
+
+	/**
+	 * return true if the block at the current position is inside a room
+	 * @return
+	 */
+	private boolean isIndoors() {
+		int chunk = Extent.getChunkCode(pos.x, pos.z);
+		for(Room x: castle.getRoomsByChunk(chunk)){
+			if(x.e.contains(pos)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public Material getMaterial() {
@@ -460,6 +483,10 @@ public class Turtle {
 			return BACKSTAIRS;
 		case 't':
 			return TEST;
+		case 'i':
+			return NOTINDOORS;
+		case 'I':
+			return ABORTINDOORS;
 		}
 		return 0;
 	}

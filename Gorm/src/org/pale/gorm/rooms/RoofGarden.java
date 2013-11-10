@@ -25,6 +25,7 @@ public class RoofGarden extends Room {
 	public RoofGarden(MaterialManager mgr, Extent e, Building b) {
 		super(mgr, e, b);
 		setAllSidesOpen();
+		setOutside();
 	}
 
 	/**

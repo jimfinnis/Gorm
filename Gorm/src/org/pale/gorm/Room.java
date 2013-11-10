@@ -46,10 +46,15 @@ public abstract class Room implements Comparable<Room> {
 	 */
 	protected Extent e;
 	protected Building b;
+	
+	
 
 	/**
-	 * 
+	 * the room is indoors; this is true by default - call
+	 * setOutside to change it.
 	 */
+	private boolean indoors = true;
+	
 
 	/**
 	 * This is a map of exits by the room they go to
@@ -152,20 +157,33 @@ public abstract class Room implements Comparable<Room> {
 			b.extent = modifiedBldgExtent;
 	}
 
-	protected void setOpenSide(Direction d) {
+	protected Room setOpenSide(Direction d) {
 		openSides.add(d);
+		return this;
 	}
 
 	public boolean isOpen(Direction d) {
 		return openSides.contains(d);
 	}
 
-	public void setAllSidesOpen() {
+	public Room setAllSidesOpen() {
 		openSides.add(Direction.NORTH);
 		openSides.add(Direction.SOUTH);
 		openSides.add(Direction.EAST);
 		openSides.add(Direction.WEST);
+		return this;
 	}
+
+	public Room setOutside(){
+		indoors=false;
+		return this;
+	}
+	
+	public boolean isIndoors(){
+		return indoors;
+	}
+	
+	
 
 	public boolean exitIntersects(Extent e) {
 		for (Exit x : exits) {

@@ -55,10 +55,10 @@ public class Garden extends Building {
 		// we can end up unroofing things
 		c.fill(floor.subvec(0,1,0), mgr.getSecondary());
 		
+
+		makeSingleRoom(mgr).setOutside().setAllSidesOpen(); // this is a single, exterior room
 		// fill the floor with a random material
 		c.checkFill(floor, ground.m, ground.d);
-
-		makeSingleRoom(mgr).setAllSidesOpen(); // this is a single, exterior
 		underfill(mgr, true);
 												// room
 		Gardener.plant(floor); // plant some things

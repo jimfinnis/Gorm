@@ -48,6 +48,7 @@ public class PitchedRoofBuilder extends RoofBuilder {
 		MaterialDataPair fillMat = MaterialDataPair.fromSteps(mat);
 		Turtle t = new Turtle(mgr,Castle.getInstance().getWorld(),new IntVector(0,0,0),dir);
 		t.setMaterial(mat);
+		t.setModeFlag(Turtle.NOTINDOORS);
 		IntVector base1 = new IntVector(startx,roof.miny,roof.minz);
 		IntVector base2 = base1.add(dir.vec.scale(shortEdge-1));
 		

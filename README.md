@@ -28,14 +28,21 @@ URI (which you can get from the Github page for this project,
 it's git@github.com:jimfinnis/Gorm.git). Then it should be just all the
 defaults.
 
-You'll then also need to add the appropriate bukkit jar to the class
-path. Right click on the project, select Properties, Java Build Path,
-and add the jar as an external. 
+You may find that all the source directories for the subpackages
+have been added separately, causing errors. Resolve this by
+1) right click on the project and select Properties
+2) Java Build Path
+3) Source
+4) remove the Gorm/src directory
+5) add it again.
 
-When all the errors have gone away, make a Gorm directory in your
-craftbukkit plugin directory. use File/Export JAR to export
-the built jar to this new directory, calling it Gorm.jar. Also copy
-the plugin.yml from this project to the new directory.
+You'll then also need to add the appropriate bukkit jar to the class
+path. Again from the Java Build Path, this time the Libraries tab,
+add the jar using Add External JARs.
+
+When all the errors have gone away, export the plugin using
+File/Export.../Java/Export JAR. Make sure you include plugin.yml
+and export it to the craftbukkit plugins directory.
 
 
 The turtle

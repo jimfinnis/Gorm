@@ -16,8 +16,26 @@ Commands:
     /gt <str>   issue a test turtle string. There must be a castle for this.
     
 Note that Gorm does not save rooms between reloads.
-    
 
+
+Building
+========
+
+Make sure you have Java SE installed, and Eclipse IDE. Install
+the EGit plugin so you can use Git. Check out this project
+with "File/Import.../Projects from Git/URI" and enter the appropriate
+URI (which you can get from the Github page for this project,
+it's git@github.com:jimfinnis/Gorm.git). Then it should be just all the
+defaults.
+
+You'll then also need to add the appropriate bukkit jar to the class
+path. Right click on the project, select Properties, Java Build Path,
+and add the jar as an external. 
+
+When all the errors have gone away, make a Gorm directory in your
+craftbukkit plugin directory. use File/Export JAR to export
+the built jar to this new directory, calling it Gorm.jar. Also copy
+the plugin.yml from this project to the new directory.
 
 
 The turtle

@@ -22,34 +22,32 @@ public class DungeonObjects {
 	
 	/**
 	 * Generates Random Loot Chests
+	 * @param dir 
 	 * 
 	 * @param inner defines the internal area of the room
 	 * @param chance how likely each chest room is to have a chest
 	 * @param grade the grade, or danger level, of the current room,
 	 * 			from 1 (most dangerous) to 4 (pretty much completely safe)
 	 */
-	public static void chest(Extent inner, double chance) {
+	public static void chest(IntVector location, IntVector dir) {
 		Castle c = Castle.getInstance();
-		int grade = c.gradeInt(inner);
+		int grade = c.gradeInt(location);
 		
-		IntVector centreFloor = inner.getWall(Direction.DOWN).getCentre();
-		Block b = c.getBlockAt(centreFloor);
+		Block b = c.getBlockAt(location);
 		
-		if (c.r.nextFloat() <= chance){
-			b.setType(Material.CHEST);
-			Chest chest = (Chest) b.getState();
-			
-			ArrayList<Integer> loot = GormPlugin.getInstance().getLoot(grade);
-			//How many items should the chest contain? Lower grade (more dangerous) areas get more
-			int items = (int) ((10 + c.r.nextInt(10)) / grade);
-			for(int i=1;i<items;i++){
-				//Choose an item ID from those available for this grade of room
-				int itemID = loot.get(c.r.nextInt(loot.size()));
-				chest.getBlockInventory().addItem(new ItemStack(itemID));
-			}
-			chest.update();
-			GormPlugin.log("Chest Generated @ " + centreFloor);
+		b.setType(Material.CHEST);
+		Chest chest = (Chest) b.getState();
+		
+		ArrayList<Integer> loot = GormPlugin.getInstance().getLoot(grade);
+		//How many items should the chest contain? Lower grade (more dangerous) areas get more
+		int items = (int) ((10 + c.r.nextInt(10)) / grade);
+		for(int i=1;i<items;i++){
+			//Choose an item ID from those available for this grade of room
+			int itemID = loot.get(c.r.nextInt(loot.size()));
+			chest.getBlockInventory().addItem(new ItemStack(itemID));
 		}
+		chest.update();
+		GormPlugin.log("Chest Generated @ " + location);
 	}
 	
 	/**

@@ -18,8 +18,11 @@ public class FurnitureItems {
 	/** some bookshelves 2x3*/
 	private static final String shelves2 = "MB.wuwuwddR.wuwuwdd.bTBLTBbtRt";
 	
+	private static final String chest = "Ccw";
+	
 	public static final String[] defaultChoices = {
-		chair1,sofa1,shelves1,shelves2
+		chair1,sofa1,shelves1,shelves2,
+		chest
 	};
 	
 	/** helper for getting random string */

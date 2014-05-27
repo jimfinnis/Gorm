@@ -1,29 +1,19 @@
 package org.pale.gorm;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
-
-import javax.xml.crypto.dsig.CanonicalizationMethod;
 
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.block.Chest;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Ladder;
-import org.bukkit.material.MaterialData;
 import org.bukkit.material.Vine;
 import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.rooms.BlankRoom;
-import org.pale.gorm.rooms.ChestRoom;
-import org.pale.gorm.rooms.ReadingRoom;
-import org.pale.gorm.rooms.SpawnerRoom;
+import org.pale.gorm.rooms.EmptyRoom;
 import org.pale.gorm.rooms.PlainRoom;
+import org.pale.gorm.rooms.SpawnerRoom;
 import org.pale.gorm.roomutils.WindowMaker;
 
 /**
@@ -207,8 +197,6 @@ public abstract class Building {
 			return gradeLow(mgr, roomExt, bld);
 		} else if (grade <= 0.5) {
 			return gradeMidLow(mgr, roomExt, bld);
-		} else if (grade <= 0.65) {
-			return gradeMidHigh(mgr, roomExt, bld);
 		} else {
 			return gradeHigh(mgr, roomExt, bld);
 		}
@@ -218,7 +206,7 @@ public abstract class Building {
 		Random rnd = new Random();
 		switch (rnd.nextInt(3)) {
 		case 0:
-			return new ChestRoom(mgr, roomExt, bld);
+			return new EmptyRoom(mgr, roomExt, bld);
 		default:
 			return new SpawnerRoom(mgr, roomExt, bld);
 		}
@@ -227,21 +215,6 @@ public abstract class Building {
 	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(3)) {
-		case 0:
-		case 1:
-			return new ChestRoom(mgr, roomExt, bld);
-		default:
-			return new PlainRoom(mgr, roomExt, bld);
-		}
-	}
-
-	private Room gradeMidHigh(MaterialManager mgr, Extent roomExt, Building bld) {
-		Random rnd = new Random();
-		switch (rnd.nextInt(5)) {
-		case 0:
-			return new ChestRoom(mgr, roomExt, bld);
-		case 1:
-			return new ReadingRoom(mgr, roomExt, bld);
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}
@@ -250,11 +223,6 @@ public abstract class Building {
 	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
 		Random rnd = new Random();
 		switch (rnd.nextInt(5)) {
-		case 0:
-			return new ChestRoom(mgr, roomExt, bld);
-		case 1:
-		case 2:
-			return new ReadingRoom(mgr, roomExt, bld);
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}

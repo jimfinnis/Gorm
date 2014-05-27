@@ -129,18 +129,9 @@ public class Castle {
 		return blist;
 		
 	}
-
-	/**
-	 * Get the noise determined grade value for the given extent, in order to
-	 * determine the 'level of upkeep' of this section of the castle. Use this
-	 * when we do not have access to the current building.
-	 * 
-	 * @return grade level of the current building, from 0 to 1
-	 */
-
-	public double grade(Extent e) {
-		IntVector centre = e.getCentre();
-		double grade = Noise.noise2Dfractal(centre.x, centre.z, 3, 3, 3, 0.8);
+	
+	public double grade(IntVector v){
+		double grade = Noise.noise2Dfractal(v.x, v.z, 3, 3, 3, 0.8);
 		// rebalance such that non-dungeon castles are friendlier and
 		// higher-grade
 		if ((GormPlugin.getInstance().getIsDungeon() == false)
@@ -148,7 +139,9 @@ public class Castle {
 			grade += 0.5;
 		}
 		return grade;
+		
 	}
+
 
 	/**
 	 * Get the grade level for the given extent, in order to determine the
@@ -158,9 +151,9 @@ public class Castle {
 	 * @return grade level of the given extent, from 1 to 4
 	 */
 
-	public int gradeInt(Extent e) {
+	public int gradeInt(IntVector v) {
 		Castle c = Castle.getInstance();
-		double grade = c.grade(e);
+		double grade = c.grade(v);
 		if (grade <= 0.35) {
 			return 1;
 		} else if (grade <= 0.5) {

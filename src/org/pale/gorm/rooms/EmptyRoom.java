@@ -3,24 +3,27 @@ package org.pale.gorm.rooms;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
+import org.pale.gorm.GormPlugin;
+import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
+import org.pale.gorm.roomutils.DungeonObjects;
 import org.pale.gorm.roomutils.Furniture;
+import org.pale.gorm.roomutils.FurnitureItems;
 
 /**
- * because every castle needs books.
+ * Was the chest room, now may contain no chest! That's done using the standard furniture
+ * mechanism.
+ * 
  * @author domos
  *
  */
-public class ReadingRoom extends Room {
+public class EmptyRoom extends Room {
 
-	public ReadingRoom(MaterialManager mgr,Extent e, Building b) {
+	public EmptyRoom(MaterialManager mgr,Extent e, Building b) {
 		super(mgr, e, b);
 	}
-	
-	// if we use the new system for making furniture we won't need to keep this :)
-	int carpetCol; 
 
 	@Override
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
@@ -32,15 +35,18 @@ public class ReadingRoom extends Room {
 		// fill with primary material
 		MaterialDataPair prim = mgr.getPrimary();
 		c.fill(floor,prim.m,prim.d);
-		carpetCol = lightsAndCarpets(true);
+
+		lightsAndCarpets(true);
+		
 		addSignHack();
+		
 		return null; // we don't modify the building extent
 	}
 
 	@Override
 	public void furnish(MaterialManager mgr) {
-		Extent inner = e.expand(-1, Extent.ALL);
-		Furniture.cornerShelves(inner,mgr,carpetCol);
+		// This places a chest somewhere
+		Furniture.placeFurniture(mgr,this, "Ccw");
 	}
 
 }

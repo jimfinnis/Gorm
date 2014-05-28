@@ -196,6 +196,62 @@ public class Castle {
 	public void checkFill(Extent e, MaterialDataPair mp) {
 		checkFill(e, mp.m, mp.d);
 	}
+	
+
+	/**
+	 * Fill a wall extent (i.e. one of the dimensions must be of zero width)
+	 * with a pattern of materials. There's an assumption that it's not a
+	 * floor or ceiling but I'm sure that could be fixed.
+	 * 
+	 * @param wallExtent
+	 * @param mats
+	 * @param n
+	 */
+	public void patternFill(Extent wallExtent, MaterialDataPair[] mats, int n) {
+		// first work out the long horizontal axis
+		int axis = wallExtent.getLongestAxis();
+		int xdim,ydim; // dimensions of the 2D array we'll make the pattern in
+		if(axis == Extent.X){
+			xdim = wallExtent.xsize();
+		} else {
+			xdim = wallExtent.zsize();
+		}
+		ydim = wallExtent.ysize();
+		
+		// doing it like this so I can replace with other pattern generators
+		// later.
+		int[][] array = new int[xdim][ydim];
+		for(int x=0;x<xdim/2;x++){
+			for(int y=0;y<ydim/2;y++){
+				int m = r.nextInt(n); 
+				array[x][y]=m;
+				array[(xdim-1)-x][y]=m;
+				array[x][(ydim-1)-y]=m;
+				array[(xdim-1)-x][(ydim-1)-y]=m;
+			}
+		}
+		// now slap it into the extent
+		for(int x=0;x<xdim;x++){
+			for(int y=0;y<ydim;y++){
+				int wx,wz;
+				if(axis==Extent.X){
+					wx = x+wallExtent.minx;
+					wz = wallExtent.minz;
+				} else {
+					wx = wallExtent.minx;
+					wz = x+wallExtent.minz;					
+				}
+				Block b = world.getBlockAt(wx, y+wallExtent.miny, wz);
+				MaterialDataPair mat = mats[array[x][y]];
+				b.setType(mat.m);
+				b.setData((byte) mat.d);
+				
+			}
+		}
+		
+		
+	}
+
 
 	/**
 	 * Replace certain blocks within an Extent
@@ -487,4 +543,5 @@ public class Castle {
 
 		}
 	}
+
 }

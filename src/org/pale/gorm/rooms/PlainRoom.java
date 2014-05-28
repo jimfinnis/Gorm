@@ -10,6 +10,7 @@ import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.FurnitureItems;
+import org.pale.gorm.roomutils.WindowMaker;
 
 /**
  * A room which requires no extra walls or contents to be built.
@@ -33,6 +34,8 @@ public class PlainRoom extends Room {
 
 		lightsAndCarpets(true);
 		addSignHack();
+		
+		WindowMaker.makeStainedGlassWall(mgr,this);
 		
 		return null; // we don't modify the building extent
 	}

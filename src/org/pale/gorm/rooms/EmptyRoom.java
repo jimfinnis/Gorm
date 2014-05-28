@@ -20,9 +20,10 @@ import org.pale.gorm.roomutils.FurnitureItems;
  *
  */
 public class EmptyRoom extends Room {
-
-	public EmptyRoom(MaterialManager mgr,Extent e, Building b) {
+	private boolean hasChest=false;
+	public EmptyRoom(MaterialManager mgr,Extent e, Building b, boolean addChest) {
 		super(mgr, e, b);
+		hasChest=addChest;
 	}
 
 	@Override
@@ -46,7 +47,8 @@ public class EmptyRoom extends Room {
 	@Override
 	public void furnish(MaterialManager mgr) {
 		// This places a chest somewhere
-		Furniture.placeFurniture(mgr,this, "Ccw");
+		if(hasChest)
+			Furniture.placeFurniture(mgr,this, "Ccw");
 	}
 
 }

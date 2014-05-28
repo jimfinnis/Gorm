@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -700,6 +701,19 @@ public abstract class Room implements Comparable<Room> {
 	 * the last thing done to a room
 	 */
 	public abstract void furnish(MaterialManager mgr);
+
+	/**
+	 * Remove windows intersecting with an extent
+	 * @param wallExtent
+	 */
+	public void removeWindows(Extent wallExtent) {
+		Iterator<Extent> i = windows.iterator();
+		while(i.hasNext()){
+			Extent e = i.next();
+			if(e.intersects(wallExtent))
+				i.remove();
+		}
+	}
 
 
 }

@@ -331,6 +331,20 @@ public class Extent {
 	}
 
 	/**
+	 * Get the shortest axis as a code
+	 * @return
+	 */
+	public int getShortestAxis() {
+		if (xsize() < ysize() && xsize() < zsize())
+			return X;
+		else if (zsize() < ysize())
+			return Z;
+		else
+			return Y;
+	}
+
+
+	/**
 	 * Get length of axis
 	 */
 	public int getLengthOfAxis(int axis) {

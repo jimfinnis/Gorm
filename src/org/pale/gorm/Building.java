@@ -103,7 +103,8 @@ public abstract class Building {
 		// start placing floors until we run out
 		for (int h = extent.miny + 1; h < extent.maxy - 4;) {
 			int nexth = h + c.r.nextInt(3) + 4;
-			placeFloorAt(mgr, h, nexth);
+			createRoomAt(mgr, h, nexth);
+
 
 			h = nexth + 2; // because h and nexth delineate the internal space -
 							// the air space - of the building
@@ -130,7 +131,7 @@ public abstract class Building {
 	 * @param yBelowCeiling
 	 *            Y of the block just below the ceiling
 	 */
-	private void placeFloorAt(MaterialManager mgr, int yAboveFloor,
+	private void createRoomAt(MaterialManager mgr, int yAboveFloor,
 			int yBelowCeiling) {
 
 		// work out the extent of this room
@@ -141,6 +142,7 @@ public abstract class Building {
 		Room r = roomByGrade(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
+
 	}
 
 	/**
@@ -203,26 +205,26 @@ public abstract class Building {
 	}
 
 	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		Random rnd = new Random();
-		switch (rnd.nextInt(3)) {
+		switch (Castle.getInstance().r.nextInt(15)) {
 		case 0:
-			return new EmptyRoom(mgr, roomExt, bld);
-		default:
+			return new EmptyRoom(mgr, roomExt, bld,true); //with treasure
+		case 1:
+		case 2:
 			return new SpawnerRoom(mgr, roomExt, bld);
+		default:
+			return new EmptyRoom(mgr, roomExt, bld,false); // actually empty
 		}
 	}
 
 	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		Random rnd = new Random();
-		switch (rnd.nextInt(3)) {
+		switch (Castle.getInstance().r.nextInt(3)) {
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}
 	}
 
 	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
-		Random rnd = new Random();
-		switch (rnd.nextInt(5)) {
+		switch (Castle.getInstance().r.nextInt(5)) {
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
 		}
@@ -471,8 +473,6 @@ public abstract class Building {
 	 * is for horizontal exits
 	 */
 	public boolean makeRandomExit() {
-		Castle c = Castle.getInstance();
-
 		// find a room with few exits. Or not many. Just iterate until an exit
 		// has been made.
 
@@ -506,11 +506,7 @@ public abstract class Building {
 
 		// one side will be badly hit.
 		Direction rd;
-		final Direction ruinDir;
-		do {
-			rd = Direction.values()[rnd.nextInt(Direction.values().length)];
-		} while (rd.vec.y != 0); // but not UP or DOWN!
-		ruinDir = rd;
+		final Direction ruinDir = Direction.getRandom(rnd, true);
 
 		ruinExtent.runOnAllLocations(new LocationRunner() {
 			@Override

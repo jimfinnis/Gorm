@@ -1,0 +1,23 @@
+GormPlugin.buildRandomRoom
+    creates Builder if none
+    calls Builder.build
+        if no buildings yet
+            b = new Hall
+        else
+            b = createAndFitBuilding
+                try multiple times:
+                    b = random building (recent ones more likely)
+                    newb = b.createChildBuilding (abstract in Building)
+                    moveRoomUntilFit(newb,b)
+                
+        mgr=new MaterialMgr(building centre biome)
+        b.build(mgr)      
+        castle.addBuilding(b)
+        b.furnish
+        b.ruin
+        castle.sortRooms
+        b.makeRandomExit
+        b.update
+        castle.makeRandomExit twice
+            
+

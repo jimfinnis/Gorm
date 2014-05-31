@@ -32,58 +32,38 @@ public class Builder {
 	 *            initial room location
 	 */
 	public void build(Location loc) {
-		// initial room test
-		
+		Building b;
+
 		if (castle.getBuildingCount() == 0) {
-			buildFirstBuilding(loc);
+			// create the first building if there aren't any
+			IntVector v = new IntVector(loc).subtract(0,1,0);
+			Extent e = new Extent(v, 10, 0, 10).setHeight(30);
+			b = new Hall(e);
 		} else {
-			// first, create the required room, with its extents
-			// set around some other room, and slide it around until it fits
-			Building b = createAndFitBuilding();
-			if (b != null) {
-				MaterialManager mgr = new MaterialManager(b.getExtent().getCentre().getBlock().getBiome());
-				b.build(mgr);
-				
-				castle.addBuilding(b);
-				b.furnish(mgr);
-				b.ruin();
-				// very important - tell the castle to re-sort the room list!
-				castle.sortRooms();
-				b.makeRandomExit();
-
-				GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
-			} else {
-				GormPlugin.log("Could not move building to a good place.");
-			}
-			makeRandomExit();
-			makeRandomExit();
-			if(b!=null)
-				b.update();
-			//castle.roomSanityCheck();
+			// first, create the required building, with its extents
+			// set around some other building, and slide it around until it fits
+			b = createAndFitBuilding();
 		}
-	}
-	
-	/**
-	 * That very special case of the first building
-	 * @param loc
-	 */
-	private void buildFirstBuilding(Location loc){
-		IntVector v = new IntVector(loc).subtract(0,1,0);
-		
-		// get the size
-		Extent e = new Extent(v, 10, 0, 10).setHeight(30);
-		MaterialManager mgr = new MaterialManager(e.getCentre().getBlock().getBiome());
-		
-		// and the type is quite important too.
-		Building b = new Hall(e);
-		
-		b.build(mgr);
-		castle.addBuilding(b);
-		// very important - tell the castle to re-sort the room list!
-		castle.sortRooms();
+		if(b!=null){
+			MaterialManager mgr = new MaterialManager(b.getExtent().getCentre().getBlock().getBiome());
+			GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
+			b.build(mgr);
+			castle.addBuilding(b);
+			b.furnish(mgr);
+			b.ruin();
+			// very important - tell the castle to re-sort the room list!
+			castle.sortRooms();
+			b.makeRandomExit();
+			b.update();
+			makeRandomExit();
+			makeRandomExit();
+		} else {
+			GormPlugin.log("Could not move building to a good place.");
+		}
 
-		b.update();
+		//castle.roomSanityCheck();
 	}
+
 
 	/**
 	 * Attempt to construct a random link between two rooms
@@ -108,12 +88,12 @@ public class Builder {
 
 		// we try to find a suitable building, picking random buidingsfrom the
 		// beginning of the list.
-		Random rnd = new Random();
+		Random rnd = Castle.getInstance().r;
 		for (int tries = 0; tries < 10; tries++) {
 			double qqq = 1.0 / (double) castle.getBuildingCount();
 			for (Building b : castle.getBuildings()) {
 				if (rnd.nextDouble() < qqq) {
-					Building newBuilding = createBuilding(b);
+					Building newBuilding = b.createChildBuilding(rnd);
 					GormPlugin.log("New building "+Integer.toString(newBuilding.id)+" created: attempting move");
 					if (moveRoomUntilFit(newBuilding, 3 + tries, b)) { // more
 																	// laxity in
@@ -128,25 +108,6 @@ public class Builder {
 
 	}
 
-	/**
-	 * Create the room most required, centred around another room. We'll slide
-	 * it about to get it to fit.
-	 * 
-	 * @return
-	 */
-	private Building createBuilding(Building r) {
-		
-		switch (rnd.nextInt(25)) {
-		case 0:
-			return new Garden(r);
-		case 1:
-			return new Path(r); // a long, thin garden.
-		default:
-			return new Hall(r);
-
-		}
-
-	}
 
 	private boolean moveRoomUntilFit(Building r, int maxyslide,
 			Building parentRoom) {

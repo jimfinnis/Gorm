@@ -10,6 +10,9 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Vine;
 import org.pale.gorm.Extent.LocationRunner;
+import org.pale.gorm.buildings.Garden;
+import org.pale.gorm.buildings.Hall;
+import org.pale.gorm.buildings.Path;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
 import org.pale.gorm.rooms.PlainRoom;
@@ -94,6 +97,23 @@ public abstract class Building {
 	public abstract void build(MaterialManager mgr);
 
 	/**
+	 * Fill this in to generate the sort of building that's typically attached
+	 * to this one. Typically overridden in subclasses.
+	 * 
+	 * @return
+	 */
+	public Building createChildBuilding(Random r) {
+		switch (r.nextInt(25)) {
+		case 0:
+			return new Path(this);
+		case 1:
+			return new Garden(this);
+		default:
+			return new Hall(this);
+		}
+	}
+
+	/**
 	 * Attempt to build a number of internal floors in tall buildings. Floors
 	 * are built in ascending order.
 	 */
@@ -104,7 +124,6 @@ public abstract class Building {
 		for (int h = extent.miny + 1; h < extent.maxy - 4;) {
 			int nexth = h + c.r.nextInt(3) + 4;
 			createRoomAt(mgr, h, nexth);
-
 
 			h = nexth + 2; // because h and nexth delineate the internal space -
 							// the air space - of the building
@@ -207,12 +226,12 @@ public abstract class Building {
 	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
 		switch (Castle.getInstance().r.nextInt(15)) {
 		case 0:
-			return new EmptyRoom(mgr, roomExt, bld,true); //with treasure
+			return new EmptyRoom(mgr, roomExt, bld, true); // with treasure
 		case 1:
 		case 2:
 			return new SpawnerRoom(mgr, roomExt, bld);
 		default:
-			return new EmptyRoom(mgr, roomExt, bld,false); // actually empty
+			return new EmptyRoom(mgr, roomExt, bld, false); // actually empty
 		}
 	}
 

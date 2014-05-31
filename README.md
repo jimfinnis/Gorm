@@ -137,5 +137,6 @@ Instructions:
         i   iron bars
         B   bookshelf
         D   bed
-        0-9 custom writer 0-9
         Try to avoid this and use 'm' instead
+    Cx  set custom block writer
+        c   treasure chest

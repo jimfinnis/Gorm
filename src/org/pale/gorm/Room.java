@@ -12,13 +12,18 @@ import java.util.Random;
 import java.util.Set;
 
 import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.IronGolem;
+import org.bukkit.entity.Villager;
 import org.bukkit.material.Ladder;
 import org.pale.gorm.roomutils.ExitDecorator;
+import org.pale.gorm.roomutils.Furniture;
+import org.pale.gorm.roomutils.FurnitureItems;
 import org.pale.gorm.roomutils.StairBuilder;
 
 /**
@@ -47,15 +52,12 @@ public abstract class Room implements Comparable<Room> {
 	 */
 	protected Extent e;
 	protected Building b;
-	
-	
 
 	/**
-	 * the room is indoors; this is true by default - call
-	 * setOutside to change it.
+	 * the room is indoors; this is true by default - call setOutside to change
+	 * it.
 	 */
 	private boolean indoors = true;
-	
 
 	/**
 	 * This is a map of exits by the room they go to
@@ -117,7 +119,7 @@ public abstract class Room implements Comparable<Room> {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * See whether an position inside the room is blocked by furniture or
 	 * something. Such positions should not have more furniture added here! We
@@ -135,9 +137,7 @@ public abstract class Room implements Comparable<Room> {
 			return false;
 		}
 		return true;
-	} 
-	 
-
+	}
 
 	/**
 	 * Most rooms have windows - override this value to prevent their creation
@@ -147,6 +147,18 @@ public abstract class Room implements Comparable<Room> {
 	public boolean hasWindows() {
 		return true;
 	}
+	
+	protected void spawnVillager(Villager.Profession p){
+		Location l = e.getCentre().toLocation();
+		Villager v=Castle.getInstance().getWorld().spawn(l, Villager.class);
+		v.setProfession(p);		
+		Castle.getInstance().incDenizenCount(p);
+	}
+	
+	protected void spawnIronGolem(){
+		Location l = e.getCentre().toLocation();
+		Castle.getInstance().getWorld().spawn(l, IronGolem.class);		
+	}
 
 	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
@@ -155,7 +167,8 @@ public abstract class Room implements Comparable<Room> {
 		// room build methods return either null or the new building extent
 		Extent modifiedBldgExtent = build(mgr, b.getExtent());
 		if (modifiedBldgExtent != null)
-			b.extent = modifiedBldgExtent;
+			b.setExtent(modifiedBldgExtent);
+
 	}
 
 	protected Room setOpenSide(Direction d) {
@@ -175,16 +188,14 @@ public abstract class Room implements Comparable<Room> {
 		return this;
 	}
 
-	public Room setOutside(){
-		indoors=false;
+	public Room setOutside() {
+		indoors = false;
 		return this;
 	}
-	
-	public boolean isIndoors(){
+
+	public boolean isIndoors() {
 		return indoors;
 	}
-	
-	
 
 	public boolean exitIntersects(Extent e) {
 		for (Exit x : exits) {
@@ -210,10 +221,10 @@ public abstract class Room implements Comparable<Room> {
 	 * add carpets (if this room should be carpeted) and lights to a standard
 	 * room, taking into a account the state of repair of the building.
 	 * 
-	 * @param hasCarpets
+	 * @param mayHaveCarpets *may* have carpets, depending on grade
 	 * @return carpet colour code or -1 for no carpet
 	 */
-	public int lightsAndCarpets(boolean hasCarpets) {
+	public int lightsAndCarpets(boolean mayHaveCarpets) {
 		Extent inner = e.expand(-1, Extent.ALL);
 		int carpetCol;
 		if (b.gradeInt() > 2) {
@@ -227,6 +238,17 @@ public abstract class Room implements Comparable<Room> {
 		}
 		return carpetCol;
 	}
+	
+	/**
+	 * Add generic unique items, such as a possible spawner in low-grade rooms
+	 * @param mgr
+	 */
+	public void furnishUniques(MaterialManager mgr){
+		if(b.grade()<0.1) // we ONLY place really scary things if the whole building is lowgrade
+			Furniture.place(mgr, this, 
+					FurnitureItems.random(FurnitureItems.uniqueScaryChoices));
+	}
+
 
 	public Extent getExtent() {
 		return e;
@@ -246,7 +268,9 @@ public abstract class Room implements Comparable<Room> {
 		List<Room> rooms = new ArrayList<Room>(adjacentRooms());
 		Collections.sort(rooms);
 		for (Room that : rooms) {
-			// GormPlugin.log("This: "+e.toString()+" That: "+that.e.toString());
+			// don't permit connection to a room we're already connected to
+			if(isConnected(that))
+				continue;
 			// don't try to connect a room to itself or another in the same
 			// building
 			if (that == this || that.b == this.b)
@@ -264,11 +288,7 @@ public abstract class Room implements Comparable<Room> {
 				// only make a link if the two have similar floor heights, and
 				// the zone of intersection
 				// is large in XZ.
-				/*
-				 * GormPlugin.log(String.format("floor diff: %d, intersect: %d",
-				 * Math.abs(this.e.miny - that.e.miny), Math.max(inter.xsize(),
-				 * inter.zsize())));
-				 */
+				//
 				if (Math.abs(this.e.miny - that.e.miny) < 5
 						&& Math.max(inter.xsize(), inter.zsize()) > 5) {
 					if (makeRandomExit(that))
@@ -295,17 +315,22 @@ public abstract class Room implements Comparable<Room> {
 			return that.makeExitBetweenRooms(this);
 
 	}
+	
+	
+	public boolean isConnected(Room that){
+		return exitMap.containsKey(that);
+	}
 
 	static final int[] offsets = { 0, 1, -1, 2, -2, 3, -3 };
 
 	/**
 	 * This is used to make a random horizontal exit to a room we already know
-	 * intersects enough with us
+	 * intersects enough with us. Public for debugging.
 	 * 
 	 * @param that
 	 *            destination room, whose floor is LOWER than us.
 	 */
-	private boolean makeExitBetweenRooms(Room that) {
+	public boolean makeExitBetweenRooms(Room that) {
 		Extent intersection = this.e.intersect(that.e);
 		Direction dir;
 		/*
@@ -345,43 +370,49 @@ public abstract class Room implements Comparable<Room> {
 			IntVector centreOfIntersection = intersection.getCentre().add(
 					offsetVec.scale(offset));
 
-			if (!intersection.contains(centreOfIntersection))
+			if (!intersection.contains(centreOfIntersection)){
 				continue; // slid out of intersection
+			}
 
 			Extent e = new Extent(centreOfIntersection.x, this.e.miny + 1,
 					centreOfIntersection.z, centreOfIntersection.x, this.e.miny
 							+ height, centreOfIntersection.z);
 
 			// don't allow an exit if it is hits the top of either room
-			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy)
+			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy){
 				continue;
+			}
 
 			// don't allow an exit if there's a window in the way!
 			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,
 					Extent.Y);
 			if (this.windowIntersects(wideexit)
-					|| that.windowIntersects(wideexit))
-				continue;
+					|| that.windowIntersects(wideexit)){
+				continue;				
+			}
 
 			// the exit must not intersect any other exits in either building
-			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit))
+			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit)){
 				continue;
+			}
 
 			// grab an appropriate material manager
 			MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
 					.getBiome());
 
 			// add the space on either side of the exit to the block lists -
-			// we actually build two extents, one protruding into the other room,
-			// one into this. We can't just add an exit extent across both rooms,
-			// because isBlocked would always trigger on that because it is partially outside
+			// we actually build two extents, one protruding into the other
+			// room,
+			// one into this. We can't just add an exit extent across both
+			// rooms,
+			// because isBlocked would always trigger on that because it is
+			// partially outside
 			// the room!
 			Extent blockExtent = e.expand(1, dir.vec.x == 0 ? Extent.Z
 					: Extent.X);
 			// make sure it doesn't clash with existing blocks
-			if(this.isBlocked(blockExtent.intersect(this.e)) || 
-					that.isBlocked(blockExtent.intersect(that.e)))
-			{
+			if (this.isBlocked(blockExtent.intersect(this.e))
+					|| that.isBlocked(blockExtent.intersect(that.e))) {
 				continue;
 			}
 
@@ -392,19 +423,19 @@ public abstract class Room implements Comparable<Room> {
 			Castle c = Castle.getInstance();
 
 			// make stairs and add them to the blocked list if successful
-			StairBuilder sb=new StairBuilder(mgr);
-			
-			Extent stairExtent =
-				sb.dropExitStairs(src.getExtent(),
-					src.getDirection(),that,5);
+			StairBuilder sb = new StairBuilder(mgr);
 
-			// if the stairs didn't get made because of a blockage, don't create any exit data at all.
-			if (sb.isStairsBlocked()){
+			Extent stairExtent = sb.dropExitStairs(src.getExtent(),
+					src.getDirection(), that, 5);
+
+			// if the stairs didn't get made because of a blockage, don't create
+			// any exit data at all.
+			if (sb.isStairsBlocked()) {
 				continue;
 			}
-			
+
 			// don't allow anything to subsequently be made in the stairs
-			if(stairExtent!=null)
+			if (stairExtent != null)
 				addBlock(stairExtent);
 
 			// add the exits to the blocks
@@ -479,17 +510,19 @@ public abstract class Room implements Comparable<Room> {
 	 * linkage/placement debugging.
 	 */
 	protected void addSignHack() {
-		/*
-		 * IntVector pos = e.getCentre(); pos.y=e.miny+1;
-		 * 
-		 * Block blk = Castle.getInstance().getBlockAt(pos);
-		 * blk.setType(Material.SIGN_POST); Sign s = (Sign)blk.getState();
-		 * s.setLine(0,"Room "+Integer.toString(id));
-		 * s.setLine(1,String.format("Grade %d (%.2f)",b.gradeInt(),b.grade()));
-		 * s.setLine(2,
-		 * getClass().getSimpleName()+"/"+b.getClass().getSimpleName());
-		 * s.update();
-		 */}
+/*
+		IntVector pos = e.getCentre();
+		pos.y = e.miny + 1;
+
+		Block blk = Castle.getInstance().getBlockAt(pos);
+		blk.setType(Material.SIGN_POST);
+		Sign s = (Sign) blk.getState();
+		s.setLine(0, "Room " + Integer.toString(id));
+		s.setLine(1, String.format("Grade %d (%.2f)", b.gradeInt(), b.grade()));
+		s.setLine(2, getClass().getSimpleName() + "/"
+				+ b.getClass().getSimpleName());
+		s.update();
+*/	}
 
 	/**
 	 * Force updates of the modified chunk to be sent to all players. Not sure
@@ -506,99 +539,99 @@ public abstract class Room implements Comparable<Room> {
 		 * w.refreshChunk(c.getX(), c.getZ());
 		 */
 	}
-	
+
 	/**
 	 * Build an exit up to another room; sometimes stairs, sometimes a ladder.
+	 * 
 	 * @param upper
 	 */
-	public void buildVerticalExitUpTo(Room upper){
+	public void buildVerticalExitUpTo(Room upper) {
 		// sometimes, try to build stairs. If it fails after a certain
 		// number of tries, give up and go with the ladder.
-		if(Castle.getInstance().r.nextFloat()<0.7){
-			for(int tries=0;tries<10;tries++){
-				if(buildStairsUpTo(upper))
+		if (Castle.getInstance().r.nextFloat() < 0.7) {
+			for (int tries = 0; tries < 10; tries++) {
+				if (buildStairsUpTo(upper))
 					return;
 			}
 		}
 		buildCornerLadderUpTo(upper);
 	}
-	
-	private boolean buildStairsUpTo(Room upper){
+
+	private boolean buildStairsUpTo(Room upper) {
 		Castle c = Castle.getInstance();
 		Random r = c.r;
-		
-		// firstly, find the length of the stairs. We need to have at least 
+
+		// firstly, find the length of the stairs. We need to have at least
 		// 1 clearance at each end.
 		int steps = upper.e.miny - e.miny;
 		boolean stepsAlongXAxis;
-		
+
 		// select an alignment. Why -4 in these tests? Because we're not only
-		// taking the 1 block clearance at the end of each staircase into account,
-		// but also the fact that steps are delimited by the inner extent, and we're
+		// taking the 1 block clearance at the end of each staircase into
+		// account,
+		// but also the fact that steps are delimited by the inner extent, and
+		// we're
 		// working directly with the outer extent.
-		if(upper.e.xsize()-4<=steps){
+		if (upper.e.xsize() - 4 <= steps) {
 			// X isn't valid; is Z?
-			if(upper.e.zsize()-4<=steps)
+			if (upper.e.zsize() - 4 <= steps)
 				return false; // no room
 			// only Z is valid
 			stepsAlongXAxis = false;
 		} else {
 			// X is valid
-			if(upper.e.zsize()-4<=steps)
+			if (upper.e.zsize() - 4 <= steps)
 				stepsAlongXAxis = true; // only X is valid
 			else
 				stepsAlongXAxis = r.nextBoolean(); // either
 		}
-		GormPlugin.log(String.format("xsize: %d, zsize: %d, steps: %d, xaxis?: %d",
-				upper.e.xsize(),upper.e.zsize(),steps,stepsAlongXAxis?1:0));
-		
-		// now we have to find a position to build down from, and place the stairs
-		
+
+		// now we have to find a position to build down from, and place the
+		// stairs
+
 		Extent ex;
-		if(stepsAlongXAxis){
+		if (stepsAlongXAxis) {
 			// 4 here to account for both using only the inner extent and
 			// also the clearance at the end
-			int startx = r.nextInt(upper.e.xsize()-(steps+4));
+			int startx = r.nextInt(upper.e.xsize() - (steps + 4));
 			// and get a z in the inner extent somewhere.
 			int z;
-			z = r.nextBoolean()?upper.e.minz+1 : upper.e.maxz-1;
-//			int z = r.nextInt(upper.e.zsize()-2)+upper.e.minz+1;
-			
-			startx += upper.e.minx+2;
-			ex = new Extent(startx,e.miny+1,z,
-								    startx+steps,upper.e.miny,z);
-			if(isBlocked(ex))
+			z = r.nextBoolean() ? upper.e.minz + 1 : upper.e.maxz - 1;
+			// int z = r.nextInt(upper.e.zsize()-2)+upper.e.minz+1;
+
+			startx += upper.e.minx + 2;
+			ex = new Extent(startx, e.miny + 1, z, startx + steps,
+					upper.e.miny, z);
+			if (isBlocked(ex))
 				return false;
-			
+
 		} else {
-			int startz = r.nextInt(upper.e.zsize()-(steps+4));
-			startz += upper.e.minz+2;
+			int startz = r.nextInt(upper.e.zsize() - (steps + 4));
+			startz += upper.e.minz + 2;
 			// and get an x in the inner extent somewhere.
 			int x;
-			x = r.nextBoolean()?upper.e.minx+1 : upper.e.maxx-1;
-//			int x = r.nextInt(upper.e.xsize()-2)+upper.e.minx+1;
-			ex = new Extent(x,e.miny+1,startz,
-									x,upper.e.miny,startz+steps);
-			if(isBlocked(ex))
+			x = r.nextBoolean() ? upper.e.minx + 1 : upper.e.maxx - 1;
+			// int x = r.nextInt(upper.e.xsize()-2)+upper.e.minx+1;
+			ex = new Extent(x, e.miny + 1, startz, x, upper.e.miny, startz
+					+ steps);
+			if (isBlocked(ex))
 				return false;
 		}
-		
-	
+
 		MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
 				.getBiome());
 		StairBuilder sb = new StairBuilder(mgr);
-		
-		
+
 		// now we need to convert the extent of the stairs
 		// into the extent of an "exit" at the top of the stairs.
 
 		// First, pick an end and a direction. Move the end so that it's just
 		// above the block before the stairs start down.
-		
+
 		IntVector base;
 		Direction d;
-		if(stepsAlongXAxis){
-			if(r.nextBoolean()){
+		if (stepsAlongXAxis) {
+			if (r.nextBoolean()) {
 				d = Direction.EAST;
 				base = ex.getCorner(Extent.X);
 			} else {
@@ -606,7 +639,7 @@ public abstract class Room implements Comparable<Room> {
 				base = ex.getCorner(0);
 			}
 		} else {
-			if(r.nextBoolean()){
+			if (r.nextBoolean()) {
 				d = Direction.SOUTH;
 				base = ex.getCorner(Extent.Z);
 			} else {
@@ -614,26 +647,27 @@ public abstract class Room implements Comparable<Room> {
 				base = ex.getCorner(0);
 			}
 		}
-		
-		// clear a hole big enough to provide headroom
-		Extent ex2 = new Extent(base,0,0,0);
-		ex2.maxy+=2; // deal with carpet carpet etc.
-		ex2= ex2.union(base.add(d.vec.scale(3)));
-		c.fill(ex2,Material.AIR,0);
-		
-		
-		// we have the corner inside the stairs extent, now move out and up one.
-		base = base.subtract(d.vec).add(0,1,0);
-		// turn this into an "exit extent"
-		ex = new Extent(base,0,0,0).setHeight(2);
 
-//		c.fill(ex, Material.LAPIS_BLOCK,0);
+		// clear a hole big enough to provide headroom
+		Extent ex2 = new Extent(base, 0, 0, 0);
+		ex2.maxy += 2; // deal with carpet carpet etc.
+		ex2 = ex2.union(base.add(d.vec.scale(3)));
+		c.fill(ex2, Material.AIR, 0);
+
+		// we have the corner inside the stairs extent, now move out and up one.
+		base = base.subtract(d.vec).add(0, 1, 0);
+		// turn this into an "exit extent"
+		ex = new Extent(base, 0, 0, 0).setHeight(2);
+
+		// c.fill(ex, Material.LAPIS_BLOCK,0);
 		sb.heightCheckSubtract = 5; // so we don't end up stopping too early
-		Extent result = sb.dropExitStairs(ex, d, this,30);// allow pretty much any length of flight
-		
-		if(result==null){
+		Extent result = sb.dropExitStairs(ex, d, this, 30);// allow pretty much
+															// any length of
+															// flight
+
+		if (result == null) {
 			// shouldn't happen, but just in case
-			c.fill(ex2,Material.STONE,0); // might look a bit weird..
+			c.fill(ex2, Material.STONE, 0); // might look a bit weird..
 			return false;
 		} else {
 			// add blocks - the stair extent in the lower room,
@@ -645,12 +679,13 @@ public abstract class Room implements Comparable<Room> {
 			return true;
 		}
 	}
-	
+
 	/**
 	 * Builds a ladder from this room up to another room, in the corner
+	 * 
 	 * @param upper
 	 */
-	private void buildCornerLadderUpTo(Room upper){
+	private void buildCornerLadderUpTo(Room upper) {
 		World w = Castle.getInstance().getWorld();
 
 		// get the inner extent of the lower room
@@ -681,39 +716,37 @@ public abstract class Room implements Comparable<Room> {
 		// and block that off in the lower room, so we don't block the ladder
 		addBlock(e);
 		// now block off the same area in the room above
-		e.miny = upper.e.miny+1;
-		e.maxy = upper.e.maxy-1;
+		e.miny = upper.e.miny + 1;
+		e.maxy = upper.e.maxy - 1;
 		upper.addBlock(e);
 	}
-	
-	
 
 	/**
-	 * actually make the room's walls (the building's outer walls
-	 * should already exist.) Note that roof gardens may modify the building's
-	 * extent; the new building extent is returned. Furniture should be added
-	 * in furnish() although carpets should be added here.
+	 * actually make the room's walls (the building's outer walls should already
+	 * exist.) Note that roof gardens may modify the building's extent; the new
+	 * building extent is returned. Furniture should be added in furnish()
+	 * although carpets should be added here.
 	 */
 	public abstract Extent build(MaterialManager mgr, Extent buildingExtent);
-	
+
 	/**
-	 * Furnish a room after all exits and windows have been made - this should be
-	 * the last thing done to a room
+	 * Furnish a room after all exits and windows have been made - this should
+	 * be the last thing done to a room
 	 */
 	public abstract void furnish(MaterialManager mgr);
 
 	/**
 	 * Remove windows intersecting with an extent
+	 * 
 	 * @param wallExtent
 	 */
 	public void removeWindows(Extent wallExtent) {
 		Iterator<Extent> i = windows.iterator();
-		while(i.hasNext()){
+		while (i.hasNext()) {
 			Extent e = i.next();
-			if(e.intersects(wallExtent))
+			if (e.intersects(wallExtent))
 				i.remove();
 		}
 	}
-
 
 }

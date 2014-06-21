@@ -11,12 +11,16 @@ import java.util.Random;
 import java.util.Set;
 import java.util.HashSet;
 
+import net.minecraft.server.v1_7_R3.TileEntity;
+
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
+import org.bukkit.entity.Villager.Profession;
 import org.bukkit.material.Stairs;
 import org.pale.gorm.roomutils.ExitDecorator;
 
@@ -30,6 +34,8 @@ public class Castle {
 	private static Castle instance;
 	private World world;
 	public Random r = new Random();
+	private HashMap<Profession,Integer> denizenCounts = new HashMap<Profession,Integer>();
+
 
 	/**
 	 * Each chunk has a list of rooms which intersect it. Naturally, a room is
@@ -50,6 +56,9 @@ public class Castle {
 	 * Private ctor so this is a singleton
 	 */
 	private Castle() {
+		for(Profession p: Profession.values()){
+			denizenCounts.put(p, 0);
+		}
 	}
 
 	/**
@@ -114,8 +123,8 @@ public class Castle {
 		}
 		return false;
 	}
-	
-	public Collection<Building> getIntersectingBuildings(Extent e){
+
+	public Collection<Building> getIntersectingBuildings(Extent e) {
 		Collection<Building> blist = new ArrayList<Building>();
 		for (int c : e.getChunks()) {
 			Collection<Building> list = buildingsByChunk.get(c);
@@ -127,10 +136,10 @@ public class Castle {
 			}
 		}
 		return blist;
-		
+
 	}
-	
-	public double grade(IntVector v){
+
+	public double grade(IntVector v) {
 		double grade = Noise.noise2Dfractal(v.x, v.z, 3, 3, 3, 0.8);
 		// rebalance such that non-dungeon castles are friendlier and
 		// higher-grade
@@ -139,9 +148,8 @@ public class Castle {
 			grade += 0.5;
 		}
 		return grade;
-		
-	}
 
+	}
 
 	/**
 	 * Get the grade level for the given extent, in order to determine the
@@ -196,62 +204,125 @@ public class Castle {
 	public void checkFill(Extent e, MaterialDataPair mp) {
 		checkFill(e, mp.m, mp.d);
 	}
-	
 
 	/**
 	 * Fill a wall extent (i.e. one of the dimensions must be of zero width)
-	 * with a pattern of materials. There's an assumption that it's not a
-	 * floor or ceiling but I'm sure that could be fixed.
+	 * with a pattern of materials. There's an assumption that it's not a floor
+	 * or ceiling but I'm sure that could be fixed.
 	 * 
 	 * @param wallExtent
 	 * @param mats
+	 *            array of material pairs
 	 * @param n
+	 *            number of elements in array (might want to use a subset)
 	 */
-	public void patternFill(Extent wallExtent, MaterialDataPair[] mats, int n) {
-		// first work out the long horizontal axis
-		int axis = wallExtent.getLongestAxis();
-		int xdim,ydim; // dimensions of the 2D array we'll make the pattern in
-		if(axis == Extent.X){
-			xdim = wallExtent.xsize();
-		} else {
-			xdim = wallExtent.zsize();
+	public void patternFill(Extent wallExtent, MaterialDataPair[] mats, int n, Random rnd) {
+		if(rnd==null)rnd=r;
+		// work out the zero axis
+		int shortAxis = wallExtent.getShortestAxis();
+		// work out the long axis
+		int longAxis = wallExtent.getLongestAxis();
+		int xdim, ydim; // dimensions of the 2D array we'll make the pattern in
+		switch (shortAxis) {
+		case Extent.Y:
+			if (longAxis == Extent.X) {
+				xdim = wallExtent.xsize();
+				ydim = wallExtent.zsize();
+			} else {
+				xdim = wallExtent.zsize();
+				ydim = wallExtent.xsize();
+			}
+			break;
+		case Extent.X:
+			if (longAxis == Extent.Z) {
+				xdim = wallExtent.zsize();
+				ydim = wallExtent.ysize();
+			} else {
+				xdim = wallExtent.ysize();
+				ydim = wallExtent.zsize();
+			}
+			break;
+		default:
+		case Extent.Z:
+			if (longAxis == Extent.X) {
+				xdim = wallExtent.xsize();
+				ydim = wallExtent.ysize();
+			} else {
+				xdim = wallExtent.ysize();
+				ydim = wallExtent.xsize();
+			}
+			break;
 		}
-		ydim = wallExtent.ysize();
-		
+
 		// doing it like this so I can replace with other pattern generators
 		// later.
+
 		int[][] array = new int[xdim][ydim];
-		for(int x=0;x<xdim/2;x++){
-			for(int y=0;y<ydim/2;y++){
-				int m = r.nextInt(n); 
-				array[x][y]=m;
-				array[(xdim-1)-x][y]=m;
-				array[x][(ydim-1)-y]=m;
-				array[(xdim-1)-x][(ydim-1)-y]=m;
+		if (xdim == 1 || ydim == 1) {
+			// simple version without symmetry, for tall windows.
+			for (int x = 0; x < xdim; x++) {
+				for (int y = 0; y < ydim; y++) {
+					array[x][y] = rnd.nextInt(n);
+				}
+			}
+		} else {
+			for (int x = 0; x < xdim / 2; x++) {
+				for (int y = 0; y < ydim / 2; y++) {
+					int m = rnd.nextInt(n);
+					array[x][y] = m;
+					array[(xdim - 1) - x][y] = m;
+					array[x][(ydim - 1) - y] = m;
+					array[(xdim - 1) - x][(ydim - 1) - y] = m;
+				}
 			}
 		}
+
 		// now slap it into the extent
-		for(int x=0;x<xdim;x++){
-			for(int y=0;y<ydim;y++){
-				int wx,wz;
-				if(axis==Extent.X){
-					wx = x+wallExtent.minx;
-					wz = wallExtent.minz;
-				} else {
+		for (int x = 0; x < xdim; x++) {
+			for (int y = 0; y < ydim; y++) {
+				int wx, wz, wy;
+				switch (shortAxis) {
+				case Extent.Y:
+					wy = wallExtent.miny;
+					if (longAxis == Extent.X) {
+						wx = x + wallExtent.minx;
+						wz = y + wallExtent.minz;
+					} else {
+						wz = x + wallExtent.minz;
+						wx = y + wallExtent.minx;
+					}
+					break;
+				case Extent.X:
 					wx = wallExtent.minx;
-					wz = x+wallExtent.minz;					
+					if (longAxis == Extent.Y) {
+						wy = x + wallExtent.miny;
+						wz = y + wallExtent.minz;
+					} else {
+						wz = x + wallExtent.minz;
+						wy = y + wallExtent.miny;
+					}
+					break;
+				default:
+				case Extent.Z:
+					wz = wallExtent.minz;
+					if (longAxis == Extent.X) {
+						wx = x + wallExtent.minx;
+						wy = y + wallExtent.miny;
+					} else {
+						wy = x + wallExtent.miny;
+						wx = y + wallExtent.minx;
+					}
+					break;
 				}
-				Block b = world.getBlockAt(wx, y+wallExtent.miny, wz);
+				Block b = world.getBlockAt(wx, wy, wz);
 				MaterialDataPair mat = mats[array[x][y]];
 				b.setType(mat.m);
 				b.setData((byte) mat.d);
-				
+
 			}
 		}
-		
-		
-	}
 
+	}
 
 	/**
 	 * Replace certain blocks within an Extent
@@ -427,8 +498,6 @@ public class Castle {
 		b.setType(s.getItemType());
 	}
 
-
-
 	@SuppressWarnings("unused")
 	private void replaceSolidWithAir(Extent e) {
 		for (int x = e.minx; x <= e.maxx; x++) {
@@ -543,5 +612,15 @@ public class Castle {
 
 		}
 	}
+	
+	public Map<Profession, Integer> getDenizenCounts() {
+		return denizenCounts;
+	}
+
+	public void incDenizenCount(Profession p) {
+		denizenCounts.put(p, denizenCounts.get(p)+1);
+		
+	}
+
 
 }

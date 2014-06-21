@@ -20,7 +20,7 @@ import org.pale.gorm.Util;
  * 
  */
 public class WindowMaker {
-	private static final float WINDOW_CHANCE = 0.3f;
+	private static final float WINDOW_CHANCE = 0.4f;
 
 	/**
 	 * Build a window covering the given extent. The key is a random value used
@@ -33,9 +33,10 @@ public class WindowMaker {
 	 *            extent of containing room
 	 * @param out
 	 * @param key
+	 * @param stepct 
 	 */
 	public static void window(MaterialManager mgr, Extent e, Extent re,
-			Direction out, int key) {
+			Direction out, int key, int stepct) {
 		// first blow the hole itself
 		Castle c = Castle.getInstance();
 		c.fill(e, Material.AIR, 0);
@@ -47,11 +48,16 @@ public class WindowMaker {
 
 		// so let's fill it
 
-		if (glazed)
-			// If not iron, get material and data of window material
-			c.fill(e, ironNotGlass ? Material.IRON_FENCE : mgr.getWindow().m,
-					ironNotGlass ? 0 : mgr.getWindow().d);
-		else {
+		if (glazed) {
+			Material m =ironNotGlass ? Material.IRON_FENCE : mgr.getWindow().m;
+			int d = mgr.getWindow().d;
+				
+//			if(m == Material.THIN_GLASS && (((key<<8)&3) != 0)){
+				// glass can be overriden to stained glass
+				stainedGlassFill(e,key+stepct);
+//			} else 
+//				c.fill(e, m, d);
+		} else {
 			// this window isn't going to get filled, lets put some bars in
 			c.fill(e, Material.IRON_FENCE, 0);
 		}
@@ -104,7 +110,6 @@ public class WindowMaker {
 				// every wall, and
 				// only vertical
 				// walls!
-				GormPlugin.log("Windows for direction " + d.toString());
 
 				Extent wallExtent = roomExt.getWall(d); // the wall on that side
 				int width = 1 + Util.randomExp(c.r, 2);
@@ -116,6 +121,7 @@ public class WindowMaker {
 				// Nobody puts windows in the corner.
 				wallExtent = wallExtent.expand(-2, Extent.LONGESTXZ);
 
+				int stepct=0;
 				for (IntVector pos : wallExtent.getVectorIterable(step, offset,
 						true)) {
 					Extent window = new Extent();
@@ -129,13 +135,25 @@ public class WindowMaker {
 								&& !r.exitIntersects(window.expand(2, Extent.X
 										| Extent.Z))) {// avoid overwriting
 														// exits
-							window(mgr, window, roomExt, d, key);
+							window(mgr, window, roomExt, d, key,stepct%2);
 							r.addWindow(window);
 						}
 					}
+					stepct++;
 				}
 			}
 		}
+	}
+	
+	public static void stainedGlassFill(Extent e, int seed){
+		Random rnd = new Random((long)seed);
+		int n = rnd.nextInt(3) + 2;
+		MaterialDataPair[] mats = new MaterialDataPair[n];
+		for (int i = 0; i < n; i++) {
+			int mc = rnd.nextInt(16);
+			mats[i] = new MaterialDataPair(Material.STAINED_GLASS_PANE,mc);
+		}
+		Castle.getInstance().patternFill(e, mats, n, rnd);
 	}
 
 	/**
@@ -152,18 +170,7 @@ public class WindowMaker {
 
 		// remove existing windows in that wall, we're about to overwrite them
 		r.removeWindows(wallExtent);
-		
-		// Now for the fun part - we're going to have to generate a random
-		// 2D pattern of colours and put it into the wall.
-		
-		int n = rnd.nextInt(3)+2;
-		MaterialDataPair[] mats = new MaterialDataPair[n];
-		for(int i=0;i<n;i++){
-			mats[i]=new MaterialDataPair(Material.STAINED_GLASS_PANE,rnd.nextInt(16));
-		}
-		
-		Castle.getInstance().patternFill(wallExtent,mats,n);
-		
+		stainedGlassFill(wallExtent,rnd.nextInt());
 		r.addWindow(wallExtent);
 
 	}

@@ -108,6 +108,8 @@ public class Extent {
 		else
 			return "[invalid]";
 	}
+	
+
 
 	/**
 	 * Construct an extent from corners of rectangles. It doesn't matter which

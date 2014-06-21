@@ -18,6 +18,6 @@ GormPlugin.buildRandomRoom
         castle.sortRooms
         b.makeRandomExit
         b.update
-        castle.makeRandomExit twice
+        makeRandomExit twice
             
 

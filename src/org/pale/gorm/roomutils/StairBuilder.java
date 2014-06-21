@@ -130,8 +130,6 @@ public class StairBuilder {
 		int y = start.y;
 		Material mat = mgr.getStair();
 		
-		GormPlugin.log("Start="+start.toString());
-		
 /*		
 		// steps starting from blind walls can happen.. but are stupid.
 		IntVector startWall = start.subtract(v).add(0, 1, 0);

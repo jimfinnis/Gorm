@@ -1,10 +1,14 @@
 package org.pale.gorm.rooms;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Random;
 
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
+import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
+import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
@@ -50,15 +54,12 @@ public class SpawnerRoom extends Room {
 	@Override
 	public void furnish(MaterialManager mgr) {
 		Castle c = Castle.getInstance();
-		ArrayList<EntityType> entities = new ArrayList<EntityType>();
-		entities.add(EntityType.CAVE_SPIDER);
-		entities.add(EntityType.SKELETON);
-		entities.add(EntityType.SPIDER);
-		entities.add(EntityType.ZOMBIE);
-		entities.add(EntityType.WITCH);
+		IntVector pos = e.expand(-1, Extent.ALL).getWall(Direction.DOWN).getCentre();
+		EntityType[] ents = {EntityType.CAVE_SPIDER,EntityType.WITCH,
+				EntityType.SKELETON,EntityType.SPIDER,EntityType.ZOMBIE};
 		
-		Extent inner = e.expand(-1, Extent.ALL);
-		DungeonObjects.spawner(inner,entities.get(c.r.nextInt(entities.size())), 1);
+		
+		DungeonObjects.spawner(pos,ents[c.r.nextInt(ents.length)]);
 	}
 
 }

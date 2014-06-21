@@ -128,6 +128,7 @@ Instructions:
         l   log
         b   stone brick
         c   chiselled stone brick
+        C   empty chest (use Cc for loot)
         s   stone stairs
         L   lapis (for debugging)
         t   torch
@@ -136,7 +137,11 @@ Instructions:
         G   glass block
         i   iron bars
         B   bookshelf
-        D   bed
+        D0  bed head, pillow at far end
+        D1  bed foot
+        Sb  brewing stand
         Try to avoid this and use 'm' instead
     Cx  set custom block writer
-        c   treasure chest
+        c   treasure chest (use Mc for empty)
+        s   spawner
+        p   flowerpot

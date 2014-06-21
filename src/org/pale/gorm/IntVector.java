@@ -30,6 +30,10 @@ public class IntVector {
 		y = loc.getBlockY();
 		z = loc.getBlockZ();
 	}
+	
+	public Location toLocation(){
+		return new Location(Castle.getInstance().getWorld(),x,y,z);
+	}
 
 	public IntVector add(int x, int y, int z) {
 		return new IntVector(this.x + x, this.y + y, this.z + z);

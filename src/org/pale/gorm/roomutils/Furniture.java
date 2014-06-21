@@ -46,7 +46,7 @@ public class Furniture {
 	 * The string defines the furniture as seen from the centre of its back,
 	 * facing towards the back.
 	 */
-	public static void placeFurniture(MaterialManager mgr, Room r, String s) {
+	public static void place(MaterialManager mgr, Room r, String s) {
 		Castle c = Castle.getInstance();
 		// we keep a list of candidates
 		ArrayList<PlacementCandidate> candidates = new ArrayList<PlacementCandidate>();
@@ -54,8 +54,18 @@ public class Furniture {
 		int maxScore = 0; // candidate max score
 
 		// now we iterate through each wall of the inner space
-		Extent inner = r.getExtent().expand(-1, Extent.ALL);
+		Extent innerTrue = r.getExtent().expand(-1, Extent.ALL);
+		
 		for (Direction wallDir : Direction.values()) {
+			Extent inner=new Extent(innerTrue);
+			
+			// pull in the extent if the axis is long; this puts
+			// furniture away from the walls.
+			if(inner.xsize()>6)
+				inner=inner.expand(-(c.r.nextInt(3)+1), Extent.X);
+			if(inner.zsize()>6)
+				inner=inner.expand(-(c.r.nextInt(3)+1), Extent.Z);
+			
 			if (wallDir.vec.y == 0) { // disregard floor/ceiling
 				Extent wall = inner.getWall(wallDir);
 				// and we move into the room along the opposite vector

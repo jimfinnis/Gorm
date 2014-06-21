@@ -16,7 +16,10 @@ import org.pale.gorm.buildings.Path;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
 import org.pale.gorm.rooms.PlainRoom;
+import org.pale.gorm.rooms.RoofGarden;
 import org.pale.gorm.rooms.SpawnerRoom;
+import org.pale.gorm.roomutils.BoxBuilder;
+import org.pale.gorm.roomutils.RoofBuilder;
 import org.pale.gorm.roomutils.WindowMaker;
 
 /**
@@ -34,11 +37,15 @@ public abstract class Building {
 	 * @param e
 	 */
 	public void setInitialExtent(Building parent, int x, int y, int z) {
-		Extent e = new Extent(parent.getExtent().getCentre(), x, 1, z); // y
-																		// unused
-		e.miny = parent.getExtent().miny; // make floors align
-		extent = e.setHeight(y);
-
+		Extent e = new Extent(parent.originalExtent.getCentre(), x, 1, z); // y
+		// unused
+		e.miny = parent.originalExtent.miny; // make ground floors align
+		setInitialExtent(e.setHeight(y));
+	}
+	
+	
+	public void setInitialExtent(Extent e){
+		extent = new Extent(e);
 	}
 
 	private static int idCounter = 0;
@@ -67,9 +74,14 @@ public abstract class Building {
 	}
 
 	/**
-	 * The extent of the entire building
+	 * The extent of the entire building INCLUDING the basement
 	 */
 	public Extent extent;
+	
+	/**
+	 * The original extent of the building before any basements etc.
+	 */
+	public Extent originalExtent;
 
 	/**
 	 * Return the bounding box of the building, including the walls
@@ -79,6 +91,49 @@ public abstract class Building {
 	public Extent getExtent() {
 		return extent;
 	}
+	
+	/**
+	 * This is used once the building is fitted into place to set the originalExtent,
+	 * which records where the unmodified building is before basements etc. are added;
+	 * useful for setting the floor levels of adjacent gardens etc.
+	 */
+	public void fixOriginalExtent(){
+		originalExtent = new Extent(extent);
+	}
+	
+	
+	
+	/**
+	 * Generate the "standard" extent, used by most room types - but can
+	 * be tweaked afterwards
+	 */
+	protected void setStandardInitialExtent(Building parent,double xzscale,double yscale){
+		Random rnd = Castle.getInstance().r;
+
+		// get the new building's extent (i.e. location and size)
+		int x = rnd.nextInt(10) + 5;
+		int z = rnd.nextInt(10) + 5;
+		int y;
+		
+		double height = Noise.noise2Dfractal(x, z, 1, 2, 3, 0.5); //0-1 noise
+		double variance = Noise.noise2Dfractal(x,z,2,2,3,0.5);
+
+		// TODO this is a blatant special case hack.
+		if(parent.rooms.getFirst() instanceof RoofGarden && rnd.nextFloat()<0.8) {
+			// if the top room of the parent has a garden, high chance that we're a good bit taller.
+			y = parent.extent.ysize() + 4 + rnd.nextInt((int)(height*10.0));
+		} else {
+			y = rnd.nextInt(5+Noise.scale(15, variance))+10;
+			y = Noise.scale(y,height)+5;
+		}
+		
+		x = (int)(((double)x)*xzscale);
+		z = (int)(((double)z)*xzscale);
+		y = (int)(((double)y)*yscale);
+		
+		setInitialExtent(parent, x, y, z);
+
+	}
 
 	/**
 	 * The standard operation for single-room buildings
@@ -86,15 +141,22 @@ public abstract class Building {
 	 */
 	public Room makeSingleRoom(MaterialManager mgr) {
 		rooms = new LinkedList<Room>(); // make sure any old ones are gone
-		Room r = new BlankRoom(mgr, extent, this);
+		Room r = new BlankRoom(mgr, originalExtent, this);
 		addRoomTop(r);
 		return r;
 	}
 
 	/**
-	 * Fill this in - it's what actually makes the building
+	 * Draw into the world - call this *before* adding the building! This builds
+	 * "standard" buildings.
 	 */
-	public abstract void build(MaterialManager mgr);
+	public void build(MaterialManager mgr) {
+		BoxBuilder.build(mgr, extent); // make the walls
+		makeRooms(mgr); // and make the internal rooms
+		underfill(mgr, false); // build "stilts" if required
+		generateRoof(mgr);
+
+	}
 
 	/**
 	 * Fill this in to generate the sort of building that's typically attached
@@ -102,16 +164,7 @@ public abstract class Building {
 	 * 
 	 * @return
 	 */
-	public Building createChildBuilding(Random r) {
-		switch (r.nextInt(25)) {
-		case 0:
-			return new Path(this);
-		case 1:
-			return new Garden(this);
-		default:
-			return new Hall(this);
-		}
-	}
+	public abstract Building createChildBuilding(Random r);
 
 	/**
 	 * Attempt to build a number of internal floors in tall buildings. Floors
@@ -126,8 +179,47 @@ public abstract class Building {
 			createRoomAt(mgr, h, nexth);
 
 			h = nexth + 2; // because h and nexth delineate the internal space -
-							// the air space - of the building
+			// the air space - of the building
 		}
+	}
+
+	/**
+	 * Generate roof for a building
+	 */
+	protected void generateRoof(MaterialManager mgr) {
+		Castle c = Castle.getInstance();
+		// is the bit above the building free?
+		// Calculate an extent for a putative pitched roof, the height
+		// of which is half the longest edge (is that right?)
+		Extent e = new Extent(extent);
+		e.miny = e.maxy;
+		if (e.xsize() > e.zsize())
+			e = e.setHeight(e.xsize() / 2);
+		else
+			e = e.setHeight(e.zsize() / 2);
+		if (c.intersects(e)) {
+			// only building for a small roof, so skip.
+			RoofBuilder.randomRoof(mgr, extent);
+		} else {
+			// room for a bigger roof or maybe a roof garden! Roof garden if
+			// we're short.
+			if (c.r.nextFloat() < 0.5 || extent.ysize() < 24) {
+				buildRoofGarden(mgr, e);
+			} else {
+				roofHeight = RoofBuilder.randomRoof(mgr, extent);
+			}
+		}
+	}
+
+	/**
+	 * This adds a new room on top of the existing rooms, and extends the
+	 * building upwards. The new room is marked as outside. The floor is grass,
+	 * and this room will intrude one block into the innerspace of the the room
+	 * below for the underfloor.
+	 */
+	private void buildRoofGarden(MaterialManager mgr, Extent e) {
+		Room r = new RoofGarden(mgr, e, this);
+		addRoomAndBuildExitDown(r, true);
 	}
 
 	/**
@@ -158,7 +250,7 @@ public abstract class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = roomByGrade(mgr, roomExt, this);
+		Room r = createRoom(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
 
@@ -212,7 +304,7 @@ public abstract class Building {
 	 * @return Room
 	 */
 
-	private Room roomByGrade(MaterialManager mgr, Extent roomExt, Building bld) {
+	protected Room createRoom(MaterialManager mgr, Extent roomExt, Building bld) {
 		double grade = bld.grade();
 		if (grade <= 0.35) {
 			return gradeLow(mgr, roomExt, bld);
@@ -273,7 +365,7 @@ public abstract class Building {
 	 */
 	protected void addRoomAndBuildExitUp(Room r, boolean outside) {
 		Room upperFloor = rooms.peekLast(); // any prior floor will be the last
-											// item
+		// item
 		addRoomBasement(r); // adds to head
 		if (upperFloor != null) {
 			// there is a floor below - try to build some kind of link down
@@ -357,8 +449,8 @@ public abstract class Building {
 		World w = c.getWorld();
 		int dx, dz;
 
-		// try to build a basement down here!
-		if (attemptNewRoomUnder(mgr))
+		// maybe try to build a basement down here!
+		if (c.r.nextFloat()<0.7 && attemptNewRoomUnder(mgr))
 			return;
 
 		MaterialDataPair mat = mgr.getSecondary();
@@ -378,8 +470,8 @@ public abstract class Building {
 				for (int y = extent.miny - 1;; y--) {
 					Block b = w.getBlockAt(x, y, z);
 					if (!b.getType().isSolid() && Castle.canOverwrite(b)) { // also
-																			// avoid
-																			// "unwritable air"
+						// avoid
+						// "unwritable air"
 						b.setType(mat.m);
 						b.setData((byte) mat.d);
 					} else {
@@ -431,7 +523,7 @@ public abstract class Building {
 			e = extent.getWall(Direction.DOWN).union(e);
 			c.fill(e, mgr.getPrimary()); // make the walls
 			c.fill(e.expand(-1, Extent.ALL), Material.AIR, 0); // clear the
-																// contents
+			// contents
 
 			// we'll succeed eventually unless the world has gone very strange
 			// now we add a new room onto the bottom of the building (i.e. at
@@ -439,7 +531,7 @@ public abstract class Building {
 			Room r = new PlainRoom(mgr, e, this);
 			addRoomAndBuildExitUp(r, false);
 			GormPlugin.log("basement done! " + e.toString());
-			extent = extent.union(e);
+			extent = extent.union(e); // Doesn't modify originalExtent
 			return true;
 		}
 	}

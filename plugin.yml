@@ -22,9 +22,19 @@ commands:
     usage: /razegorm
     permission: Gorm.build
     permission-message: You don't have permission
-  test:
-    description: Oh, you know. This and that.
-    usage: /test
+  deni:
+    description: List types of castle denizens
+    usage: /deni
+    permission: Gorm.build
+    permission-message: You don't have permission
+  shb:
+    description: Fill blocked regions of current room
+    usage: /shb
+    permission: Gorm.build
+    permission-message: You don't have permission
+  mke:
+    description: Make exit from current room to lookedat room
+    usage: /mke
     permission: Gorm.build
     permission-message: You don't have permission
   gt:

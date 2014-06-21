@@ -7,6 +7,10 @@ public class MaterialDataPair {
 		this.m = m;
 		this.d = d;
 	}
+	public MaterialDataPair(MaterialDataPair p){
+		this.m = p.m;
+		this.d = p.d;
+	}
 
 	public Material m;
 	public int d;

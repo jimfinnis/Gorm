@@ -53,7 +53,6 @@ public class Gardener {
 					}
 				}
 				if (mat != null) {
-					
 					Block b = w.getBlockAt(x, y-1, z);
 					if(b.getType() == Material.GRASS || b.getType()==Material.DIRT){
 						b = w.getBlockAt(x, y, z);

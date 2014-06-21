@@ -2,6 +2,7 @@ package org.pale.gorm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -11,9 +12,11 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 public final class GormPlugin extends JavaPlugin {
 
@@ -162,11 +165,22 @@ public final class GormPlugin extends JavaPlugin {
 			Player p = (Player) sender;
 			gt(p, args[0]);
 			return true;
-		} else if (command.getName().equalsIgnoreCase("test")) {
+		} else if (command.getName().equalsIgnoreCase("shb")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
-			test(p);
+			showBlocks(p);
+			return true;
+		} else if(command.getName().equalsIgnoreCase("deni")) {
+			if (!playerCheck(sender))
+				return false;
+			Player p = (Player) sender;
+			deni(p);
+		} else if (command.getName().equalsIgnoreCase("mke")) {
+			if (!playerCheck(sender))
+				return false;
+			Player p = (Player) sender;
+			makeExitManually(p);
 			return true;
 		} else if (command.getName().equalsIgnoreCase("flatten")) {
 			if (!playerCheck(sender))
@@ -184,15 +198,15 @@ public final class GormPlugin extends JavaPlugin {
 
 			@Override
 			public void run(int x, int y, int z) {
-				if(r.isBlocked(new Extent(x,y,z))){
+//				if(r.isBlocked(new Extent(x,y,z))){
 					c.getWorld().getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK);
-				}
+//				}
 				
 			}});
 		
 	}
 
-	private void test(Player p) {
+	private void showBlocks(Player p) {
 		// IntVector pos = new IntVector(p.getLocation());
 		Castle c = Castle.getInstance();
 		c.setWorld(p.getWorld());
@@ -206,6 +220,54 @@ public final class GormPlugin extends JavaPlugin {
 		}
 	}
 
+	private void makeExitManually(Player p) {
+		// IntVector pos = new IntVector(p.getLocation());
+		Castle c = Castle.getInstance();
+		c.setWorld(p.getWorld());
+		
+		IntVector pos = new IntVector(p.getLocation());
+
+		Room thisRoom=null,thatRoom=null;
+		for(Room r: c.getRooms()){
+			if(r.getExtent().contains(pos)){
+				thisRoom = r;
+				break;
+			}
+		}
+		if(thisRoom==null){
+			log("no room at current location");
+			return;
+		}
+			
+		
+		IntVector d= IntVector.yawToDir(p.getLocation().getYaw()).vec;
+		for(int i=0;i<100;i++){
+			pos = pos.add(d);
+			for(Room r: c.getRooms()){
+				if(r!=thisRoom && r.getExtent().contains(pos)){
+					thatRoom = r;
+					break;
+				}
+			}			
+		}
+		if(thatRoom==null){
+			log("no room along current direction");
+			return;
+		}
+		
+		if(thisRoom.getExtent().intersects(thatRoom.getExtent())){
+			thisRoom.makeExitBetweenRooms(thatRoom);
+		} else 
+			log("rooms do not intersect");
+	}
+	
+	private void deni(Player player){
+		Map<Villager.Profession,Integer> deniCounts = Castle.getInstance().getDenizenCounts();
+		for(Villager.Profession p: deniCounts.keySet()){
+			player.sendMessage(p.toString()+": "+Integer.toString(deniCounts.get(p)));
+		}
+	}
+	
 	private void flatten(Player p) {
 		IntVector pos = new IntVector(p.getLocation());
 		int size = 50;
@@ -245,8 +307,6 @@ public final class GormPlugin extends JavaPlugin {
 		Direction dir = IntVector.yawToDir(f);
 
 		IntVector pos = new IntVector(p.getTargetBlock(null, 100).getLocation());
-		GormPlugin.log("Direction : " + dir.toString() + " from yaw "
-				+ Float.toString(f));
 		MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
 		Turtle t = new Turtle(mgr, p.getWorld(), pos, dir);
 		t.run(str);

@@ -36,17 +36,22 @@ public class Builder {
 
 		if (castle.getBuildingCount() == 0) {
 			// create the first building if there aren't any
-			IntVector v = new IntVector(loc).subtract(0,1,0);
-			Extent e = new Extent(v, 10, 0, 10).setHeight(30);
+			IntVector v = new IntVector(loc).subtract(0, 1, 0);
+			Extent e = new Extent(v, 30, 0, 20).setHeight(30);
 			b = new Hall(e);
 		} else {
 			// first, create the required building, with its extents
 			// set around some other building, and slide it around until it fits
 			b = createAndFitBuilding();
 		}
-		if(b!=null){
-			MaterialManager mgr = new MaterialManager(b.getExtent().getCentre().getBlock().getBiome());
-			GormPlugin.log("Building "+Integer.toString(b.id)+" created and added!");
+		
+		
+		if (b != null) {
+			b.fixOriginalExtent();
+			MaterialManager mgr = new MaterialManager(b.getExtent().getCentre()
+					.getBlock().getBiome());
+			GormPlugin.log("** " + b.getClass().getName() + " "
+					+ Integer.toString(b.id) + " created and added!");
 			b.build(mgr);
 			castle.addBuilding(b);
 			b.furnish(mgr);
@@ -61,16 +66,22 @@ public class Builder {
 			GormPlugin.log("Could not move building to a good place.");
 		}
 
-		//castle.roomSanityCheck();
+		// castle.roomSanityCheck();
 	}
-
 
 	/**
 	 * Attempt to construct a random link between two rooms
 	 */
 	private boolean makeRandomExit() {
-		for(Room r: castle.getRooms()){
-			if(r.attemptMakeExit()){
+		for (Room r : castle.getRooms()) {
+			// corridors have lots of exits. Hack hack hack.
+			if (r.b instanceof org.pale.gorm.buildings.Corridor) {
+				if (r.attemptMakeExit())
+					r.update();
+			}
+		}
+		for (Room r : castle.getRooms()) {
+			if (r.attemptMakeExit()) {
 				r.update();
 				return true;
 			}
@@ -79,8 +90,8 @@ public class Builder {
 	}
 
 	/**
-	 * Create a building of the type we most need, in the same location as another
-	 * room. Then slide it about until it fits.
+	 * Create a building of the type we most need, in the same location as
+	 * another room. Then slide it about until it fits.
 	 * 
 	 * @return room
 	 */
@@ -94,11 +105,15 @@ public class Builder {
 			for (Building b : castle.getBuildings()) {
 				if (rnd.nextDouble() < qqq) {
 					Building newBuilding = b.createChildBuilding(rnd);
-					GormPlugin.log("New building "+Integer.toString(newBuilding.id)+" created: attempting move");
+					GormPlugin.log("New " + b.getClass().getSimpleName() + " "
+							+ Integer.toString(newBuilding.id)
+							+ " created: attempting move");
 					if (moveRoomUntilFit(newBuilding, 3 + tries, b)) { // more
-																	// laxity in
-																	// y-slide
-																	// each time
+																		// laxity
+																		// in
+																		// y-slide
+																		// each
+																		// time
 						return newBuilding;
 					}
 				}
@@ -107,7 +122,6 @@ public class Builder {
 		return null;
 
 	}
-
 
 	private boolean moveRoomUntilFit(Building r, int maxyslide,
 			Building parentRoom) {
@@ -156,19 +170,23 @@ public class Builder {
 			Building parentRoom) {
 		Extent e = moved.addvec(0, yslide, 0);
 		Extent eOuter = e.expand(1, Extent.ALL);
-		// we allow a building to be positioned if it is (a) not intersecting the castle
-		// and (b) is not too buried in the earth. For this check, we only use the bottom
+		// we allow a building to be positioned if it is (a) not intersecting
+		// the castle
+		// and (b) is not too buried in the earth. For this check, we only use
+		// the bottom
 		// three layers (to avoid problems with gardens and paths)
-		double filled=e.setHeight(3).amountOfSoil();
-		if (filled<0.25 && !castle.intersects(e)){
-			
-			if (e.getMinHeightAboveWorld() < 3 && 
-					e.getMaxHeightAboveWorld() < 10 && // stupid stilt avoidance!
+		double filled = e.setHeight(3).amountOfSoil();
+		if (filled < 0.25 && !castle.intersects(e)) {
+
+			if (e.getMinHeightAboveWorld() < 3
+					&& e.getMaxHeightAboveWorld() < 10 && // stupid stilt
+															// avoidance!
 					parentRoom.intersects(eOuter)) {
 				// that'll do!
 				b.setExtent(eOuter);
-				GormPlugin.log("amount in ground: "+Double.toString(filled));
-				GormPlugin.log("building "+Integer.toString(b.id)+" moved to: " + b.getExtent().toString());
+				GormPlugin.log("amount in ground: " + Double.toString(filled));
+				GormPlugin.log("building " + Integer.toString(b.id)
+						+ " moved to: " + b.getExtent().toString());
 				return true;
 			}
 		}

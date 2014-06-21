@@ -19,55 +19,49 @@ import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 
 public class DungeonObjects {
-	
+
 	/**
 	 * Generates Random Loot Chests
-	 * @param dir 
 	 * 
-	 * @param inner defines the internal area of the room
-	 * @param chance how likely each chest room is to have a chest
-	 * @param grade the grade, or danger level, of the current room,
-	 * 			from 1 (most dangerous) to 4 (pretty much completely safe)
+	 * @param dir
+	 * 
+	 * @param inner
+	 *            defines the internal area of the room
+	 * @param chance
+	 *            how likely each chest room is to have a chest
+	 * @param grade
+	 *            the grade, or danger level, of the current room, from 1 (most
+	 *            dangerous) to 4 (pretty much completely safe)
 	 */
 	public static void chest(IntVector location, IntVector dir) {
 		Castle c = Castle.getInstance();
 		int grade = c.gradeInt(location);
-		
+
 		Block b = c.getBlockAt(location);
-		
+
 		b.setType(Material.CHEST);
 		Chest chest = (Chest) b.getState();
-		
+
 		ArrayList<Integer> loot = GormPlugin.getInstance().getLoot(grade);
-		//How many items should the chest contain? Lower grade (more dangerous) areas get more
+		// How many items should the chest contain? Lower grade (more dangerous)
+		// areas get more
 		int items = (int) ((10 + c.r.nextInt(10)) / grade);
-		for(int i=1;i<items;i++){
-			//Choose an item ID from those available for this grade of room
+		for (int i = 1; i < items; i++) {
+			// Choose an item ID from those available for this grade of room
 			int itemID = loot.get(c.r.nextInt(loot.size()));
 			chest.getBlockInventory().addItem(new ItemStack(itemID));
 		}
 		chest.update();
-		GormPlugin.log("Chest Generated @ " + location);
 	}
-	
-	/**
-	 * Generates a spawner in the centre of the room
-	 * @param inner defines the internal area of the room
-	 * @param spawnEntity the entity type to be spawned by the spawner
-	 * @param chance how likely each spawner room is to have a spawner
-	 */
-	
-	public static void spawner(Extent inner, EntityType spawnEntity, double chance) {
+
+	public static void spawner(IntVector location, EntityType spawnEntity) {
 		Castle c = Castle.getInstance();
-		IntVector centreFloor = inner.getWall(Direction.DOWN).getCentre();
-		Block b = c.getBlockAt(centreFloor);
-		if (c.r.nextFloat() <= chance){
-			b.setType(Material.MOB_SPAWNER);
-			CreatureSpawner spawner = (CreatureSpawner) b.getState();
-			spawner.setSpawnedType(spawnEntity);
-			spawner.update();
-			GormPlugin.log("Spawner Generated @ " + centreFloor);
-		}
+		Block b = c.getBlockAt(location);
+
+		b.setType(Material.MOB_SPAWNER);
+		CreatureSpawner spawner = (CreatureSpawner) b.getState();
+		spawner.setSpawnedType(spawnEntity);
+		spawner.update();
 	}
-	
+
 }

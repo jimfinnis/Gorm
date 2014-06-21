@@ -1,6 +1,9 @@
 package org.pale.gorm.rooms;
 
+import java.util.Random;
+
 import org.bukkit.Material;
+import org.bukkit.entity.Villager;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
@@ -34,17 +37,28 @@ public class PlainRoom extends Room {
 
 		lightsAndCarpets(true);
 		addSignHack();
-		
-		WindowMaker.makeStainedGlassWall(mgr,this);
+//		WindowMaker.makeStainedGlassWall(mgr, this);
 		
 		return null; // we don't modify the building extent
 	}
+	
 
 	@Override
 	public void furnish(MaterialManager mgr) {
+		Random r = Castle.getInstance().r;
+		double grade = b.grade() + r.nextGaussian()*0.1; // get room grade
+		
+		furnishUniques(mgr);
+		
 		for(int i=0;i<e.xsize()*e.ysize()/10;i++){
-			String f = FurnitureItems.random(FurnitureItems.defaultChoices);
-			Furniture.placeFurniture(mgr,this, f);
+			String f;
+			if(grade<0.1)
+				f = FurnitureItems.random(FurnitureItems.scaryChoices);
+			else if(grade>1)
+				f = FurnitureItems.random(FurnitureItems.poshChoices);
+			else
+				f = FurnitureItems.random(FurnitureItems.defaultChoices);
+			Furniture.place(mgr,this, f);
 		}
 
 	}

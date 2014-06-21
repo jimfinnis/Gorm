@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import net.minecraft.server.v1_7_R3.TileEntity;
+
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.EntityType;
+import org.bukkit.material.Bed;
 import org.bukkit.material.Sign;
 import org.bukkit.material.Stairs;
 import org.pale.gorm.roomutils.DungeonObjects;
@@ -181,10 +185,29 @@ public class Turtle {
 		pos = initpos;
 		this.mgr = mgr;
 		
+		// here we set up the custom 'C' materials - e.g. Cc is the chest.
 		setWriter('c', new TurtleWriter(){
 			@Override
 			public void write(Turtle t, IntVector v, IntVector dir) {
 				DungeonObjects.chest(v,dir);
+			}
+		});
+		setWriter('s',new TurtleWriter(){
+			@Override
+			public void write(Turtle t, IntVector loc, IntVector dir) {
+				EntityType[] ents = {EntityType.CAVE_SPIDER,EntityType.WITCH,
+						EntityType.SKELETON,EntityType.SPIDER,EntityType.ZOMBIE};
+				DungeonObjects.spawner(loc,ents[Castle.getInstance().r.nextInt(ents.length)]);
+			}
+		});
+		setWriter('p',new TurtleWriter(){
+			@Override
+			// TODO add to this when actual flowerpots are implemented, so we don't
+			// have to muck about with NBT
+			public void write(Turtle t, IntVector loc, IntVector dir) {
+				Block b = t.castle.getBlockAt(loc);
+				b.setType(Material.FLOWER_POT);
+				BlockState bs = b.getState();
 			}
 		});
 	}
@@ -336,6 +359,13 @@ public class Turtle {
 				Sign s = (Sign) bs.getData();
 				s.setFacingDirection(dir.negate().toBlockFace());
 				bs.update(true);
+			} else if(mat == Material.BED_BLOCK){
+				b.setType(mat);
+				BlockState bs = b.getState();
+				Bed bed = (Bed) bs.getData();
+				bed.setFacingDirection(dir.toBlockFace());
+				bed.setHeadOfBed(data==0);
+				bs.update();
 			} else {
 				b.setData((byte) data);
 				b.setType(mat);
@@ -626,10 +656,41 @@ public class Turtle {
 			mat = Material.BOOKSHELF;
 			data = 0;
 			break;
-		case 'D':
-			mat = Material.BED_BLOCK;
+		case 'C':
+			mat = Material.CHEST; // EMPTY chest. Use Cc for chests with loot.
 			data = 0;
 			break;
+		case 'D':
+			char qq = getNext();
+			mat = Material.BED_BLOCK;
+			if(qq=='1')
+				data=1;
+			else
+				data=0;
+			break;
+		case 'S'://specials
+			switch(getNext()){
+			case 'b':
+				setMaterial(Material.BREWING_STAND);
+				break;
+			case 'a':
+				setMaterial(Material.ANVIL);
+				break;
+			case 'f':
+				setMaterial(Material.FURNACE);
+				break;
+			case 'c':
+				setMaterial(Material.CAULDRON);
+				break;
+			case 't':
+				setMaterial(Material.WORKBENCH);
+				break;
+				default:
+					setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
+			}
+			break;
+
+			
 
 		default: {
 			int n = Character.getNumericValue(c);

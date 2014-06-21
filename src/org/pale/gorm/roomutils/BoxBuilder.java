@@ -70,8 +70,8 @@ public class BoxBuilder {
 		// the "cross" shape
 		c.fill(e.getWall(Direction.UP).expand(-1, Extent.X), prim);
 		c.fill(e.getWall(Direction.UP).expand(-1, Extent.Z), prim);
-		c.fill(e.getWall(Direction.DOWN).expand(-1, Extent.X), prim);
-		c.fill(e.getWall(Direction.DOWN).expand(-1, Extent.Z), prim);
+		// but we DON'T do this with the floor.
+		c.fill(e.getWall(Direction.DOWN), prim);
 
 		c.fill(e.expand(-1, Extent.ALL), Material.AIR, 1); // 'inside' air
 

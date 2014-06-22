@@ -64,5 +64,33 @@ public class Gardener {
 		});
 
 	}
+	
+	
+	private static final Material[] crops = {
+		Material.CROPS, Material.CROPS,Material.CROPS,
+		Material.CARROT,
+		Material.POTATO
+	};
+	
+
+	public static void makeFarm(Extent floor){
+		Castle c = Castle.getInstance();
+		c.fill(floor, new MaterialDataPair(Material.SOIL, 0));
+		
+		MaterialDataPair crop = new MaterialDataPair(crops[c.r.nextInt(crops.length)], 0);
+
+		for (int x = floor.minx; x <= floor.maxx; x++) {
+			Extent tmp = new Extent(floor).setX(x);
+			if ((x - floor.minx) % 3 == 2) {
+				c.fill(tmp, new MaterialDataPair(Material.WATER, 0));
+				c.fill(tmp.setZ((floor.minz+floor.maxz)/2).addvec(0, 1, 0),
+						new MaterialDataPair(Material.STEP, 0));
+				
+			} else {
+				c.fill(tmp.addvec(0, 1, 0), crop);
+			}
+		}
+
+	}
 
 }

@@ -1,6 +1,7 @@
 package org.pale.gorm.rooms;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Villager;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
@@ -22,6 +23,8 @@ import org.pale.gorm.roomutils.Gardener;
  * 
  */
 public class RoofGarden extends Room {
+
+	private boolean isFarm = false;
 
 	public RoofGarden(MaterialManager mgr, Extent e, Building b) {
 		super(mgr, e, b);
@@ -47,11 +50,21 @@ public class RoofGarden extends Room {
 		c.fill(e.expand(-1, Extent.ALL), Material.AIR, 0);
 		// build the floor, using same material as underfloor for edge
 		c.checkFill(floor, underFloorMaterial, 0);
-		c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
+
+		isFarm = c.r.nextFloat()<0.1;
+
+		if (isFarm) {
+			Gardener.makeFarm(floor.expand(-1, Extent.X | Extent.Z));
+			if (c.r.nextFloat() < 0.1) {
+				spawnVillager(Villager.Profession.FARMER);
+			}
+		} else 
+			c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
 
 		// fill in the perimeter
 		perimeter(mgr, c);
-		
+
+
 		addSignHack();
 
 		// set the new building extent
@@ -155,11 +168,15 @@ public class RoofGarden extends Room {
 
 	}
 
-
 	@Override
 	public void furnish(MaterialManager mgr) {
-		Extent floor = e.getWall(Direction.DOWN); 
-		Gardener.plant(floor.expand(-1,Extent.X|Extent.Z));		
+		if (!isFarm) {
+			Extent floor = e.getWall(Direction.DOWN);
+			if (Castle.getInstance().r.nextFloat() < 0.5)
+				Gardener.plant(floor.expand(-1, Extent.X | Extent.Z));
+			else {
+			}
+		}
 	}
 
 }

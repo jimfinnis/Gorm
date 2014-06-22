@@ -92,6 +92,7 @@ public class WindowMaker {
 			y = roomExt.ysize() - 3;
 			break; // windows near ceiling
 		default:
+			if(roomExt.ysize()<=4)return; // can't do this.
 			y = c.r.nextInt(roomExt.ysize() - 4) + 1;
 			break; // random
 		}

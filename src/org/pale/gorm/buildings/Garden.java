@@ -38,18 +38,16 @@ public class Garden extends Building {
 		GormPlugin.log("Parent extent: " + parent.extent.toString());
 		GormPlugin.log("Parent origex: " + parent.originalExtent.toString());
 	}
-
-	@Override
-	public void build(MaterialManager mgr) {
+	
+	/**
+	 * Does stuff common to outside areas.
+	 * @param mgr
+	 * @return floor extent
+	 */
+	
+	protected Extent prepareGround(MaterialManager mgr){
 		Castle c = Castle.getInstance();
 		Extent inner = extent.expand(-1, Extent.ALL);
-
-		MaterialDataPair ground;
-
-		if (c.r.nextFloat() < 0.2)
-			ground = mgr.getSupSecondary();
-		else
-			ground = mgr.getGround();
 
 		c.checkFill(inner, Material.AIR, 0); // fill the inner area
 		// c.checkFill(extent, Material.AIR, 0); // but in the outer, avoid
@@ -64,7 +62,13 @@ public class Garden extends Building {
 		// fill the underfloor with a foundation material, otherwise
 		// we can end up unroofing things
 		c.checkFill(floor.subvec(0, 1, 0), mgr.getPrimary());
+		return floor;
+	}
 
+	@Override
+	public void build(MaterialManager mgr) {
+		Castle c = Castle.getInstance();
+		Extent floor = prepareGround(mgr);
 		// fill the floor with a random material
 		if (c.r.nextFloat() < 0.9) {
 			// patterned floor
@@ -92,12 +96,19 @@ public class Garden extends Building {
 				}
 			}
 			c.patternFill(floor.expand(-1, Extent.X | Extent.Z), mats, n, null);
-		} else
+		} else {
+			MaterialDataPair ground;
+			if (c.r.nextFloat() < 0.2)
+				ground = mgr.getSupSecondary();
+			else
+				ground = mgr.getGround();
+
 			// plain floor
 			c.fill(floor.expand(-1, Extent.X | Extent.Z), ground);
+		}
 		// room
 		Gardener.plant(floor); // plant some things
-		floorLights(inner); // light the inner region
+		floorLights(extent.expand(-1, Extent.ALL)); // light the inner region
 	}
 
 	@Override

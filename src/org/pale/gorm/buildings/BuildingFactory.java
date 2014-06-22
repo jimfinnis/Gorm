@@ -17,6 +17,7 @@ public class BuildingFactory {
 		case PATH:return new Path(parent);
 		case CORRIDOR:return new Corridor(parent);
 		case SHOP:return new Shop(parent);
+		case FARM:return new Farm(parent);
 		}
 	}
 	

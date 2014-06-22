@@ -148,7 +148,7 @@ public abstract class Room implements Comparable<Room> {
 		return true;
 	}
 	
-	protected void spawnVillager(Villager.Profession p){
+	public void spawnVillager(Villager.Profession p){
 		Location l = e.getCentre().toLocation();
 		Villager v=Castle.getInstance().getWorld().spawn(l, Villager.class);
 		v.setProfession(p);		
@@ -698,6 +698,27 @@ public abstract class Room implements Comparable<Room> {
 
 		Ladder ladder = new Ladder();
 		ladder.setFacingDirection(BlockFace.NORTH);
+		
+		// fill an area of floor around the ladder hole (deals with roof garden farms!)
+		// First make an extent where the ladder hole is
+		Extent e = new Extent(ladderPos.x,upper.e.miny,ladderPos.z);
+		// then pull it towards the centre of the room by one position in X and Z,
+		// to give a 2x2 hole
+		IntVector cc = upper.e.getCentre();
+		if(e.minx<cc.x)
+			e.maxx++;
+		else
+			e.minx--;
+		if(e.minz<cc.z)
+			e.maxz++;
+		else
+			e.minz--;
+		
+				
+		MaterialManager mgr = new MaterialManager(b.getExtent().getCentre()
+				.getBlock().getBiome()); // *sigh* 
+		Castle.getInstance().fill(e,mgr.getPrimary());
+
 
 		// build up, placing a ladder until we get to the floor above, and go
 		// one square into the room
@@ -710,8 +731,10 @@ public abstract class Room implements Comparable<Room> {
 			b.setType(Material.LADDER);
 			b.setData(ladder.getData());
 		}
+		
+		
 		// create an extent a bit wider
-		Extent e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
+		e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
 				.expand(1, Extent.ALL).setHeight(innerLower.ysize());
 		// and block that off in the lower room, so we don't block the ladder
 		addBlock(e);

@@ -11,6 +11,7 @@ import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 import org.pale.gorm.Turtle;
+import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.Gardener;
 
 /**
@@ -67,10 +68,10 @@ public class RoofGarden extends Room {
 		// bit 5 means alts have torches
 		// bits 6-7 if both are 11 means 'use steps instead of primary block'
 		int tp = c.r.nextInt();
-		placePost(mgr, c, e.minx, e.miny, e.minz, tp);
-		placePost(mgr, c, e.maxx, e.miny, e.minz, tp);
-		placePost(mgr, c, e.minx, e.miny, e.maxz, tp);
-		placePost(mgr, c, e.maxx, e.miny, e.maxz, tp);
+		Furniture.placePost(mgr, this, c, e.minx, e.miny, e.minz, tp);
+		Furniture.placePost(mgr, this, c, e.maxx, e.miny, e.minz, tp);
+		Furniture.placePost(mgr, this, c, e.minx, e.miny, e.maxz, tp);
+		Furniture.placePost(mgr, this, c, e.maxx, e.miny, e.maxz, tp);
 
 		boolean alternate = (tp & 16) == 1;
 		boolean useStepsAsWall = ((tp >> 5) & 3) == 3;
@@ -154,37 +155,6 @@ public class RoofGarden extends Room {
 
 	}
 
-	private static void placePost(MaterialManager mgr, Castle c, int x, int y, int z,
-			int tp) {
-		Turtle t = new Turtle(mgr, c.getWorld(), new IntVector(x, y + 1, z),
-				Direction.NORTH);
-		switch (tp & 7) {
-		case 0:
-			t.run("m1wu.Mtw");
-			break;
-		case 1:
-			t.run("m2wu.m2wu.Mtw");
-			break;
-		case 2:
-			t.run("mowu.m1wu.Mtw");
-			break;
-		case 3:
-			t.run("m1wu.mpwu.Mtw");
-			break;
-		case 4:
-			t.run("mowu.mpwu.Mtw");
-			break;
-		case 5:
-			t.run("mpwu.Mtw");
-			break;
-		case 6:
-			t.run("mowu.Mtw");
-			break;
-		case 7:
-			t.run("m1wu.m2wu.m1wu.m2w.Mt.fwbbwfLwRRw");
-			break;
-		}
-	}
 
 	@Override
 	public void furnish(MaterialManager mgr) {

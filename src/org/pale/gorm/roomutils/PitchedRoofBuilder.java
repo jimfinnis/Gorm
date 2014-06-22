@@ -25,7 +25,7 @@ public class PitchedRoofBuilder extends RoofBuilder {
 		if(Castle.getInstance().r.nextFloat()<0.5)
 			roof=roof.expand(1, Extent.X|Extent.Z); // so we get eaves sometimes
 		
-		roof.miny = roof.maxy + 1; // we'll work out maxy in a bit, maybe
+		roof.miny = roof.maxy; // we'll work out maxy in a bit, maybe
 		// which is the longest edge?
 		Direction dir;
 		int longEdge;

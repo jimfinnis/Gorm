@@ -38,7 +38,7 @@ public class Corridor extends Building {
 																			// noise
 		double variance = Noise.noise2Dfractal(loc.x, loc.z, 2, 2, 3, 0.5);
 
-		y = rnd.nextInt(5 + Noise.scale(15, variance)) + 10;
+		y = rnd.nextInt(5 + Noise.scale(10, variance)) + 10;
 		y = Noise.scale(y, height) + 5;
 
 		// this would make the corridor the same height as its parent. Looks
@@ -62,6 +62,7 @@ public class Corridor extends Building {
 				BuildingType.HALL,
 				BuildingType.DWELLING,
 				BuildingType.DWELLING,
+				BuildingType.SHOP,
 				BuildingType.SHOP,
 				});
 	}

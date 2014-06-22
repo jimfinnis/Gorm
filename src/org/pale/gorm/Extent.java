@@ -214,6 +214,25 @@ public class Extent {
 		isset = e.isset;
 
 	}
+	
+	public Extent setX(int x){
+		Extent e = new Extent(this);
+		e.minx = x;
+		e.maxx = x;
+		return e;
+	}
+	public Extent setY(int y){
+		Extent e = new Extent(this);
+		e.miny = y;
+		e.maxy = y;
+		return e;
+	}
+	public Extent setZ(int z){
+		Extent e = new Extent(this);
+		e.minz = z;
+		e.maxz = z;
+		return e;
+	}
 
 	public int xsize() {
 		return (maxx - minx) + 1;
@@ -226,7 +245,7 @@ public class Extent {
 	public int zsize() {
 		return (maxz - minz) + 1;
 	}
-
+	
 	/**
 	 * Similar to union with a point, but acts in place.
 	 * @param x

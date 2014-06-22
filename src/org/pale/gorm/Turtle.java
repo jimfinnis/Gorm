@@ -38,7 +38,7 @@ public class Turtle {
 	}
 
 	private Castle castle;
-	private Map<Character,TurtleWriter> customWriters = new HashMap<Character,TurtleWriter>();
+	private Map<Character, TurtleWriter> customWriters = new HashMap<Character, TurtleWriter>();
 	private World world;
 	private IntVector pos;
 	private IntVector dir;
@@ -49,8 +49,8 @@ public class Turtle {
 									// overwrite solid
 
 	/**
-	 * The custom writer we are currently using, or null if we're using a standard
-	 * material
+	 * The custom writer we are currently using, or null if we're using a
+	 * standard material
 	 */
 	private TurtleWriter currentCustomWriter = null;
 
@@ -130,11 +130,19 @@ public class Turtle {
 												// failure
 	public static final int ABORTINDOORS = 1024; // we abort if we try to write
 													// in a room
+	// ensure that all blocks placed at the starting height have something under
+	// them
+	// in test mode
+	public static final int ENSUREFLOORSUPPORT = 2048;
 
 	/**
 	 * An extent containing all the blocks written by this turtle
 	 */
 	private Extent written = new Extent();
+	/**
+	 * Where this turtle started, used for ENSUREFLOORSUPPORT
+	 */
+	private IntVector startingPos;
 
 	/**
 	 * Get the extent of all the blocks written
@@ -183,26 +191,30 @@ public class Turtle {
 		castle = Castle.getInstance();
 		dir = initdir.vec;
 		pos = initpos;
+		this.startingPos = new IntVector(pos);
 		this.mgr = mgr;
-		
+
 		// here we set up the custom 'C' materials - e.g. Cc is the chest.
-		setWriter('c', new TurtleWriter(){
+		setWriter('c', new TurtleWriter() {
 			@Override
 			public void write(Turtle t, IntVector v, IntVector dir) {
-				DungeonObjects.chest(v,dir);
+				DungeonObjects.chest(v, dir);
 			}
 		});
-		setWriter('s',new TurtleWriter(){
+		setWriter('s', new TurtleWriter() {
 			@Override
 			public void write(Turtle t, IntVector loc, IntVector dir) {
-				EntityType[] ents = {EntityType.CAVE_SPIDER,EntityType.WITCH,
-						EntityType.SKELETON,EntityType.SPIDER,EntityType.ZOMBIE};
-				DungeonObjects.spawner(loc,ents[Castle.getInstance().r.nextInt(ents.length)]);
+				EntityType[] ents = { EntityType.CAVE_SPIDER, EntityType.WITCH,
+						EntityType.SKELETON, EntityType.SPIDER,
+						EntityType.ZOMBIE };
+				DungeonObjects.spawner(loc,
+						ents[Castle.getInstance().r.nextInt(ents.length)]);
 			}
 		});
-		setWriter('p',new TurtleWriter(){
+		setWriter('p', new TurtleWriter() {
 			@Override
-			// TODO add to this when actual flowerpots are implemented, so we don't
+			// TODO add to this when actual flowerpots are implemented, so we
+			// don't
 			// have to muck about with NBT
 			public void write(Turtle t, IntVector loc, IntVector dir) {
 				Block b = t.castle.getBlockAt(loc);
@@ -235,6 +247,7 @@ public class Turtle {
 	 */
 	public boolean run(String s) {
 		char c;
+		int maxCount = 100; // only allow this number of instructions!
 		string = s;
 		aborted = false;
 		// dumpMap();
@@ -250,6 +263,8 @@ public class Turtle {
 			if (aborted)
 				return false;
 			execute(c);
+			if (--maxCount == 0)
+				return false;
 		}
 	}
 
@@ -328,56 +343,63 @@ public class Turtle {
 	}
 
 	public boolean write() {
+		boolean rv;
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
-			if (isModeFlag(TEST))
-				return true;
-			if (containingRoom != null && containingRoom.isBlocked(pos))
-				return false;
-			if (isModeFlag(NOTINDOORS) && isIndoors())
-				return true;
-			if (isModeFlag(ABORTINDOORS) && isIndoors())
-				return false;
+			if (isModeFlag(ENSUREFLOORSUPPORT) && !isSupportedByFloor())
+				rv = false;
+			else if (isModeFlag(TEST))
+				rv = true;
+			else if (containingRoom != null && containingRoom.isBlocked(pos))
+				rv = false;
+			else if (isModeFlag(NOTINDOORS) && isIndoors())
+				rv = false;
+			else if (isModeFlag(ABORTINDOORS) && isIndoors())
+				rv = false;
+			else {
+				Block b = get();
 
-			Block b = get();
+				if (currentCustomWriter != null) {
+					currentCustomWriter.write(this, pos, dir);
+					return true;
+				}
 
-			if (currentCustomWriter!=null) {
-				currentCustomWriter.write(this, pos, dir);
-				return true;
+				if (Castle.isStairs(mat)) { // if we're writing stairs, they are
+											// facing
+											// upwards away from us
+					b.setType(mat);
+					Stairs s = new Stairs(mat);
+					IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
+					s.setFacingDirection(d.toBlockFace());
+					b.setData(s.getData());
+				} else if (mat == Material.WALL_SIGN) {
+					b.setType(mat);
+					BlockState bs = b.getState();
+					Sign s = (Sign) bs.getData();
+					s.setFacingDirection(dir.negate().toBlockFace());
+					bs.update(true);
+				} else if (mat == Material.BED_BLOCK) {
+					b.setType(mat);
+					BlockState bs = b.getState();
+					Bed bed = (Bed) bs.getData();
+					bed.setFacingDirection(dir.toBlockFace());
+					bed.setHeadOfBed(data == 0);
+					bs.update();
+				} else {
+					b.setData((byte) data);
+					b.setType(mat);
+				}
+
+				written = written.union(pos);
+
+				rv = true;
 			}
-
-			if (Castle.isStairs(mat)) { // if we're writing stairs, they are
-										// facing
-										// upwards away from us
-				b.setType(mat);
-				Stairs s = new Stairs(mat);
-				IntVector d = isModeFlag(BACKSTAIRS) ? dir.negate() : dir;
-				s.setFacingDirection(d.toBlockFace());
-				b.setData(s.getData());
-			} else if (mat == Material.WALL_SIGN) {
-				b.setType(mat);
-				BlockState bs = b.getState();
-				Sign s = (Sign) bs.getData();
-				s.setFacingDirection(dir.negate().toBlockFace());
-				bs.update(true);
-			} else if(mat == Material.BED_BLOCK){
-				b.setType(mat);
-				BlockState bs = b.getState();
-				Bed bed = (Bed) bs.getData();
-				bed.setFacingDirection(dir.toBlockFace());
-				bed.setHeadOfBed(data==0);
-				bs.update();
-			} else {
-				b.setData((byte) data);
-				b.setType(mat);
-			}
-
-			written = written.union(pos);
-
-			return true;
 		} else {
-			abort();
-			return false;
+			rv = false;
 		}
+		
+		if(!rv)
+			abort();
+		return rv;
 	}
 
 	/**
@@ -534,17 +556,19 @@ public class Turtle {
 			return NOTINDOORS;
 		case 'I':
 			return ABORTINDOORS;
+		case 'F':
+			return ENSUREFLOORSUPPORT;
 		}
 		return 0;
 	}
-	
-	private void setCustomWriter(){
+
+	private void setCustomWriter() {
 		char c = getNext();
-		if(customWriters.containsKey(c))
+		if (customWriters.containsKey(c))
 			currentCustomWriter = customWriters.get(c);
 		else
-			GormPlugin.log("cannot find custom writer for code "+c);
-		
+			GormPlugin.log("cannot find custom writer for code " + c);
+
 	}
 
 	/**
@@ -663,13 +687,13 @@ public class Turtle {
 		case 'D':
 			char qq = getNext();
 			mat = Material.BED_BLOCK;
-			if(qq=='1')
-				data=1;
+			if (qq == '1')
+				data = 1;
 			else
-				data=0;
+				data = 0;
 			break;
-		case 'S'://specials
-			switch(getNext()){
+		case 'S':// specials
+			switch (getNext()) {
 			case 'b':
 				setMaterial(Material.BREWING_STAND);
 				break;
@@ -685,12 +709,10 @@ public class Turtle {
 			case 't':
 				setMaterial(Material.WORKBENCH);
 				break;
-				default:
-					setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
+			default:
+				setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
 			}
 			break;
-
-			
 
 		default: {
 			int n = Character.getNumericValue(c);
@@ -699,9 +721,9 @@ public class Turtle {
 						+ c);
 				setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
 			} else {
-				GormPlugin.log("unknown material code "+c);
+				GormPlugin.log("unknown material code " + c);
 				setMaterial(Material.STAINED_CLAY, 14);// red clay error code!
-				
+
 			}
 		}
 		}
@@ -840,6 +862,23 @@ public class Turtle {
 	}
 
 	/**
+	 * Check a location is OK to write
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private boolean isLocationEmpty(IntVector p) {
+		// check for a containing room
+		if (containingRoom != null) {
+			if (containingRoom.isBlocked(p)) {
+				return false;
+			}
+		}
+		Block b = world.getBlockAt(p.x, p.y, p.z);
+		return !b.getType().isSolid();
+	}
+
+	/**
 	 * Look at the block relative to the turtle - in turtle space - and tell
 	 * whether it's empty (i.e. not solid)
 	 * 
@@ -850,14 +889,14 @@ public class Turtle {
 	public boolean isEmpty(int x, int y, int z) {
 		IntVector v = new IntVector(x, y, z).rotateToSpace(dir);
 		IntVector p = pos.add(v);
-		// check for a containing room
-		if (containingRoom != null) {
-			if (containingRoom.isBlocked(p)) {
-				return false;
-			}
-		}
+		return isLocationEmpty(p);
+	}
+
+	private boolean isSupportedByFloor() {
+		IntVector p = new IntVector(pos);
+		p.y = startingPos.y - 1;
 		Block b = world.getBlockAt(p.x, p.y, p.z);
-		return !b.getType().isSolid();
+		return b.getType().isSolid();
 	}
 
 	/**

@@ -98,6 +98,8 @@ Instructions:
             ?   RANDOM
             w   WRITEONMOVE
             c   CHECKWRITE
+            F   ENSUREFLOORSUPPORT (assumes CHECKWRITE, makes sure anything written at same Y level
+                as start has solid underneath)
             S   BACKSTAIRS (writes stairs facing away from us, rather than towards)
             t   TEST (do not write, just test we can - and abort if we can't)
             i   NOTINDOORS (will not write if it would write into the extent of an inside room)
@@ -140,8 +142,13 @@ Instructions:
         D0  bed head, pillow at far end
         D1  bed foot
         Sb  brewing stand
+        Sf  furnace
+        Sa  anvil
+        Sc  cauldron
+        St  crafting table
         Try to avoid this and use 'm' instead
     Cx  set custom block writer
         c   treasure chest (use Mc for empty)
         s   spawner
         p   flowerpot
+        

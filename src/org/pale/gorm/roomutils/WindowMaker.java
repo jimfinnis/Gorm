@@ -52,11 +52,11 @@ public class WindowMaker {
 			Material m =ironNotGlass ? Material.IRON_FENCE : mgr.getWindow().m;
 			int d = mgr.getWindow().d;
 				
-//			if(m == Material.THIN_GLASS && (((key<<8)&3) != 0)){
+			if(m == Material.THIN_GLASS && (((key>>8)&3) == 0)){
 				// glass can be overriden to stained glass
 				stainedGlassFill(e,key+stepct);
-//			} else 
-//				c.fill(e, m, d);
+			} else 
+				c.fill(e, m, d);
 		} else {
 			// this window isn't going to get filled, lets put some bars in
 			c.fill(e, Material.IRON_FENCE, 0);

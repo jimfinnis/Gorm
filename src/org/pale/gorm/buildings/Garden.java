@@ -108,6 +108,7 @@ public class Garden extends Building {
 				BuildingType.LIBRARY,
 				BuildingType.HALL,
 				BuildingType.DWELLING,
+				BuildingType.SHOP,
 				});
 
 	}

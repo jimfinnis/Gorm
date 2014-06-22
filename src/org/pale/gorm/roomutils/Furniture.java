@@ -2,6 +2,7 @@ package org.pale.gorm.roomutils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -86,6 +87,9 @@ public class Furniture {
 						// c.getBlockAt(pos).setType(Material.EMERALD_BLOCK);
 						// now try to position the furniture there
 						Turtle t = new Turtle(mgr, c.getWorld(), pos, wallDir);
+						// make sure there's something under every block we make 
+						// at floor height
+						t.setRoom(r).setModeFlag(Turtle.ENSUREFLOORSUPPORT);
 						t.setRoom(r).setModeFlag(Turtle.TEST); // we're just
 																// testing, not
 																// building,
@@ -133,6 +137,132 @@ public class Furniture {
 			t.run(s);
 			r.addBlock(t.getWritten()); // add all written blocks to blocked off area
 		} //else GormPlugin.log("No candidates found!");
+	}
+
+	/**
+	 * Generate columns at the edges of an extent
+	 * @param e
+	 */
+	public static void columns(Room r,Extent e, MaterialManager mgr) {
+		// we need a columnar spacing such that (width-1)%spacing and (height-1)%spacing
+		// are both zero.
+		Castle c = Castle.getInstance();
+		int x = e.xsize();
+		int z = e.zsize();
+		int spacing;
+		ArrayList<Integer> spacings=new ArrayList<Integer>();
+		for(spacing=2;spacing<x && spacing<z;spacing++){
+			if((x-1)%spacing==0 && ((z-1)%spacing==0))
+				spacings.add(spacing);
+		}
+		if(spacings.size()==0)
+			return; // couldn't do it.
+		spacing = spacings.get(c.r.nextInt(spacings.size()));
+		
+		// now do the fills.
+		
+		boolean isLit = true;
+		
+		int tp = c.r.nextInt(); // column type
+		
+		for(x=e.minx;x<=e.maxx;x+=spacing){
+			placeColumn(mgr,r,c,x,e.miny,e.minz,tp);
+			placeColumn(mgr,r,c,x,e.miny,e.maxz,tp);
+		}
+		for(z=e.minz;z<=e.maxz;z+=spacing){
+			placeColumn(mgr,r,c,e.minx,e.miny,z,tp);
+			placeColumn(mgr,r,c,e.maxx,e.miny,z,tp);
+		}
+		
+	}
+
+	/**
+	 * General turtleriffic post placement system, for roof gardens primarily
+	 * @param mgr
+	 * @param room
+	 * @param c
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param tp
+	 */
+	public static void placePost(MaterialManager mgr, Room room, Castle c, int x, int y, int z,
+			int tp) {
+		Turtle t = new Turtle(mgr, c.getWorld(), new IntVector(x, y + 1, z),
+				Direction.NORTH);
+		t.setRoom(room);
+		
+		switch (tp & 7) {
+		case 0:
+			t.run("m1wu.Mtw");
+			break;
+		case 1:
+			t.run("m2wu.m2wu.Mtw");
+			break;
+		case 2:
+			t.run("mowu.m1wu.Mtw");
+			break;
+		case 3:
+			t.run("m1wu.mpwu.Mtw");
+			break;
+		case 4:
+			t.run("mowu.mpwu.Mtw");
+			break;
+		case 5:
+			t.run("mpwu.Mtw");
+			break;
+		case 6:
+			t.run("mowu.Mtw");
+			break;
+		case 7:
+			t.run("m1wu.m2wu.m1wu.m2w.Mt.fwbbwfLwRRw");
+			break;
+		}
+	}
+
+	/**
+	 * Column placement 
+	 * @param mgr
+	 * @param room
+	 * @param c
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param tp
+	 */
+	public static void placeColumn(MaterialManager mgr, Room room, Castle c, int x, int y, int z,
+			int tp) {
+		Turtle t = new Turtle(mgr, c.getWorld(), new IntVector(x, y, z),
+				Direction.NORTH);
+		t.setRoom(room);
+		t.clrModeFlag(Turtle.CHECKWRITE); // containing room check will still work
+		
+		switch (tp & 7) {
+		case 0:
+			t.run("m1:wu");
+			break;
+		case 1:
+			t.run("m2:wu");
+			break;
+		case 2:
+			t.run(":mowu.m1wu");
+			break;
+		case 3:
+			t.run("mp:wu");
+			break;
+		case 4:
+			t.run(":m1wu.m2wu");
+			break;
+		case 5:
+			t.run(":mowu.m2wu");
+			break;
+		case 6:
+			t.run("m1wu:mowu.m1wu.m1wu");
+			break;
+		case 7:
+			t.run("m1wu.m2wu.m1wu.m2w.Mt.fwbbwfLwRRwL:m1wu.m2wu");
+			break;
+		}
 	}
 
 }

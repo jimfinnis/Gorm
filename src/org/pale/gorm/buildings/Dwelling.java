@@ -26,8 +26,6 @@ public class Dwelling extends Building {
 				BuildingType.DWELLING,
 				BuildingType.DWELLING,
 				BuildingType.GARDEN,
-				BuildingType.GARDEN,
-				BuildingType.GARDEN,
 				BuildingType.HALL,
 				BuildingType.HALL,
 				BuildingType.HALL

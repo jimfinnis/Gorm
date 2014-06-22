@@ -18,13 +18,13 @@ public class Hall extends Building {
 	}
 
 	public Hall(Building parent) {
-		setStandardInitialExtent(parent, 1.5, 1.5);
+		setStandardInitialExtent(parent, 2, 2);
 	}
 
 	@Override
 	public Building createChildBuilding(Random r) {
 		return BuildingFactory.createRandom(this, new BuildingType[] {
-				BuildingType.PATH, BuildingType.GARDEN, BuildingType.GARDEN,
+				BuildingType.PATH, BuildingType.GARDEN,
 				BuildingType.CORRIDOR, BuildingType.CORRIDOR,
 				BuildingType.HALL, BuildingType.HALL, });
 	}

@@ -164,7 +164,6 @@ public class Furniture {
 		boolean isLit = true;
 		
 		int tp = c.r.nextInt(); // column type
-		
 		for(x=e.minx;x<=e.maxx;x+=spacing){
 			placeColumn(mgr,r,c,x,e.miny,e.minz,tp);
 			placeColumn(mgr,r,c,x,e.miny,e.maxz,tp);

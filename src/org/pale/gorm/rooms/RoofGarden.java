@@ -32,6 +32,10 @@ public class RoofGarden extends Room {
 		setOutside();
 	}
 
+	public boolean canBeBelowGallery() {
+		return false;
+	}
+
 	/**
 	 * Note - this changes the extent of the building, adding a new "room" on
 	 * top.
@@ -51,19 +55,18 @@ public class RoofGarden extends Room {
 		// build the floor, using same material as underfloor for edge
 		c.checkFill(floor, underFloorMaterial, 0);
 
-		isFarm = c.r.nextFloat()<0.1;
+		isFarm = c.r.nextFloat() < 0.1;
 
 		if (isFarm) {
 			Gardener.makeFarm(floor.expand(-1, Extent.X | Extent.Z));
 			if (c.r.nextFloat() < 0.1) {
 				spawnVillager(Villager.Profession.FARMER);
 			}
-		} else 
+		} else
 			c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
 
 		// fill in the perimeter
 		perimeter(mgr, c);
-
 
 		addSignHack();
 

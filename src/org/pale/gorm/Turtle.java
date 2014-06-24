@@ -134,6 +134,9 @@ public class Turtle {
 	// them
 	// in test mode
 	public static final int ENSUREFLOORSUPPORT = 2048;
+	
+	// debugging
+	public static final int DEBUG = 4096;
 
 	/**
 	 * An extent containing all the blocks written by this turtle
@@ -344,6 +347,7 @@ public class Turtle {
 
 	public boolean write() {
 		boolean rv;
+		
 		if (!isModeFlag(CHECKWRITE) || isEmpty(0, 0, 0)) {
 			if (isModeFlag(ENSUREFLOORSUPPORT) && !isSupportedByFloor())
 				rv = false;

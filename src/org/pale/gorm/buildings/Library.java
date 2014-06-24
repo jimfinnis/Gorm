@@ -3,14 +3,10 @@ package org.pale.gorm.buildings;
 import java.util.Random;
 
 import org.pale.gorm.Building;
-import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
-import org.pale.gorm.rooms.Gallery;
 import org.pale.gorm.rooms.LibraryRoom;
-import org.pale.gorm.roomutils.Furniture;
-import org.pale.gorm.roomutils.FurnitureItems;
 
 public class Library extends Building {
 
@@ -36,12 +32,6 @@ public class Library extends Building {
 	
 	@Override
 	protected Room createRoom(MaterialManager mgr, Extent roomExt, Building bld) {
-		// maybe create gallery if there is a room below and we're big enough 
-		if (rooms.peekFirst() != null
-				&& Castle.getInstance().r.nextFloat() < 0.3
-				&& Gallery.bigEnough(bld.getExtent()))
-			return new Gallery(mgr,roomExt,bld);
-
 		return new LibraryRoom(mgr, roomExt, bld);
 	}
 }

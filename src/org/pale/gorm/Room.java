@@ -147,18 +147,45 @@ public abstract class Room implements Comparable<Room> {
 	public boolean hasWindows() {
 		return true;
 	}
-	
-	public void spawnVillager(Villager.Profession p){
+
+	public void spawnVillager(Villager.Profession p) {
 		Location l = e.getCentre().toLocation();
-		Villager v=Castle.getInstance().getWorld().spawn(l, Villager.class);
-		v.setProfession(p);		
+		Villager v = Castle.getInstance().getWorld().spawn(l, Villager.class);
+		v.setProfession(p);
 		Castle.getInstance().incDenizenCount(p);
 	}
-	
-	protected void spawnIronGolem(){
+
+	protected void spawnIronGolem() {
 		Location l = e.getCentre().toLocation();
-		Castle.getInstance().getWorld().spawn(l, IronGolem.class);		
+		Castle.getInstance().getWorld().spawn(l, IronGolem.class);
 	}
+	
+	/**
+	 * Make this room the room below a gallery. This needs to be done before the
+	 * room above is made, and before furniture in this room is planted, so that
+	 * the furniture is not overwritten by the columns.
+	 */
+
+	public void makeBelowGallery(MaterialManager mgr) {
+		int minDim = Math.min(e.xsize(), e.zsize());
+		int gallerySize = minDim / 4;
+		if (gallerySize > 8)
+			gallerySize = 8;
+
+		if (gallerySize < 2)
+			return; // gallery won't be big enough in this room
+
+		// work out where to place the columns, and do so
+		galleryColumnExtent = e.expand(-1, Extent.X | Extent.Z)
+				.getWall(Direction.DOWN)
+				.expand(-gallerySize, Extent.X | Extent.Z).addvec(0, 1, 0);
+
+		galleryColumnExtent.maxy = e.maxy;
+		Furniture.columns(this, galleryColumnExtent, mgr);
+
+	}
+
+
 
 	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
@@ -169,6 +196,39 @@ public abstract class Room implements Comparable<Room> {
 		if (modifiedBldgExtent != null)
 			b.setExtent(modifiedBldgExtent);
 
+		// maybe make this room into a gallery base
+		Castle c = Castle.getInstance();
+		if (c.r.nextFloat() < 0.7 && canBeBelowGallery())
+			makeBelowGallery(mgr);
+		// and if the room below is a gallery base, blow the necessary hole
+		// and fence it.
+		// this room won't have been added, so the last room added - that at
+		// the head of the list - is the one we're interested in.
+		if (!b.rooms.isEmpty()) {
+			// make the fence
+			Room below = b.rooms.getFirst();
+			if (below.galleryColumnExtent != null) {
+				Extent fence = new Extent(below.galleryColumnExtent)
+						.setY(e.miny + 1);
+				c.checkFill(fence, mgr.getFence());
+				// make the hole (overwriting most of the fence we just made)
+				Extent hole = fence.setY(e.miny).expand(-1,
+						Extent.X | Extent.Z).setHeight(3);
+				hole.setHeight(3);
+				GormPlugin.log("Room extent:  "+e.toString());
+				GormPlugin.log("Fence extent: "+fence.toString());
+				GormPlugin.log("Hole extent:  "+hole.toString());
+				c.fill(hole, new MaterialDataPair(Material.EMERALD, 0));
+				// it would be stupid to make furniture in the hole or fence.
+				addBlock(hole.expand(1, Extent.X | Extent.Z));
+			}
+
+		}
+
+	}
+
+	public  boolean canBeBelowGallery() {
+		return true;
 	}
 
 	protected Room setOpenSide(Direction d) {
@@ -221,7 +281,8 @@ public abstract class Room implements Comparable<Room> {
 	 * add carpets (if this room should be carpeted) and lights to a standard
 	 * room, taking into a account the state of repair of the building.
 	 * 
-	 * @param mayHaveCarpets *may* have carpets, depending on grade
+	 * @param mayHaveCarpets
+	 *            *may* have carpets, depending on grade
 	 * @return carpet colour code or -1 for no carpet
 	 */
 	public int lightsAndCarpets(boolean mayHaveCarpets) {
@@ -238,17 +299,18 @@ public abstract class Room implements Comparable<Room> {
 		}
 		return carpetCol;
 	}
-	
+
 	/**
 	 * Add generic unique items, such as a possible spawner in low-grade rooms
+	 * 
 	 * @param mgr
 	 */
-	public void furnishUniques(MaterialManager mgr){
-		if(b.grade()<0.1) // we ONLY place really scary things if the whole building is lowgrade
-			Furniture.place(mgr, this, 
+	public void furnishUniques(MaterialManager mgr) {
+		if (b.grade() < 0.1) // we ONLY place really scary things if the whole
+								// building is lowgrade
+			Furniture.place(mgr, this,
 					FurnitureItems.random(FurnitureItems.uniqueScaryChoices));
 	}
-
 
 	public Extent getExtent() {
 		return e;
@@ -269,7 +331,7 @@ public abstract class Room implements Comparable<Room> {
 		Collections.sort(rooms);
 		for (Room that : rooms) {
 			// don't permit connection to a room we're already connected to
-			if(isConnected(that))
+			if (isConnected(that))
 				continue;
 			// don't try to connect a room to itself or another in the same
 			// building
@@ -315,9 +377,8 @@ public abstract class Room implements Comparable<Room> {
 			return that.makeExitBetweenRooms(this);
 
 	}
-	
-	
-	public boolean isConnected(Room that){
+
+	public boolean isConnected(Room that) {
 		return exitMap.containsKey(that);
 	}
 
@@ -370,7 +431,7 @@ public abstract class Room implements Comparable<Room> {
 			IntVector centreOfIntersection = intersection.getCentre().add(
 					offsetVec.scale(offset));
 
-			if (!intersection.contains(centreOfIntersection)){
+			if (!intersection.contains(centreOfIntersection)) {
 				continue; // slid out of intersection
 			}
 
@@ -379,7 +440,7 @@ public abstract class Room implements Comparable<Room> {
 							+ height, centreOfIntersection.z);
 
 			// don't allow an exit if it is hits the top of either room
-			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy){
+			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy) {
 				continue;
 			}
 
@@ -387,12 +448,12 @@ public abstract class Room implements Comparable<Room> {
 			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,
 					Extent.Y);
 			if (this.windowIntersects(wideexit)
-					|| that.windowIntersects(wideexit)){
-				continue;				
+					|| that.windowIntersects(wideexit)) {
+				continue;
 			}
 
 			// the exit must not intersect any other exits in either building
-			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit)){
+			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit)) {
 				continue;
 			}
 
@@ -476,6 +537,14 @@ public abstract class Room implements Comparable<Room> {
 	private Set<Integer> chunks = null;
 
 	/**
+	 * If this is not null, this room is marked as the area below a gallery and
+	 * a hole should be blown in the room above. The extent itself is the extent
+	 * containing the columns of the gallery, so it's 1 bigger than the hole and
+	 * in the room below.
+	 */
+	private Extent galleryColumnExtent = null;
+
+	/**
 	 * Get the nearby rooms to this one - not necessarily intersecting
 	 * 
 	 * @return
@@ -510,19 +579,16 @@ public abstract class Room implements Comparable<Room> {
 	 * linkage/placement debugging.
 	 */
 	protected void addSignHack() {
-/*
-		IntVector pos = e.getCentre();
-		pos.y = e.miny + 1;
-
-		Block blk = Castle.getInstance().getBlockAt(pos);
-		blk.setType(Material.SIGN_POST);
-		Sign s = (Sign) blk.getState();
-		s.setLine(0, "Room " + Integer.toString(id));
-		s.setLine(1, String.format("Grade %d (%.2f)", b.gradeInt(), b.grade()));
-		s.setLine(2, getClass().getSimpleName() + "/"
-				+ b.getClass().getSimpleName());
-		s.update();
-*/	}
+		/*
+		 * IntVector pos = e.getCentre(); pos.y = e.miny + 1;
+		 * 
+		 * Block blk = Castle.getInstance().getBlockAt(pos);
+		 * blk.setType(Material.SIGN_POST); Sign s = (Sign) blk.getState();
+		 * s.setLine(0, "Room " + Integer.toString(id)); s.setLine(1,
+		 * String.format("Grade %d (%.2f)", b.gradeInt(), b.grade()));
+		 * s.setLine(2, getClass().getSimpleName() + "/" +
+		 * b.getClass().getSimpleName()); s.update();
+		 */}
 
 	/**
 	 * Force updates of the modified chunk to be sent to all players. Not sure
@@ -698,27 +764,27 @@ public abstract class Room implements Comparable<Room> {
 
 		Ladder ladder = new Ladder();
 		ladder.setFacingDirection(BlockFace.NORTH);
-		
-		// fill an area of floor around the ladder hole (deals with roof garden farms!)
+
+		// fill an area of floor around the ladder hole (deals with roof garden
+		// farms!)
 		// First make an extent where the ladder hole is
-		Extent e = new Extent(ladderPos.x,upper.e.miny,ladderPos.z);
-		// then pull it towards the centre of the room by one position in X and Z,
+		Extent e = new Extent(ladderPos.x, upper.e.miny, ladderPos.z);
+		// then pull it towards the centre of the room by one position in X and
+		// Z,
 		// to give a 2x2 hole
 		IntVector cc = upper.e.getCentre();
-		if(e.minx<cc.x)
+		if (e.minx < cc.x)
 			e.maxx++;
 		else
 			e.minx--;
-		if(e.minz<cc.z)
+		if (e.minz < cc.z)
 			e.maxz++;
 		else
 			e.minz--;
-		
-				
-		MaterialManager mgr = new MaterialManager(b.getExtent().getCentre()
-				.getBlock().getBiome()); // *sigh* 
-		Castle.getInstance().fill(e,mgr.getPrimary());
 
+		MaterialManager mgr = new MaterialManager(b.getExtent().getCentre()
+				.getBlock().getBiome()); // *sigh*
+		Castle.getInstance().fill(e, mgr.getPrimary());
 
 		// build up, placing a ladder until we get to the floor above, and go
 		// one square into the room
@@ -731,11 +797,10 @@ public abstract class Room implements Comparable<Room> {
 			b.setType(Material.LADDER);
 			b.setData(ladder.getData());
 		}
-		
-		
+
 		// create an extent a bit wider
-		e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z)
-				.expand(1, Extent.ALL).setHeight(innerLower.ysize());
+		e = new Extent(ladderPos.x, ladderPos.y - 1, ladderPos.z).expand(1,
+				Extent.ALL).setHeight(innerLower.ysize());
 		// and block that off in the lower room, so we don't block the ladder
 		addBlock(e);
 		// now block off the same area in the room above

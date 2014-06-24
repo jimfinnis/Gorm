@@ -10,12 +10,8 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Vine;
 import org.pale.gorm.Extent.LocationRunner;
-import org.pale.gorm.buildings.Garden;
-import org.pale.gorm.buildings.Hall;
-import org.pale.gorm.buildings.Path;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
-import org.pale.gorm.rooms.Gallery;
 import org.pale.gorm.rooms.PlainRoom;
 import org.pale.gorm.rooms.RoofGarden;
 import org.pale.gorm.rooms.SpawnerRoom;
@@ -329,13 +325,6 @@ public abstract class Building {
 	}
 
 	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		// maybe create gallery if there is a room below and we're big enough 
-		if (rooms.peekFirst() != null
-				&& Castle.getInstance().r.nextFloat() < 0.5
-				&& Gallery.bigEnough(bld.getExtent())) {
-			return new Gallery(mgr,roomExt,bld);
-		}
-
 		switch (Castle.getInstance().r.nextInt(15)) {
 		case 0:
 			return new EmptyRoom(mgr, roomExt, bld, true); // with treasure
@@ -348,12 +337,6 @@ public abstract class Building {
 	}
 
 	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		// maybe create gallery if there is a room below and we're big enough 
-		if (rooms.peekFirst() != null
-				&& Castle.getInstance().r.nextFloat() < 0.5
-				&& Gallery.bigEnough(bld.getExtent())) {
-			return new Gallery(mgr,roomExt,bld);
-		}
 		switch (Castle.getInstance().r.nextInt(3)) {
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
@@ -361,12 +344,6 @@ public abstract class Building {
 	}
 
 	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
-		// maybe create gallery if there is a room below and we're big enough 
-		if (rooms.peekFirst() != null
-				&& Castle.getInstance().r.nextFloat() < 0.5
-				&& Gallery.bigEnough(bld.getExtent())) {
-			return new Gallery(mgr,roomExt,bld);
-		}
 		switch (Castle.getInstance().r.nextInt(5)) {
 		default:
 			return new PlainRoom(mgr, roomExt, bld);
@@ -398,7 +375,7 @@ public abstract class Building {
 	protected void addRoomAndBuildExitUp(Room r, boolean outside) {
 		Room upperFloor = rooms.peekLast(); // any prior floor will be the last
 		// item
-		addRoomBasement(r); // adds to head
+		addRoomBasement(r); // adds to tail
 		if (upperFloor != null) {
 			// there is a floor below - try to build some kind of link down
 			r.buildVerticalExitUpTo(upperFloor);
@@ -495,7 +472,7 @@ public abstract class Building {
 			dz = extent.zsize() <= 8 ? extent.zsize() - 1
 					: calcUnderfill(extent.zsize() - 1);
 		}
-
+		
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
@@ -723,5 +700,4 @@ public abstract class Building {
 			}
 		});
 	}
-
 }

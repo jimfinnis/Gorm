@@ -34,8 +34,7 @@ public class Castle {
 	private static Castle instance;
 	private World world;
 	public Random r = new Random();
-	private HashMap<Profession,Integer> denizenCounts = new HashMap<Profession,Integer>();
-
+	private HashMap<Profession, Integer> denizenCounts = new HashMap<Profession, Integer>();
 
 	/**
 	 * Each chunk has a list of rooms which intersect it. Naturally, a room is
@@ -56,7 +55,7 @@ public class Castle {
 	 * Private ctor so this is a singleton
 	 */
 	private Castle() {
-		for(Profession p: Profession.values()){
+		for (Profession p : Profession.values()) {
 			denizenCounts.put(p, 0);
 		}
 	}
@@ -205,6 +204,7 @@ public class Castle {
 		checkFill(e, mp.m, mp.d);
 	}
 
+
 	/**
 	 * Fill a wall extent (i.e. one of the dimensions must be of zero width)
 	 * with a pattern of materials. There's an assumption that it's not a floor
@@ -216,8 +216,10 @@ public class Castle {
 	 * @param n
 	 *            number of elements in array (might want to use a subset)
 	 */
-	public void patternFill(Extent wallExtent, MaterialDataPair[] mats, int n, Random rnd) {
-		if(rnd==null)rnd=r;
+	public void patternFill(Extent wallExtent, MaterialDataPair[] mats, int n,
+			Random rnd) {
+		if (rnd == null)
+			rnd = r;
 		// work out the zero axis
 		int shortAxis = wallExtent.getShortestAxis();
 		// work out the long axis
@@ -390,21 +392,19 @@ public class Castle {
 	 * that.
 	 * 
 	 * @param b
+	 * @param mode
 	 * @return
 	 */
 	public static boolean canOverwrite(Block b) {
 		Material m = b.getType();
 		// this is going to be hideous if they remove getData().
 		byte data = b.getData();
-		// materials walls can be made of
-		if (m == Material.SMOOTH_BRICK || m == Material.WOOD
-				|| m == Material.BRICK || m == Material.COBBLESTONE
+
+		if(m == Material.SMOOTH_BRICK || m == Material.WOOD
+				|| m == Material.BRICK || m == Material.COBBLESTONE 
 				|| (m == Material.SANDSTONE && data != 0) || isStairs(m))
 			return false;
-
-		// check for 'inside' air which we can't overwrite
-		if (m == Material.AIR && data == 1)
-			return false;
+		
 		return true;
 	}
 
@@ -414,7 +414,7 @@ public class Castle {
 	 * @param e
 	 * @param checkOverwrite
 	 */
-	private void fillBrickWithCracksAndMoss(Extent e, boolean checkOverwrite) {
+	private void fillBrickWithCracksAndMoss(Extent e, boolean checkFill) {
 		int t = 0;
 		int dataVals[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, 2, 2, 1, 2 };
@@ -422,7 +422,7 @@ public class Castle {
 			for (int y = e.miny; y <= e.maxy; y++) {
 				for (int z = e.minz; z <= e.maxz; z++) {
 					Block b = world.getBlockAt(x, y, z);
-					if (!checkOverwrite || canOverwrite(b)) {
+					if (!checkFill || canOverwrite(b)) {
 						b.setType(Material.SMOOTH_BRICK);
 						b.setData((byte) dataVals[r.nextInt(dataVals.length)]);
 					}
@@ -612,15 +612,14 @@ public class Castle {
 
 		}
 	}
-	
+
 	public Map<Profession, Integer> getDenizenCounts() {
 		return denizenCounts;
 	}
 
 	public void incDenizenCount(Profession p) {
-		denizenCounts.put(p, denizenCounts.get(p)+1);
-		
-	}
+		denizenCounts.put(p, denizenCounts.get(p) + 1);
 
+	}
 
 }

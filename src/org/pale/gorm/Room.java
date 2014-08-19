@@ -159,7 +159,7 @@ public abstract class Room implements Comparable<Room> {
 		Location l = e.getCentre().toLocation();
 		Castle.getInstance().getWorld().spawn(l, IronGolem.class);
 	}
-	
+
 	/**
 	 * Make this room the room below a gallery. This needs to be done before the
 	 * room above is made, and before furniture in this room is planted, so that
@@ -185,8 +185,6 @@ public abstract class Room implements Comparable<Room> {
 
 	}
 
-
-
 	protected Room(MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
 		this.e = new Extent(e);
@@ -204,7 +202,7 @@ public abstract class Room implements Comparable<Room> {
 		// and fence it.
 		// this room won't have been added, so the last room added - that at
 		// the head of the list - is the one we're interested in.
-		if (!b.rooms.isEmpty()) {
+		if (!b.rooms.isEmpty() && canHaveHoleInFloor()) {
 			// make the fence
 			Room below = b.rooms.getFirst();
 			if (below.galleryColumnExtent != null) {
@@ -212,13 +210,13 @@ public abstract class Room implements Comparable<Room> {
 						.setY(e.miny + 1);
 				c.checkFill(fence, mgr.getFence());
 				// make the hole (overwriting most of the fence we just made)
-				Extent hole = fence.setY(e.miny).expand(-1,
-						Extent.X | Extent.Z).setHeight(3);
-				hole.setHeight(3);
-				GormPlugin.log("Room extent:  "+e.toString());
-				GormPlugin.log("Fence extent: "+fence.toString());
-				GormPlugin.log("Hole extent:  "+hole.toString());
-				c.fill(hole, new MaterialDataPair(Material.EMERALD, 0));
+				/// (and also part of the underfloor)
+				Extent hole = fence.setY(e.miny-1).expand(-1,
+						Extent.X | Extent.Z).setHeight(4);
+				GormPlugin.log("Room extent:  " + e.toString());
+				GormPlugin.log("Fence extent: " + fence.toString());
+				GormPlugin.log("Hole extent:  " + hole.toString());
+				c.fill(hole, new MaterialDataPair(Material.AIR, 0));
 				// it would be stupid to make furniture in the hole or fence.
 				addBlock(hole.expand(1, Extent.X | Extent.Z));
 			}
@@ -227,8 +225,16 @@ public abstract class Room implements Comparable<Room> {
 
 	}
 
-	public  boolean canBeBelowGallery() {
+	public boolean canHaveHoleInFloor() {
+		// TODO Auto-generated method stub
 		return true;
+	}
+
+	public boolean canBeBelowGallery() {
+		// by default, only indoors rooms can be a "below gallery", and
+		// so filled with columns.
+		// Other classes might override this,
+		return indoors;
 	}
 
 	protected Room setOpenSide(Direction d) {
@@ -835,6 +841,10 @@ public abstract class Room implements Comparable<Room> {
 			if (e.intersects(wallExtent))
 				i.remove();
 		}
+	}
+
+	public boolean tallNeighbourRequired() {
+		return false;
 	}
 
 }

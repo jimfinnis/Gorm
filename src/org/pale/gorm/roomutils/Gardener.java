@@ -27,7 +27,7 @@ public class Gardener {
 			public void run(int x, int y, int z) {
 				MaterialDataPair mat = null;
 
-				if (c.r.nextFloat() < 0.1) {
+				if (c.r.nextFloat() < 0.7) {
 					switch (c.r.nextInt(10)) {
 					case 0:
 						mat = new MaterialDataPair(Material.YELLOW_FLOWER, 0);
@@ -53,39 +53,39 @@ public class Gardener {
 					}
 				}
 				if (mat != null) {
-					Block b = w.getBlockAt(x, y-1, z);
-					if(b.getType() == Material.GRASS || b.getType()==Material.DIRT){
+					Block b = w.getBlockAt(x, y - 1, z);
+					if (b.getType() == Material.GRASS
+							|| b.getType() == Material.DIRT) {
 						b = w.getBlockAt(x, y, z);
-						b.setType(mat.m);
-						b.setData((byte) mat.d);
+						if (b.getType() == Material.AIR) {
+							b = w.getBlockAt(x, y, z);
+							b.setType(mat.m);
+							b.setData((byte) mat.d);
+						}
 					}
 				}
 			}
 		});
 
 	}
-	
-	
-	private static final Material[] crops = {
-		Material.CROPS, Material.CROPS,Material.CROPS,
-		Material.CARROT,
-		Material.POTATO
-	};
-	
 
-	public static void makeFarm(Extent floor){
+	private static final Material[] crops = { Material.CROPS, Material.CROPS,
+			Material.CROPS, Material.CARROT, Material.POTATO };
+
+	public static void makeFarm(Extent floor) {
 		Castle c = Castle.getInstance();
 		c.fill(floor, new MaterialDataPair(Material.SOIL, 0));
-		
-		MaterialDataPair crop = new MaterialDataPair(crops[c.r.nextInt(crops.length)], 0);
+
+		MaterialDataPair crop = new MaterialDataPair(
+				crops[c.r.nextInt(crops.length)], 0);
 
 		for (int x = floor.minx; x <= floor.maxx; x++) {
 			Extent tmp = new Extent(floor).setX(x);
 			if ((x - floor.minx) % 3 == 2) {
 				c.fill(tmp, new MaterialDataPair(Material.WATER, 0));
-				c.fill(tmp.setZ((floor.minz+floor.maxz)/2).addvec(0, 1, 0),
+				c.fill(tmp.setZ((floor.minz + floor.maxz) / 2).addvec(0, 1, 0),
 						new MaterialDataPair(Material.STEP, 0));
-				
+
 			} else {
 				c.fill(tmp.addvec(0, 1, 0), crop);
 			}

@@ -32,14 +32,17 @@ public class RoofGarden extends Room {
 		setOutside();
 	}
 
+	@Override
 	public boolean canBeBelowGallery() {
 		return false;
 	}
 
-	/**
-	 * Note - this changes the extent of the building, adding a new "room" on
-	 * top.
-	 */
+	@Override
+	public boolean tallNeighbourRequired() {
+		return false;
+	}
+	
+
 	@Override
 	public Extent build(MaterialManager mgr, Extent buildingExtent) {
 		Castle c = Castle.getInstance();
@@ -55,15 +58,7 @@ public class RoofGarden extends Room {
 		// build the floor, using same material as underfloor for edge
 		c.checkFill(floor, underFloorMaterial, 0);
 
-		isFarm = c.r.nextFloat() < 0.1;
-
-		if (isFarm) {
-			Gardener.makeFarm(floor.expand(-1, Extent.X | Extent.Z));
-			if (c.r.nextFloat() < 0.1) {
-				spawnVillager(Villager.Profession.FARMER);
-			}
-		} else
-			c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
+		c.fill(floor.expand(-1, Extent.X | Extent.Z), mgr.getGround());
 
 		// fill in the perimeter
 		perimeter(mgr, c);
@@ -77,7 +72,9 @@ public class RoofGarden extends Room {
 		return buildingExtent; // return modified building extent
 	}
 
-	private void perimeter(MaterialManager mgr, Castle c) {
+
+
+	protected void perimeter(MaterialManager mgr, Castle c) {
 		// bitfield describing the perimeter posts
 		// bits 0-2 are the post types
 		// bit 4 if means 'alternate block with secondary if wall is odd length'
@@ -173,13 +170,9 @@ public class RoofGarden extends Room {
 
 	@Override
 	public void furnish(MaterialManager mgr) {
-		if (!isFarm) {
-			Extent floor = e.getWall(Direction.DOWN);
-			if (Castle.getInstance().r.nextFloat() < 0.5)
-				Gardener.plant(floor.expand(-1, Extent.X | Extent.Z));
-			else {
-			}
-		}
+		Extent floor = e.getWall(Direction.DOWN);
+		if (Castle.getInstance().r.nextFloat() < 0.5)
+			Gardener.plant(floor.expand(-1, Extent.X | Extent.Z));
 	}
 
 }

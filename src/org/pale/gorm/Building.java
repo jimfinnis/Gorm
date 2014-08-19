@@ -13,6 +13,7 @@ import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
 import org.pale.gorm.rooms.PlainRoom;
+import org.pale.gorm.rooms.RoofFarm;
 import org.pale.gorm.rooms.RoofGarden;
 import org.pale.gorm.rooms.SpawnerRoom;
 import org.pale.gorm.roomutils.BoxBuilder;
@@ -118,7 +119,7 @@ public abstract class Building {
 		double variance = Noise.noise2Dfractal(loc.x,loc.z,2,1,3,0.5);
 
 		// TODO this is a blatant special case hack.
-		if(parent.rooms.getFirst() instanceof RoofGarden && rnd.nextFloat()<0.8) {
+		if(parent.rooms.getFirst().tallNeighbourRequired() && rnd.nextFloat()<0.8) {
 			// if the top room of the parent has a garden, high chance that we're a good bit taller.
 			y = parent.extent.ysize() + 4 + rnd.nextInt((int)(height*10.0));
 		} else {
@@ -219,7 +220,11 @@ public abstract class Building {
 	 * below for the underfloor.
 	 */
 	private void buildRoofGarden(MaterialManager mgr, Extent e) {
-		Room r = new RoofGarden(mgr, e, this);
+		Room r;
+		if(Castle.getInstance().r.nextFloat()<0.2)
+			r = new RoofFarm(mgr, e, this);
+		else
+			r = new RoofGarden(mgr, e, this);
 		addRoomAndBuildExitDown(r, true);
 	}
 
@@ -577,6 +582,8 @@ public abstract class Building {
 	public void setExtent(Extent e) {
 		extent = new Extent(e);
 	}
+	
+
 
 	/**
 	 * Force update packet sending

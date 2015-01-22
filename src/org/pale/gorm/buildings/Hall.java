@@ -23,9 +23,10 @@ public class Hall extends Building {
 
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, new BuildingType[] {
-				BuildingType.PATH, BuildingType.GARDEN,
-				BuildingType.CORRIDOR, BuildingType.CORRIDOR,
-				BuildingType.HALL, BuildingType.HALL, });
+		return BuildingFactory.createRandom2(this,
+				BuildingType.PATH,1,
+				BuildingType.GARDEN,1,
+				BuildingType.CORRIDOR,2,
+				BuildingType.HALL,2);
 	}
 }

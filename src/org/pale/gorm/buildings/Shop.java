@@ -19,10 +19,10 @@ public class Shop extends Building {
 
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, new BuildingType[] {
-				BuildingType.PATH, BuildingType.CORRIDOR, BuildingType.GARDEN,
-				BuildingType.DWELLING, BuildingType.DWELLING,
-				BuildingType.DWELLING, BuildingType.DWELLING, });
+		return BuildingFactory.createRandom2(this, BuildingType.PATH,1,
+				BuildingType.CORRIDOR,1,
+				BuildingType.GARDEN,2,
+				BuildingType.DWELLING,4);
 	}
 
 	@Override

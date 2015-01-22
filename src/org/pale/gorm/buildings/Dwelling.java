@@ -15,28 +15,12 @@ public class Dwelling extends Building {
 	
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, 
-				new BuildingType[] {
-				BuildingType.CORRIDOR,
-				BuildingType.CORRIDOR,
-				BuildingType.CORRIDOR,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.GARDEN,
-				BuildingType.FARM,
-				BuildingType.FARM,
-				BuildingType.HALL,
-				BuildingType.HALL,
-				BuildingType.HALL,
-				BuildingType.HALL,
-				BuildingType.HALL
-				});
+		return BuildingFactory.createRandom2(this, 
+				BuildingType.CORRIDOR,3,
+				BuildingType.DWELLING,8,
+				BuildingType.GARDEN,7,
+				BuildingType.FARM,2,
+				BuildingType.HALL,5);
 	}
 	
 	

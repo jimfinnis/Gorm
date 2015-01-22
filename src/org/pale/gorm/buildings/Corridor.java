@@ -52,19 +52,13 @@ public class Corridor extends Building {
 
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, 
-				new BuildingType[] {
-				BuildingType.CORRIDOR,
-				BuildingType.CORRIDOR,
-				BuildingType.CORRIDOR,
-				BuildingType.LIBRARY,
-				BuildingType.HALL,
-				BuildingType.HALL,
-				BuildingType.DWELLING,
-				BuildingType.DWELLING,
-				BuildingType.SHOP,
-				BuildingType.SHOP,
-				});
+		return BuildingFactory.createRandom2(this,
+				BuildingType.CORRIDOR,3,
+				BuildingType.LIBRARY,1,
+				BuildingType.HALL,2,
+				BuildingType.DWELLING,2,
+				BuildingType.SHOP,2,
+				BuildingType.GARDEN,2);
 	}
 
 	@Override

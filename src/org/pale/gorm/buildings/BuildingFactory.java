@@ -4,6 +4,8 @@ import java.util.Random;
 
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
+import org.pale.gorm.RandomCollection;
+import org.pale.gorm.Util;
 
 public class BuildingFactory {
 	
@@ -21,8 +23,7 @@ public class BuildingFactory {
 		}
 	}
 	
-	static Building createRandom(Building parent,BuildingType[] arr){
-		Random r = Castle.getInstance().r;
-		return create(parent,arr[r.nextInt(arr.length)]);
+	static Building createRandom2(Building parent, Object... typeAndWeightPairs){
+		return create(parent,Util.<BuildingType>choose(typeAndWeightPairs));
 	}
 }

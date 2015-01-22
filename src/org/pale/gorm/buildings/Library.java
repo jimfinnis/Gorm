@@ -16,17 +16,14 @@ public class Library extends Building {
 	
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, 
-				new BuildingType[] {
-				BuildingType.PATH,
-				BuildingType.GARDEN,
-				BuildingType.CORRIDOR,
-				BuildingType.HALL,
-				BuildingType.LIBRARY,
-				BuildingType.LIBRARY,
-				BuildingType.DWELLING
-				
-				});
+		return BuildingFactory.createRandom2(this, 
+				BuildingType.PATH,1,
+				BuildingType.GARDEN,1,
+				BuildingType.CORRIDOR,1,
+				BuildingType.HALL,1,
+				BuildingType.LIBRARY,2,
+				BuildingType.DWELLING,1
+				);
 	}
 	
 	

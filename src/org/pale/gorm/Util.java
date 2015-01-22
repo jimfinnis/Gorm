@@ -20,6 +20,41 @@ public class Util {
 		} while (i >= n);
 		return i;
 	}
+	
+	/**
+	 * Given an array (or varargs) of object,weight,object,weight,
+	 * pick an item.
+	 * @param objsAndWeights object,weight,object,weight etc.
+	 * @return
+	 */
+
+	@SuppressWarnings("unchecked")
+	public
+	static <T> T choose(Object... objsAndWeights){
+		double totalf=0;
+		for(int i=0;i<objsAndWeights.length;i+=2){
+			Object oo = objsAndWeights[i];
+			Object wo = objsAndWeights[i+1];
+			if(!(oo instanceof Object))
+				throw new RuntimeException("Bad type in building list (item)");
+			if(!(wo instanceof Integer))
+				throw new RuntimeException("Bad type in building list (expected int)");
+			int f = (Integer)wo;
+			totalf += f;
+		}
+		
+		double r = Castle.getInstance().r.nextDouble()*totalf;
+		
+		double countf=0;
+		for(int i=0;i<objsAndWeights.length;i+=2){
+			int f = (Integer)(objsAndWeights[i+1]);
+			countf += (double)(f);
+			if(countf>=r){
+				return (T)(objsAndWeights[i]);
+			}
+		}
+		throw new RuntimeException("out of options in choose");
+	}
 
 
 }

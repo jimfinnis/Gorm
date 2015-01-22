@@ -17,9 +17,13 @@ public class Farm extends Garden {
 
 	@Override
 	public Building createChildBuilding(Random r) {
-		return BuildingFactory.createRandom(this, new BuildingType[] {
-				BuildingType.PATH, BuildingType.LIBRARY, BuildingType.HALL,
-				BuildingType.DWELLING, BuildingType.SHOP, });
+		return BuildingFactory.createRandom2(this,
+				BuildingType.PATH,1,
+				BuildingType.LIBRARY,1,
+				BuildingType.HALL,1,
+				
+				BuildingType.DWELLING,1,
+				BuildingType.SHOP,1);
 
 	}
 

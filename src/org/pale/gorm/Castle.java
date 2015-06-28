@@ -209,16 +209,18 @@ public class Castle {
         // to drop, unless there's something under it.
         // Even when it's attached to a wall.
         // Madness.
+       
+       Block bunder = w.getBlockAt(x, y-1, z);
+       if(canOverwrite(bunder) && canOverwrite(b)){
+           bunder.setType(Material.DIRT);
         
-        Block bunder = w.getBlockAt(x, y-1, z);
-        bunder.setType(Material.DIRT);
+           Torch t = new Torch(Material.TORCH);
+           t.setFacingDirection(dir);
+           b.setType(Material.TORCH);
+           b.setData(t.getData());
         
-        Torch t = new Torch(Material.TORCH);
-        t.setFacingDirection(dir);
-        b.setType(Material.TORCH);
-        b.setData(t.getData());
-        
-        bunder.setType(Material.AIR);
+           bunder.setType(Material.AIR);
+       }
     }
 	public void checkFill(Extent e, MaterialDataPair mp) {
 		checkFill(e, mp.m, mp.d);

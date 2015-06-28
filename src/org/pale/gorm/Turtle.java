@@ -10,13 +10,18 @@ import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.EntityType;
 import org.bukkit.material.Bed;
 import org.bukkit.material.Sign;
 import org.bukkit.material.Stairs;
+import org.bukkit.material.MaterialData;
+import org.bukkit.material.FlowerPot;
 import org.pale.gorm.roomutils.DungeonObjects;
+import org.pale.gorm.GormPlugin;
 
 /**
  * An attempt to write a class for building things independent of orientation,
@@ -216,15 +221,17 @@ public class Turtle {
 		});
 		setWriter('p', new TurtleWriter() {
 			@Override
-			// TODO add to this when actual flowerpots are implemented, so we
-			// don't
-			// have to muck about with NBT
 			public void write(Turtle t, IntVector loc, IntVector dir) {
-				Block b = t.castle.getBlockAt(loc);
-				b.setType(Material.FLOWER_POT);
-				BlockState bs = b.getState();
-			}
-		});
+                          Block b = t.castle.getBlockAt(loc);
+                          b.setType(Material.FLOWER_POT);
+                          
+                          // this doesn't work at the moment.
+                          FlowerPot p = new FlowerPot(Material.FLOWER_POT);
+                          p.setContents(new MaterialData(Material.RED_ROSE));
+                          b.setData(p.getData());
+                      }
+                          
+                      });
 	}
 
 	/**

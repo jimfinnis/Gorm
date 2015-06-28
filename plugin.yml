@@ -1,6 +1,6 @@
 name: Gorm
 main: org.pale.gorm.GormPlugin
-version: 1.0
+version: 1.1
 commands:
   build:
     description: Build the next room

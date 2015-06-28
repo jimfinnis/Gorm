@@ -2,6 +2,7 @@ package org.pale.gorm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -301,15 +302,14 @@ public final class GormPlugin extends JavaPlugin {
 	}
 
 	private void gt(Player p, String str) {
-		Location loc = p.getLocation();
+            Location loc = p.getLocation();
 
-		float f = loc.getYaw();
-		Direction dir = IntVector.yawToDir(f);
-
-		IntVector pos = new IntVector(p.getTargetBlock(null, 100).getLocation());
-		MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
-		Turtle t = new Turtle(mgr, p.getWorld(), pos, dir);
-		t.run(str);
+            float f = loc.getYaw();
+            Direction dir = IntVector.yawToDir(f);
+            IntVector pos = new IntVector(p.getTargetBlock((HashSet<Byte>)null, 100).getLocation());
+            MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
+            Turtle t = new Turtle(mgr, p.getWorld(), pos, dir);
+            t.run(str);
 
 	}
 

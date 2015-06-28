@@ -39,13 +39,13 @@ public class ExitDecorator {
 		lintel.y = e.getExtent().maxy + 1;
 		IntVector lightPos = lintel.add(e.getDirection().vec);
 		if (c.r.nextFloat() < 0.2
-				|| Castle.requiresLight(lightPos.x, lightPos.y, lightPos.z)) {
-			c.checkFill(new Extent(lightPos, 0, 0, 0), Material.TORCH, 0);
+                    || Castle.requiresLight(lightPos.x, lightPos.y, lightPos.z)) {
+                    c.addLightToWall(lightPos.x,lightPos.y,lightPos.z,e.getDirection().vec.toBlockFace());
 		}
 		lightPos = lintel.add(e.getDirection().vec.negate());
 		if (c.r.nextFloat() < 0.2
 				|| Castle.requiresLight(lightPos.x, lightPos.y, lightPos.z)) {
-			c.checkFill(new Extent(lightPos, 0, 0, 0), Material.TORCH, 0);
+                    c.addLightToWall(lightPos.x,lightPos.y,lightPos.z,e.getDirection().opposite().vec.toBlockFace());
 		}
 
 	}

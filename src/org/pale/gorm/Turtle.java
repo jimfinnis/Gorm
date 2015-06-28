@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.v1_7_R3.TileEntity;
+//SNARK import net.minecraft.server.v1_7_R3.TileEntity;
 
 import org.bukkit.Material;
 import org.bukkit.World;

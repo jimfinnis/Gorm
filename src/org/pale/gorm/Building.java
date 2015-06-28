@@ -9,6 +9,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.Vine;
+import org.bukkit.material.Torch;
 import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
@@ -407,23 +408,25 @@ public abstract class Building {
 	 *            the internal air space of the building
 	 */
 	public void lightWalls(Extent e) {
-
 		int y = e.miny + 4;
 		if (y > e.maxy)
-			y = e.maxy;
+                    y = e.maxy;
+            
+                Castle c = Castle.getInstance();
 		for (int x = e.minx; x <= e.maxx; x++) {
 			if (Castle.requiresLight(x, y, e.minz))
-				addLight(x, y, e.minz);
+				c.addLightToWall(x, y, e.minz,BlockFace.SOUTH);
 			if (Castle.requiresLight(x, y, e.maxz))
-				addLight(x, y, e.maxz);
+				c.addLightToWall(x, y, e.maxz,BlockFace.NORTH);
 		}
 		for (int z = e.minz; z <= e.maxz; z++) {
 			if (Castle.requiresLight(e.minx, y, z))
-				addLight(e.minx, y, z);
+				c.addLightToWall(e.minx, y, z,BlockFace.EAST);
 			if (Castle.requiresLight(e.maxx, y, z))
-				addLight(e.maxx, y, z);
+				c.addLightToWall(e.maxx, y, z,BlockFace.WEST);
 		}
 	}
+
 
 	/**
 	 * Lights on the floor if needed
@@ -563,12 +566,6 @@ public abstract class Building {
 			dPillar = (int) (Math.ceil(size / finalCount));
 		}
 		return dPillar;
-	}
-
-	void addLight(int x, int y, int z) {
-		Block b = Castle.getInstance().getWorld().getBlockAt(x, y, z);
-		b.setData((byte) 0);
-		b.setType(Material.TORCH);
 	}
 
 	public boolean contains(IntVector v) {

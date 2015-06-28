@@ -11,7 +11,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.HashSet;
 
-import net.minecraft.server.v1_7_R3.TileEntity;
+//SNARK import net.minecraft.server.v1_7_R3.TileEntity;
 
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -19,9 +19,10 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
+//SNARK import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
 import org.bukkit.entity.Villager.Profession;
 import org.bukkit.material.Stairs;
+import org.bukkit.material.Torch;
 import org.pale.gorm.roomutils.ExitDecorator;
 
 /**
@@ -200,6 +201,25 @@ public class Castle {
 		}
 	}
 
+   public void addLightToWall(int x, int y, int z,BlockFace dir) {
+        World w = Castle.getInstance().getWorld();
+        Block b = w.getBlockAt(x, y, z);
+        
+        // a hack. Creating a torch will cause it
+        // to drop, unless there's something under it.
+        // Even when it's attached to a wall.
+        // Madness.
+        
+        Block bunder = w.getBlockAt(x, y-1, z);
+        bunder.setType(Material.DIRT);
+        
+        Torch t = new Torch(Material.TORCH);
+        t.setFacingDirection(dir);
+        b.setType(Material.TORCH);
+        b.setData(t.getData());
+        
+        bunder.setType(Material.AIR);
+    }
 	public void checkFill(Extent e, MaterialDataPair mp) {
 		checkFill(e, mp.m, mp.d);
 	}
@@ -490,13 +510,14 @@ public class Castle {
 				|| m == Material.JUNGLE_WOOD_STAIRS || m == Material.SPRUCE_WOOD_STAIRS);
 	}
 
-	public void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
-		Block b = world.getBlockAt(x, y, z);
-		Stairs s = new Stairs(mat);
-		s.setFacingDirection(dir);
-		b.setData(s.getData());
-		b.setType(s.getItemType());
-	}
+    public void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
+        Block b = world.getBlockAt(x, y, z);
+        b.setType(mat);
+        Stairs matStairs = new Stairs(mat);
+        matStairs.setFacingDirection(dir);
+        b.setData(matStairs.getData());
+    }
+    
 
 	@SuppressWarnings("unused")
 	private void replaceSolidWithAir(Extent e) {

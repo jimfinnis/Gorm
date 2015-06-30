@@ -15,7 +15,6 @@ public class LibraryRoom extends PlainRoom {
 
 	public LibraryRoom(MaterialManager mgr, Extent e, Building b) {
 		super(mgr, e, b);
-		// TODO Auto-generated constructor stub
 	}
 	
 	

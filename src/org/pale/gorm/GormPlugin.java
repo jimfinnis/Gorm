@@ -1,5 +1,6 @@
 package org.pale.gorm;
 
+import java.lang.Class;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -50,7 +51,7 @@ public final class GormPlugin extends JavaPlugin {
 		instance = null;
 		getLogger().info("Gorm has been disabled");
 	}
-	
+
 	public GormPlugin(){
 		super();
 		if(instance!=null)
@@ -129,15 +130,16 @@ public final class GormPlugin extends JavaPlugin {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
-			String label, String[] args) {
-		if (command.getName().equalsIgnoreCase("build")) {
+                  String label, String[] args) {
+            String cn = command.getName();
+		if (cn.equalsIgnoreCase("build")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 
 			buildRandomRoom(p);
 			return true;
-		} else if (command.getName().equalsIgnoreCase("startgorm")) {
+		} else if (cn.equalsIgnoreCase("startgorm")) {
 			if (!playerCheck(sender))
 				return false;
 			final Player p = (Player) sender;
@@ -147,52 +149,58 @@ public final class GormPlugin extends JavaPlugin {
 
 					@Override
 					public void run() {
-						buildRandomRoom(p);
+                                            buildRandomRoom(p);
 					}
 
 				};
 				task = r.runTaskTimer(this, 0, 60); // about every s
 			}
 			return true;
-		} else if (command.getName().equalsIgnoreCase("stopgorm")) {
+		} else if (cn.equalsIgnoreCase("stopgorm")) {
 			stopGormProcess();
 			return true;
-		} else if (command.getName().equalsIgnoreCase("razegorm")) {
+		} else if (cn.equalsIgnoreCase("razegorm")) {
 			Castle.getInstance().raze();
 			return true;
-		} else if (command.getName().equalsIgnoreCase("gt")) {
+		} else if (cn.equalsIgnoreCase("gt")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 			gt(p, args[0]);
 			return true;
-		} else if (command.getName().equalsIgnoreCase("shb")) {
+		} else if (cn.equalsIgnoreCase("shb")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 			showBlocks(p);
 			return true;
-		} else if(command.getName().equalsIgnoreCase("deni")) {
+		} else if(cn.equalsIgnoreCase("deni")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 			deni(p);
-		} else if (command.getName().equalsIgnoreCase("mke")) {
+		} else if (cn.equalsIgnoreCase("mke")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 			makeExitManually(p);
 			return true;
-		} else if (command.getName().equalsIgnoreCase("flatten")) {
+		} else if (cn.equalsIgnoreCase("flatten")) {
 			if (!playerCheck(sender))
 				return false;
 			Player p = (Player) sender;
 			flatten(p);
 			return true;
+		} else if (cn.equalsIgnoreCase("roominfo")){
+			if (!playerCheck(sender))
+				return false;
+			Player p = (Player) sender;
+			roomInfo(p);
+			return true;
 		}
 		return false;
 	}
-	
+
 	private void testRoom(final Room r){
 		final Castle c = Castle.getInstance();
 		r.getExtent().runOnAllLocations(new Extent.LocationRunner(){
@@ -202,73 +210,73 @@ public final class GormPlugin extends JavaPlugin {
 //				if(r.isBlocked(new Extent(x,y,z))){
 					c.getWorld().getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK);
 //				}
-				
+
 			}});
-		
+
 	}
 
 	private void showBlocks(Player p) {
 		// IntVector pos = new IntVector(p.getLocation());
 		Castle c = Castle.getInstance();
 		c.setWorld(p.getWorld());
-		
+
 		IntVector pos = new IntVector(p.getLocation());
-		
+
 		for(Room r: c.getRooms()){
 			if(r.getExtent().contains(pos))
 				testRoom(r);
-			
+
 		}
 	}
 
-	private void makeExitManually(Player p) {
-		// IntVector pos = new IntVector(p.getLocation());
-		Castle c = Castle.getInstance();
-		c.setWorld(p.getWorld());
-		
-		IntVector pos = new IntVector(p.getLocation());
 
-		Room thisRoom=null,thatRoom=null;
-		for(Room r: c.getRooms()){
-			if(r.getExtent().contains(pos)){
-				thisRoom = r;
-				break;
-			}
+	private void roomInfo(Player p){
+		IntVector pos = new IntVector(p.getLocation());
+		Castle c = Castle.getInstance();
+		Room r = c.getRoomAt(pos);
+		p.sendMessage("Room class: "+r.getClass().getSimpleName());
+		p.sendMessage("Building: "+r.getBuilding().getClass().getSimpleName());
+		if(null==r){
+			p.sendMessage("no room at current location");
+			return;
 		}
+
+	}
+
+	private void makeExitManually(Player p) {
+		IntVector pos = new IntVector(p.getLocation());
+		Castle c = Castle.getInstance();
+		Room thisRoom,thatRoom=null;
+
+		thisRoom = c.getRoomAt(pos);
 		if(thisRoom==null){
 			log("no room at current location");
 			return;
 		}
-			
-		
 		IntVector d= IntVector.yawToDir(p.getLocation().getYaw()).vec;
 		for(int i=0;i<100;i++){
 			pos = pos.add(d);
-			for(Room r: c.getRooms()){
-				if(r!=thisRoom && r.getExtent().contains(pos)){
-					thatRoom = r;
-					break;
-				}
-			}			
+			thatRoom = c.getRoomAt(pos);
+			if(thatRoom!=null)break;
 		}
 		if(thatRoom==null){
 			log("no room along current direction");
 			return;
 		}
-		
+
 		if(thisRoom.getExtent().intersects(thatRoom.getExtent())){
 			thisRoom.makeExitBetweenRooms(thatRoom);
-		} else 
+		} else
 			log("rooms do not intersect");
 	}
-	
+
 	private void deni(Player player){
 		Map<Villager.Profession,Integer> deniCounts = Castle.getInstance().getDenizenCounts();
 		for(Villager.Profession p: deniCounts.keySet()){
 			player.sendMessage(p.toString()+": "+Integer.toString(deniCounts.get(p)));
 		}
 	}
-	
+
 	private void flatten(Player p) {
 		IntVector pos = new IntVector(p.getLocation());
 		int size = 50;
@@ -315,7 +323,7 @@ public final class GormPlugin extends JavaPlugin {
 
 	/**
 	 * Build a random room near a given player
-	 * 
+	 *
 	 * @param p
 	 *            only used to start the build process if there is no existing
 	 *            room.

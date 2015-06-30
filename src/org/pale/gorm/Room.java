@@ -29,9 +29,9 @@ import org.pale.gorm.roomutils.StairBuilder;
 /**
  * A room is a level of a building. Typically it's indoors, but the roof can
  * also constitute a room.
- * 
+ *
  * @author white
- * 
+ *
  */
 public abstract class Room implements Comparable<Room> {
 
@@ -52,6 +52,11 @@ public abstract class Room implements Comparable<Room> {
 	 */
 	protected Extent e;
 	protected Building b;
+
+	public Building getBuilding(){
+		return b;
+	}
+
 
 	/**
 	 * the room is indoors; this is true by default - call setOutside to change
@@ -94,7 +99,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Add a new extent to the list of blocked extents.
-	 * 
+	 *
 	 * @param e
 	 */
 	public void addBlock(Extent e) {
@@ -105,7 +110,7 @@ public abstract class Room implements Comparable<Room> {
 	 * See whether an extent inside the room is blocked by furniture or
 	 * something. Such extents should not have more furniture added here! We
 	 * also check the extent is inside the actual room extent!
-	 * 
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -124,7 +129,7 @@ public abstract class Room implements Comparable<Room> {
 	 * See whether an position inside the room is blocked by furniture or
 	 * something. Such positions should not have more furniture added here! We
 	 * also check the pos is inside the actual room extent!
-	 * 
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -141,7 +146,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Most rooms have windows - override this value to prevent their creation
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean hasWindows() {
@@ -226,7 +231,7 @@ public abstract class Room implements Comparable<Room> {
 	}
 
 	public boolean canHaveHoleInFloor() {
-		// TODO Auto-generated method stub
+		// all rooms can have a hole in the floor, it seems.
 		return true;
 	}
 
@@ -286,7 +291,7 @@ public abstract class Room implements Comparable<Room> {
 	/**
 	 * add carpets (if this room should be carpeted) and lights to a standard
 	 * room, taking into a account the state of repair of the building.
-	 * 
+	 *
 	 * @param mayHaveCarpets
 	 *            *may* have carpets, depending on grade
 	 * @return carpet colour code or -1 for no carpet
@@ -308,7 +313,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Add generic unique items, such as a possible spawner in low-grade rooms
-	 * 
+	 *
 	 * @param mgr
 	 */
 	public void furnishUniques(MaterialManager mgr) {
@@ -324,7 +329,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * try to make an exit with another room with few exits.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean attemptMakeExit() {
@@ -372,7 +377,7 @@ public abstract class Room implements Comparable<Room> {
 	/**
 	 * Exits 'drop down' to the destination, so the destination needs to be
 	 * lower.
-	 * 
+	 *
 	 * @param that
 	 * @return
 	 */
@@ -393,7 +398,7 @@ public abstract class Room implements Comparable<Room> {
 	/**
 	 * This is used to make a random horizontal exit to a room we already know
 	 * intersects enough with us. Public for debugging.
-	 * 
+	 *
 	 * @param that
 	 *            destination room, whose floor is LOWER than us.
 	 */
@@ -404,7 +409,7 @@ public abstract class Room implements Comparable<Room> {
 		 * GormPlugin.log(String.format(
 		 * "attempting to create exit between %d/%d and %d/%d", this.b.id,
 		 * this.id, that.b.id, that.id));
-		 * 
+		 *
 		 * if (this.exitMap.containsKey(that)) {
 		 * GormPlugin.log(String.format("exit already exists")); return false; }
 		 */
@@ -450,14 +455,15 @@ public abstract class Room implements Comparable<Room> {
 				continue;
 			}
 
-			// don't allow an exit if there's a window in the way!
 			Extent wideexit = e.expand(2, Extent.X | Extent.Z).expand(1,
 					Extent.Y);
-			if (this.windowIntersects(wideexit)
+
+			// don't allow an exit if there's a window in the way!
+/*			if (this.windowIntersects(wideexit)
 					|| that.windowIntersects(wideexit)) {
 				continue;
 			}
-
+*/
 			// the exit must not intersect any other exits in either building
 			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit)) {
 				continue;
@@ -530,7 +536,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Obtain the set of chunks which encompasses this room. Will cache the set.
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<Integer> getChunks() {
@@ -552,7 +558,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Get the nearby rooms to this one - not necessarily intersecting
-	 * 
+	 *
 	 * @return
 	 */
 	public Collection<Room> nearbyRooms() {
@@ -566,7 +572,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Get the rooms nearby which intersect
-	 * 
+	 *
 	 * @return
 	 */
 	public Collection<Room> adjacentRooms() {
@@ -587,7 +593,7 @@ public abstract class Room implements Comparable<Room> {
 	protected void addSignHack() {
 		/*
 		 * IntVector pos = e.getCentre(); pos.y = e.miny + 1;
-		 * 
+		 *
 		 * Block blk = Castle.getInstance().getBlockAt(pos);
 		 * blk.setType(Material.SIGN_POST); Sign s = (Sign) blk.getState();
 		 * s.setLine(0, "Room " + Integer.toString(id)); s.setLine(1,
@@ -614,7 +620,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Build an exit up to another room; sometimes stairs, sometimes a ladder.
-	 * 
+	 *
 	 * @param upper
 	 */
 	public void buildVerticalExitUpTo(Room upper) {
@@ -754,7 +760,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Builds a ladder from this room up to another room, in the corner
-	 * 
+	 *
 	 * @param upper
 	 */
 	private void buildCornerLadderUpTo(Room upper) {
@@ -831,7 +837,7 @@ public abstract class Room implements Comparable<Room> {
 
 	/**
 	 * Remove windows intersecting with an extent
-	 * 
+	 *
 	 * @param wallExtent
 	 */
 	public void removeWindows(Extent wallExtent) {

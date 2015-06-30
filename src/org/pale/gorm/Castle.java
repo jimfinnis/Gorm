@@ -27,9 +27,9 @@ import org.pale.gorm.roomutils.ExitDecorator;
 
 /**
  * Singleton class for the whole castle.
- * 
+ *
  * @author white
- * 
+ *
  */
 public class Castle {
 	private static Castle instance;
@@ -63,7 +63,7 @@ public class Castle {
 
 	/**
 	 * MUST call this before building
-	 * 
+	 *
 	 */
 	public void setWorld(World w) {
 		world = w;
@@ -86,9 +86,18 @@ public class Castle {
 		return buildings.size();
 	}
 
+	public Room getRoomAt(IntVector pos){
+		for(Room r: getRooms()){
+			if(r.getExtent().contains(pos)){
+				return r;
+			}
+		}
+	  return null;
+	}
+
 	/**
 	 * Add a building to the internal lists, along with its rooms
-	 * 
+	 *
 	 * @param r
 	 */
 	void addBuilding(Building b) {
@@ -107,7 +116,7 @@ public class Castle {
 	/**
 	 * returns true if e intersects any room at all. This works by iterating
 	 * over the rooms in the chunks for that extent
-	 * 
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -155,7 +164,7 @@ public class Castle {
 	 * Get the grade level for the given extent, in order to determine the
 	 * 'level of upkeep' of this section of the castle. Use this when we do not
 	 * have access to the current building.
-	 * 
+	 *
 	 * @return grade level of the given extent, from 1 to 4
 	 */
 
@@ -176,7 +185,7 @@ public class Castle {
 	/**
 	 * Fill an extent with a material and data, checking we don't overwrite
 	 * certain things
-	 * 
+	 *
 	 * @param e
 	 * @param mat
 	 * @param data
@@ -204,21 +213,21 @@ public class Castle {
    public void addLightToWall(int x, int y, int z,BlockFace dir) {
         World w = Castle.getInstance().getWorld();
         Block b = w.getBlockAt(x, y, z);
-        
+
         // a hack. Creating a torch will cause it
         // to drop, unless there's something under it.
         // Even when it's attached to a wall.
         // Madness.
-       
+
        Block bunder = w.getBlockAt(x, y-1, z);
        if(canOverwrite(bunder) && canOverwrite(b)){
            bunder.setType(Material.DIRT);
-        
+
            Torch t = new Torch(Material.TORCH);
            t.setFacingDirection(dir);
            b.setType(Material.TORCH);
            b.setData(t.getData());
-        
+
            bunder.setType(Material.AIR);
        }
     }
@@ -231,7 +240,7 @@ public class Castle {
 	 * Fill a wall extent (i.e. one of the dimensions must be of zero width)
 	 * with a pattern of materials. There's an assumption that it's not a floor
 	 * or ceiling but I'm sure that could be fixed.
-	 * 
+	 *
 	 * @param wallExtent
 	 * @param mats
 	 *            array of material pairs
@@ -350,7 +359,7 @@ public class Castle {
 
 	/**
 	 * Replace certain blocks within an Extent
-	 * 
+	 *
 	 * @param e
 	 * @param mat
 	 * @param data
@@ -383,7 +392,7 @@ public class Castle {
 	/**
 	 * Fill an extent with a material and data DOES NOT CHECK that the stuff
 	 * we're writing will overwrite anything
-	 * 
+	 *
 	 * @param e
 	 * @param mat
 	 * @param data
@@ -412,7 +421,7 @@ public class Castle {
 	/**
 	 * We should use this when we might overwrite a blg or exit, to prevent
 	 * that.
-	 * 
+	 *
 	 * @param b
 	 * @param mode
 	 * @return
@@ -423,16 +432,16 @@ public class Castle {
 		byte data = b.getData();
 
 		if(m == Material.SMOOTH_BRICK || m == Material.WOOD
-				|| m == Material.BRICK || m == Material.COBBLESTONE 
+				|| m == Material.BRICK || m == Material.COBBLESTONE
 				|| (m == Material.SANDSTONE && data != 0) || isStairs(m))
 			return false;
-		
+
 		return true;
 	}
 
 	/**
 	 * Fill an area with bricks, adding moss and cracks.
-	 * 
+	 *
 	 * @param e
 	 * @param checkOverwrite
 	 */
@@ -489,7 +498,7 @@ public class Castle {
 
 	/**
 	 * Return a list of buildings within a given extent
-	 * 
+	 *
 	 * @return
 	 */
 	public Collection<Building> getBuildingsIntersecting(Extent e) {
@@ -519,7 +528,7 @@ public class Castle {
         matStairs.setFacingDirection(dir);
         b.setData(matStairs.getData());
     }
-    
+
 
 	@SuppressWarnings("unused")
 	private void replaceSolidWithAir(Extent e) {
@@ -558,7 +567,7 @@ public class Castle {
 
 	/**
 	 * add a room to both the room list and the rooms-by-chunk map
-	 * 
+	 *
 	 * @param r
 	 */
 	public void addRoom(Room r) {
@@ -578,7 +587,7 @@ public class Castle {
 
 	/**
 	 * This will return null if a chunk isn't in the map yet
-	 * 
+	 *
 	 * @return
 	 */
 	public Collection<Room> getRoomsByChunk(int key) {
@@ -598,7 +607,7 @@ public class Castle {
 
 	/**
 	 * Useful shortcut for getting a block in the world.
-	 * 
+	 *
 	 * @param pos
 	 * @return
 	 */

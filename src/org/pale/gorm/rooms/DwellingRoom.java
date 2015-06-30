@@ -10,7 +10,6 @@ public class DwellingRoom extends PlainRoom {
 
 	public DwellingRoom(MaterialManager mgr, Extent e, Building b) {
 		super(mgr, e, b);
-		// TODO Auto-generated constructor stub
 	}
 
 

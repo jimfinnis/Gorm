@@ -9,9 +9,9 @@ import org.bukkit.block.Biome;
  * Given a biome, the material manager handles possible materials for walls,
  * columns and fences (and anything else I think of). The idea is that people
  * building in this biome would use local materials!
- * 
+ *
  * @author white
- * 
+ *
  */
 public class MaterialManager {
 
@@ -26,7 +26,7 @@ public class MaterialManager {
 	private static final int GROUND = 7;
 	private static final int POLE = 8;
 	private static final int WINDOW = 9;
-	
+
 
 	/**
 	 * Each base material has a set of building materials. They're in these
@@ -60,7 +60,7 @@ public class MaterialManager {
 					new MaterialDataPair(Material.NETHER_BRICK_STAIRS, 0) },
 			{ new MaterialDataPair(Material.SOUL_SAND, 0),
 					new MaterialDataPair(Material.NETHERRACK, 0) },
-			{ new MaterialDataPair(Material.NETHER_BRICK, 0) }, 
+			{ new MaterialDataPair(Material.NETHER_BRICK, 0) },
 			{ new MaterialDataPair(Material.IRON_FENCE, 0) }, };
 	static final MaterialDataPair[][] matsNormal = {
 			{ new MaterialDataPair(Material.SMOOTH_BRICK, 0) },
@@ -85,7 +85,7 @@ public class MaterialManager {
 					new MaterialDataPair(Material.GRAVEL, 0),
 					new MaterialDataPair(Material.SAND, 0) },
 			{ new MaterialDataPair(Material.WOOD, 0),
-					new MaterialDataPair(Material.COBBLE_WALL, 0) }, 
+					new MaterialDataPair(Material.COBBLE_WALL, 0) },
 			{ new MaterialDataPair(Material.THIN_GLASS, 0) }, };
 	static final MaterialDataPair[][] matsCobble = {
 			{ new MaterialDataPair(Material.COBBLESTONE, 0) },
@@ -118,7 +118,7 @@ public class MaterialManager {
 		{ new MaterialDataPair(Material.SNOW_BLOCK, 0),
 				new MaterialDataPair(Material.GRASS, 0),},
 		{ new MaterialDataPair(Material.WOOD, 1),
-				new MaterialDataPair(Material.COBBLE_WALL, 0) }, 
+				new MaterialDataPair(Material.COBBLE_WALL, 0) },
 		{ new MaterialDataPair(Material.THIN_GLASS, 0) }, };
 
 	static final MaterialDataPair[][][] matsListsSandy = { matsSand, matsSand,
@@ -132,16 +132,28 @@ public class MaterialManager {
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
 			ground, pole, window;
+
+	// in 1.8, there are several different kinds of door. We have an array
+	// of possible doortypes for different biomes.
+	static final Material doorMatsDefault[] = {
+		Material.WOODEN_DOOR, Material.ACACIA_DOOR, Material.SPRUCE_DOOR,
+		Material.WOODEN_DOOR, Material.WOODEN_DOOR, Material.DARK_OAK_DOOR,
+		Material.IRON_DOOR
+	};
+
 	private Material stairs, roofSteps;
+  private Material doorMats[];
 
 	public MaterialManager(Biome b) {
 		Random r = Castle.getInstance().r;
 		MaterialDataPair[][] baseMats;
+		doorMats = doorMatsDefault; // may get overwritten by the switch below
 		switch (b) {
 		case DESERT:
 		case DESERT_HILLS:
 		case BEACH:
 			baseMats = matsListsSandy[r.nextInt(matsListsSandy.length)];
+
 			break;
 		case TAIGA:
 		case ICE_PLAINS:
@@ -166,6 +178,10 @@ public class MaterialManager {
 		pole = getRandom(r, baseMats[POLE]);
 		roofSteps = getRandom(r, baseMats[ROOFSTEPS]).m;
 		window = getRandom(r, baseMats[WINDOW]);
+	}
+
+	public Material getRandomDoor(Random r){
+		return doorMats[r.nextInt(doorMats.length)];
 	}
 
 	private MaterialDataPair getRandom(Random r,
@@ -195,7 +211,7 @@ public class MaterialManager {
 
 	/**
 	 * Note that this returns a material; the data determines the direction
-	 * 
+	 *
 	 * @return
 	 */
 	public Material getRoofSteps() {
@@ -208,7 +224,7 @@ public class MaterialManager {
 
 	/**
 	 * Note that this returns a material; the data determines the direction
-	 * 
+	 *
 	 * @return
 	 */
 	public Material getStair() {
@@ -222,7 +238,7 @@ public class MaterialManager {
 	public MaterialDataPair getFence() {
 		return fence;
 	}
-	
+
 	public MaterialDataPair getWindow() {
 		return window;
 	}

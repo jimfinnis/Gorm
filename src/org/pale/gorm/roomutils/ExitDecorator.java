@@ -56,9 +56,10 @@ public class ExitDecorator {
 		// doors are deprecated, so this might be hairy.
 		Extent x = e.getExtent();
 
+		Material m = mgr.getRandomDoor(c.r);
 		x = x.getWall(Direction.DOWN);
-		c.fill(x, Material.WOODEN_DOOR, 0); // bottom
-		c.fill(x.addvec(Direction.UP.vec), Material.WOODEN_DOOR, 8); // then top
+		c.fill(x, m, 0); // bottom
+		c.fill(x.addvec(Direction.UP.vec), m, 8); // then top
 
 		// fill in the hole at the top if there is one
 		x.miny += 2;x.maxy=x.miny;

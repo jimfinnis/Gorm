@@ -17,6 +17,11 @@ commands:
     usage: /stopgorm
     permission: Gorm.build
     permission-message: You don't have permission
+  gormconf:
+    description: Reload config
+    usage: /gormconf
+    permission: Gorm.build
+    permission-message: You don't have permission
   razegorm:
     description: Flatten and demolish
     usage: /razegorm

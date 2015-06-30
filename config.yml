@@ -1,0 +1,78 @@
+matlist:
+    default:
+        - mats.default
+    desert:
+        - mats.desert
+
+aliases.matpairs:
+    granite: stone/1
+    polgranite: stone/2
+    diorite: stone/3
+    poldiorite: stone/4
+    andesite: stone/5
+    polandesite: stone/6
+    brick: smooth_brick/0
+    carvedbrick: smooth_brick/3
+    stairs: smooth_stairs/0
+    
+mats:
+    default:
+        primary:
+            - brick
+            - polandesite
+        secondary:
+            - stone
+            - poldiorite
+        supsecondary:
+            - gravel
+        ornament:
+            - carvedbrick
+        stair:
+            - stairs
+            - birch_wood_stairs
+            - jungle_wood_stairs
+            - spruce_wood_stairs
+        fence:
+            - fence
+            - cobble_wall
+            - iron_fence
+        roofsteps:
+            - smooth_stairs
+            - wood_stairs
+            - birch_wood_stairs
+            - jungle_wood_stairs
+            - spruce_wood_stairs
+            - obsidian
+        ground:
+            - grass
+            - gravel
+            - sand
+        pole:
+            - wood
+            - cobble_wall
+        window:
+            - thin_glass
+    desert:
+        primary:
+            - sandstone/1
+        secondary:
+            - sandstone/0
+        supsecondary:
+            - sand
+        ornament:
+            - sandstone/2
+        stair:
+            - sandstone_stairs
+            - birch_wood_stairs
+        fence:
+            - fence
+            - iron_fence
+        roofsteps:
+            - sandstone_stairs
+            - birch_wood_stairs
+        ground:
+            - sand
+        pole:
+            - wood
+        window:
+            - thin_glass

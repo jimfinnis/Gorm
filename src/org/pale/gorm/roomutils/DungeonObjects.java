@@ -40,8 +40,10 @@ public class DungeonObjects {
 		Block b = c.getBlockAt(location);
 
 		b.setType(Material.CHEST);
-		Chest chest = (Chest) b.getState();
-
+            Chest chest = (Chest) b.getState();
+            // TODO - chest contents temporarily disabled because of the
+            // heavy use of magic numbers. Sorry.
+/*
 		ArrayList<Integer> loot = GormPlugin.getInstance().getLoot(grade);
 		// How many items should the chest contain? Lower grade (more dangerous)
 		// areas get more
@@ -51,8 +53,9 @@ public class DungeonObjects {
 			int itemID = loot.get(c.r.nextInt(loot.size()));
 			chest.getBlockInventory().addItem(new ItemStack(itemID));
 		}
-		chest.update();
-	}
+   
+                chest.update();
+*/	}
 
 	public static void spawner(IntVector location, EntityType spawnEntity) {
 		Castle c = Castle.getInstance();

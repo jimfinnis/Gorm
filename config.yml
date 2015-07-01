@@ -1,9 +1,3 @@
-matlist:
-    default:
-        - mats.default
-    desert:
-        - mats.desert
-
 aliases.matpairs:
     granite: stone/1
     polgranite: stone/2
@@ -14,14 +8,23 @@ aliases.matpairs:
     brick: smooth_brick/0
     carvedbrick: smooth_brick/3
     stairs: smooth_stairs/0
+    clay: stained_clay/0
     
+matlist:
+    default:
+        - mats.test2
+    desert:
+        - mats.sand
+    nether:
+        - mats.nether
+
 mats:
     default:
         primary:
             - brick
-            - polandesite
         secondary:
             - stone
+            - polandesite
             - poldiorite
         supsecondary:
             - gravel
@@ -52,7 +55,7 @@ mats:
             - cobble_wall
         window:
             - thin_glass
-    desert:
+    sand:
         primary:
             - sandstone/1
         secondary:
@@ -76,3 +79,79 @@ mats:
             - wood
         window:
             - thin_glass
+    nether:
+        primary:
+            - nether_brick
+        secondary:
+            - nether_brick
+        supsecondary:
+            - gravel
+        ornament:
+            - red_sandstone
+        stair:
+            - nether_brick_stairs
+            - red_sandstone_stairs
+        fence:
+            - nether_fence
+            - iron_fence
+        roofsteps:
+            - nether_brick_stairs
+            - red_sandstone_stairs
+        ground:
+            - soul_sand
+            - netherrack
+        pole:
+            - nether_brick
+        window:
+            - iron_fence
+    cobble:
+        primary:
+            - cobblestone
+        secondary:
+            - cobblestone
+        supsecondary:
+            - gravel
+        ornament:
+            - cobblestone/3
+        stair:
+            - cobblestone_stairs
+        fence:
+            - iron_fence
+            - cobble_wall
+            - fence
+        roofsteps:
+            - wood_stairs
+            - cobblestone_stairs
+        ground:
+            - gravel
+        pole:
+            - cobble_wall
+            - fence
+        window:
+            - thin_glass
+    test:
+        primary:
+            - clay/0
+            - clay/1
+            - clay/2
+            - clay/3
+            - clay/4
+            - clay/5
+            - clay/6
+            - clay/7
+            - clay/8
+            - clay/9
+            - clay/10
+            - clay/11
+            - clay/12
+            - clay/13
+            - clay/14
+            - clay/15
+
+    test2:
+        base: mats.test
+        secondary:
+            - stone
+        fence:
+            - cobble_wall
+                

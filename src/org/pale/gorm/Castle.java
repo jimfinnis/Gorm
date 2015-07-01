@@ -552,8 +552,9 @@ public class Castle {
 
 	public void raze() {
 		for (Building r : buildings) {
-			fill(r.getExtent(), Material.AIR, 0);
-			fill(r.getExtent().getWall(Direction.DOWN), Material.GRASS, 0);
+			Extent e = r.getExtent().expand(4, Extent.X|Extent.Z);
+			fill(e.growDirection(Direction.UP, 5), Material.AIR, 0);
+			fill(e.getWall(Direction.DOWN), Material.GRASS, 0);
 		}
 		buildings.clear();
 	}

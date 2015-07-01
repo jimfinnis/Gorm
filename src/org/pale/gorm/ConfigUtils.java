@@ -36,7 +36,7 @@ public class ConfigUtils {
 			Material m = Material.getMaterial(s.toUpperCase());
 			if(m==null){
 				log.log(Level.SEVERE, "Cannot find material in "+key+": "+s);
-				m = Material.DIAMOND;
+				m = Material.DIAMOND_BLOCK;
 			}
 			l.add(m);
 		}
@@ -52,16 +52,23 @@ public class ConfigUtils {
 				Material m = Material.getMaterial(name.toUpperCase());
 				if(m==null){
 					GormPlugin.getInstance().getLogger().log(Level.SEVERE, "Cannot find material "+name);
-					m=Material.DIAMOND;
-				} else
-					return new MaterialDataPair(m,0);
+					m=Material.DIAMOND_BLOCK;
+				}
+				return new MaterialDataPair(m,0);
 			}
 		}	
 		String parts[] = name.split("/");
+		// the first part of a mat/data name can also be an alias; if it aliases
+		// to a mat/data name, we drop the data part.
+		if(matPairAliases.containsKey(parts[0])){
+			parts[0]=matPairAliases.get(parts[0]);
+			if(parts[0].contains("/"))
+				parts[0]=parts[0].split("/")[0];
+		}
 		Material m = Material.getMaterial(parts[0].toUpperCase());
 		if(m==null){
 			GormPlugin.getInstance().getLogger().log(Level.SEVERE, "Cannot find material "+parts[0]);
-			return new MaterialDataPair(Material.DIAMOND,0);
+			return new MaterialDataPair(Material.DIAMOND_BLOCK,0);
 		}
 		return new MaterialDataPair(m,Integer.parseInt(parts[1]));
 	}
@@ -75,9 +82,11 @@ public class ConfigUtils {
 		Logger log = GormPlugin.getInstance().getLogger();
 		List<MaterialDataPair> l = new ArrayList<MaterialDataPair>();
 		List<String> lst = GormPlugin.getInstance().getConfig().getStringList(key);
-		if(lst==null)
-			log.log(Level.SEVERE,"Unable to load key: "+key);
-		log.info("Strings: "+String.valueOf(lst.size()));
+		if(lst==null){
+			log.info("Unable to load key, must inherit from base: "+key);
+			return null;
+		}
+		log.info("Strings for "+key+": "+lst.size());
 		for(String s: GormPlugin.getInstance().getConfig().getStringList(key)){
 			MaterialDataPair mp = makeMatDataPair(s);
 			l.add(mp);

@@ -1,3 +1,11 @@
+# These are aliases for material/databyte pairs which can be used
+# in material sets. A material/databyte pair is normally
+# ID/DATA but if the data is omitted, 0 is assumed for the databyte.
+#
+# In using an alias, it's possible to override the provided databyte.
+# For example, given the list below, "clay" normally means stained_clay/0,
+# but "clay/4" will map to stained_clay/4.
+
 aliases.matpairs:
     granite: stone/1
     polgranite: stone/2
@@ -9,14 +17,65 @@ aliases.matpairs:
     carvedbrick: smooth_brick/3
     stairs: smooth_stairs/0
     clay: stained_clay/0
-    
+
+#
+# These lists define the material sets to be used for each biome.
+# Each new building in that biome will then use a random member
+# of the list as its material set. Biome names here must be full
+# names. If a biome is not named here, first a match will be looked
+# for in the "matmatch" lists. If one is not found, the default will
+# be used (a default must be provided).
+#    
 matlist:
     default:
-        - mats.test2
+        - mats.default
     desert:
         - mats.sand
     nether:
         - mats.nether
+
+# These lists define material sets for those biomes not in the matlist
+# above. The keys are regular expressions, but "*" is replaced with ".*"
+# because of YAML not permitting "." inside a key.
+#
+# This list is only used if the biome is not present, by its full name,
+# in the matlist. If it is also not found here, the default entry in the
+# matlist is used.
+
+matmatch:
+    "*taiga*":
+        - mats.taiga
+    "frozen*":
+        - mats.taiga
+    "ice*":
+        - mats.taiga    
+
+# These are the material sets which are referred to by the lists above.
+# Each entry within a set is used for a particular type of block inside
+# the castle:
+#
+# primary -     used for most of the building
+# secondary -   used for a bit of variety in Turtle building (columns,
+#               roof crenellation), but also to underfill floating
+#               buildings and for garden patterning.
+# supsecondary- a loose building material which is subject to gravity,
+#               like sand or gravel. Used in crenellation.
+# ornament -    used for decorative blocks
+# stair -       for stair exits
+# fence -       for roof and interior fencing
+# roofsteps -   for constructing pitched roofs
+# ground -      for gardens and paths (and roof gardens).
+# pole -        for some columns and parts of columns
+# window -      for windows. If this is thin_glass, the window may
+#               become a patterned stained-glass window.
+#
+# Inheritance
+# It is possible for one material set to inherit any lists it doesn't
+# explicitly specify from another, either using YAML's merge facility
+# or by setting a base: key to the name of another material set,
+# e.g. "base: mats.cobble".
+# All sets inherit the set called "default".
+
 
 mats:
     default:
@@ -129,29 +188,13 @@ mats:
             - fence
         window:
             - thin_glass
-    test:
-        primary:
-            - clay/0
-            - clay/1
-            - clay/2
-            - clay/3
-            - clay/4
-            - clay/5
-            - clay/6
-            - clay/7
-            - clay/8
-            - clay/9
-            - clay/10
-            - clay/11
-            - clay/12
-            - clay/13
-            - clay/14
-            - clay/15
-
-    test2:
-        base: mats.test
-        secondary:
-            - stone
+    taiga:
+        stair:
+            - spruce_wood_stairs
+            - stairs
         fence:
             - cobble_wall
-                
+            - iron_fence
+        ground:
+            - snow_block
+            - grass

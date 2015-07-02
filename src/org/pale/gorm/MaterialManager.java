@@ -39,23 +39,14 @@ public class MaterialManager {
 	private static final int GROUND = 7;
 	private static final int POLE = 8;
 	private static final int WINDOW = 9;
-
-	private static final int MATLISTCT = 10;
+	private static final int FLOOR = 10;
+	private static final int DOOR = 11;
+	private static final int MATLISTCT = 12;
 
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
-	ground, pole, window;
+	ground, pole, window, floor, door,stairs,roofSteps;
 
-	// in 1.8, there are several different kinds of door. We have an array
-	// of possible doortypes for different biomes.
-	static final Material doorMatsDefault[] = {
-		Material.WOODEN_DOOR, Material.ACACIA_DOOR, Material.SPRUCE_DOOR,
-		Material.WOODEN_DOOR, Material.WOODEN_DOOR, Material.DARK_OAK_DOOR,
-		Material.IRON_DOOR
-	};
-
-	private Material stairs, roofSteps;
-	private Material doorMats[];
 	// three level array for each biome!
 	// Top level, set of top level data for the biome to pick from randomly
 	// when the manager is initialised.
@@ -67,8 +58,6 @@ public class MaterialManager {
 	public MaterialManager(Biome b) {
 		Random r = Castle.getInstance().r;
 
-		doorMats = doorMatsDefault; // TODO proper door randomness
-
 		MaterialDataPair[][][] lst = biomeMetaList.get(b);
 		MaterialDataPair[][] baseMats = lst[r.nextInt(lst.length)];
 
@@ -76,16 +65,14 @@ public class MaterialManager {
 		secondary = getRandom(r, baseMats[SECONDARY]);
 		supSecondary = getRandom(r, baseMats[SUPSECONDARY]);
 		ornament = getRandom(r, baseMats[ORNAMENT]);
-		stairs = getRandom(r, baseMats[STAIR]).m;
+		stairs = getRandom(r, baseMats[STAIR]);
 		ground = getRandom(r, baseMats[GROUND]);
 		fence = getRandom(r, baseMats[FENCE]);
 		pole = getRandom(r, baseMats[POLE]);
-		roofSteps = getRandom(r, baseMats[ROOFSTEPS]).m;
+		roofSteps = getRandom(r, baseMats[ROOFSTEPS]);
 		window = getRandom(r, baseMats[WINDOW]);
-	}
-
-	public Material getRandomDoor(Random r){
-		return doorMats[r.nextInt(doorMats.length)];
+		door = getRandom(r, baseMats[DOOR]);
+		floor = getRandom(r, baseMats[FLOOR]);
 	}
 
 	private MaterialDataPair getRandom(Random r,
@@ -113,12 +100,16 @@ public class MaterialManager {
 		return ornament;
 	}
 
+	public MaterialDataPair getDoor(Random r){
+		return door;
+	}
+
 	/**
 	 * Note that this returns a material; the data determines the direction
 	 *
 	 * @return
 	 */
-	public Material getRoofSteps() {
+	public MaterialDataPair getRoofSteps() {
 		return roofSteps;
 	}
 
@@ -131,7 +122,7 @@ public class MaterialManager {
 	 *
 	 * @return
 	 */
-	public Material getStair() {
+	public MaterialDataPair getStair() {
 		return stairs;
 	}
 
@@ -146,6 +137,11 @@ public class MaterialManager {
 	public MaterialDataPair getWindow() {
 		return window;
 	}
+	
+	public MaterialDataPair getFloor(){
+		return floor;
+	}
+	
 
 	private static HashMap<Biome,List<String>> biomeMetaListNames;
 	public static void loadMats(){
@@ -309,6 +305,8 @@ public class MaterialManager {
 		mats[GROUND]= ConfigUtils.getMaterialDataPairs(key+".ground"); 
 		mats[POLE]= ConfigUtils.getMaterialDataPairs(key+".pole"); 
 		mats[WINDOW]= ConfigUtils.getMaterialDataPairs(key+".window"); 
+		mats[DOOR]= ConfigUtils.getMaterialDataPairs(key+".door"); 
+		mats[FLOOR]= ConfigUtils.getMaterialDataPairs(key+".floor"); 
 		return mats;
 	}
 }

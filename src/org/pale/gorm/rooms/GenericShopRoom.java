@@ -11,25 +11,13 @@ import org.pale.gorm.Room;
 import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.FurnitureItems;
 
-public class GenericShopRoom extends Room {
+public class GenericShopRoom extends PlainRoom {
 
 	public GenericShopRoom(MaterialManager mgr, Extent roomExt, Building bld) {
 		super(mgr,roomExt,bld);
 	}
 
-	@Override
-	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		Castle c = Castle.getInstance();
-		// make the actual floor - first layer
-		Extent floor = e.expand(-1, Extent.X | Extent.Z).getWall(Direction.DOWN);
-		// fill with primary material
-		MaterialDataPair prim = mgr.getPrimary();
-		c.fill(floor,prim.m,prim.d);
 
-		lightsAndCarpets(false);
-		addSignHack();
-		return null; // we don't modify the building extent
-	}
 
 	@Override
 	public void furnish(MaterialManager mgr) {

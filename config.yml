@@ -17,6 +17,18 @@ aliases.matpairs:
     carvedbrick: smooth_brick/3
     stairs: smooth_stairs/0
     clay: stained_clay/0
+    oakwood: wood/0
+    sprucewood: wood/1
+    birchwood: wood/2
+    junglewood: wood/3
+    acaciawood: wood/4
+    darkoakwood: wood/5
+    oaklog: log/0
+    sprucelog: log/1
+    birchlog: log/2
+    junglelog: log/3
+    acacialog: log_2/0
+    darkoaklog: log_2/1
 
 #
 # These lists define the material sets to be used for each biome.
@@ -89,6 +101,16 @@ mats:
             - gravel
         ornament:
             - carvedbrick
+        door:
+            - wood_door
+            - wood_door
+            - wood_door
+            - spruce_door
+            - dark_oak_door
+            - acacia_door
+            - birch_door
+            - iron_door
+            - jungle_door
         stair:
             - stairs
             - birch_wood_stairs
@@ -114,6 +136,10 @@ mats:
             - cobble_wall
         window:
             - thin_glass
+        floor:
+            - stone
+            - polandesite
+            - birchwood
     sand:
         primary:
             - sandstone/1

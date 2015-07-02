@@ -11,7 +11,7 @@ import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.FurnitureItems;
 import org.pale.gorm.roomutils.WindowMaker;
 
-public class LibraryRoom extends PlainRoom {
+public class LibraryRoom extends GenericShopRoom {
 
 	public LibraryRoom(MaterialManager mgr, Extent e, Building b) {
 		super(mgr, e, b);

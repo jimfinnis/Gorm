@@ -601,7 +601,7 @@ public class Turtle {
 			setMaterial(mgr.getFence());
 			break;
 		case 's':
-			setMaterial(mgr.getStair(), 0);
+			setMaterial(mgr.getStair());
 			break;
 		case 'S':
 			setMaterial(mgr.getPrimary().toSteps());

@@ -15,6 +15,7 @@ import org.pale.gorm.roomutils.FurnitureItems;
 /**
  * Was the chest room, now may contain no chest! That's done using the standard furniture
  * mechanism.
+ * Is now also the base class of all rooms with a floor.
  * 
  * @author domos
  *
@@ -33,9 +34,9 @@ public class EmptyRoom extends Room {
 		Extent floor = e.expand(-1, Extent.X | Extent.Z);
 		floor.maxy = floor.miny;
 		
-		// fill with primary material
-		MaterialDataPair prim = mgr.getPrimary();
-		c.fill(floor,prim.m,prim.d);
+		// fill with floor material
+		MaterialDataPair f = mgr.getFloor();
+		c.fill(floor,f.m,f.d);
 
 		lightsAndCarpets(true);
 		

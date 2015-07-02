@@ -20,28 +20,11 @@ import org.pale.gorm.roomutils.WindowMaker;
  * @author white
  *
  */
-public class PlainRoom extends Room {
+public class PlainRoom extends EmptyRoom {
 
 	public PlainRoom(MaterialManager mgr, Extent e, Building b) {
-		super(mgr, e, b);
+		super(mgr, e, b,false);
 	}
-
-	@Override
-	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		Castle c = Castle.getInstance();
-		// make the actual floor - first layer
-		Extent floor = e.expand(-1, Extent.X | Extent.Z).getWall(Direction.DOWN);
-		// fill with primary material
-		MaterialDataPair prim = mgr.getPrimary();
-		c.fill(floor,prim.m,prim.d);
-
-		lightsAndCarpets(true);
-		addSignHack();
-//		WindowMaker.makeStainedGlassWall(mgr, this);
-		
-		return null; // we don't modify the building extent
-	}
-	
 
 	@Override
 	public void furnish(MaterialManager mgr) {

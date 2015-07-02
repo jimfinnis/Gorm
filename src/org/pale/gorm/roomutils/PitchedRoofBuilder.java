@@ -44,8 +44,8 @@ public class PitchedRoofBuilder extends RoofBuilder {
 		}
 		int maxy=0;
 		
-		Material mat = mgr.getRoofSteps();
-		MaterialDataPair fillMat = MaterialDataPair.fromSteps(mat);
+		MaterialDataPair mat = mgr.getRoofSteps();
+		MaterialDataPair fillMat = MaterialDataPair.fromSteps(mat.m);
 		Turtle t = new Turtle(mgr,Castle.getInstance().getWorld(),new IntVector(0,0,0),dir);
 		t.setMaterial(mat);
 		t.setModeFlag(Turtle.NOTINDOORS);

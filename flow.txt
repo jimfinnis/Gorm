@@ -8,6 +8,8 @@ GormPlugin.buildRandomRoom
                 try multiple times:
                     b = random building (recent ones more likely)
                     newb = b.createChildBuilding (abstract in Building)
+                    # nomenclature problem : buildings still called
+                    # "rooms" here, but rooms are still something else.
                     moveRoomUntilFit(newb,b)
                 
         mgr=new MaterialMgr(building centre biome)

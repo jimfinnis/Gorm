@@ -14,6 +14,7 @@ import org.pale.gorm.Direction;
 import org.pale.gorm.Extent;
 import org.pale.gorm.GormPlugin;
 import org.pale.gorm.IntVector;
+import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 
@@ -128,7 +129,7 @@ public class StairBuilder {
 		Collection<BlockState> undoBuffer = new ArrayList<BlockState>();
 
 		int y = start.y;
-		Material mat = mgr.getStair();
+		Material mat = mgr.getStair().m;
 		
 /*		
 		// steps starting from blind walls can happen.. but are stupid.

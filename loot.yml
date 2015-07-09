@@ -1,0 +1,120 @@
+#
+# These are the various loot types. Material/data pairs
+# are used as in biomes.yml, so aliases can be used too. The data
+# value here is ignored, however.
+#
+
+# this is a list included in the main lists, keyed by mat/data pair
+# with the chance as the value. This value is multiplied by the
+# chance associated with the list when it is included
+
+food:
+    bread: 2
+    carrot: 1
+    cookie: 0.5
+    cooked_chicken: 1
+    cooked_beef: 1
+    cooked_rabbit: 1
+    cooked_fish: 1
+    cooked_mutton: 1
+    egg: 1
+    potato: 1
+    
+stuff:
+    bowl: 1
+    bucket: 1
+    book: 2
+    gold_record: 1
+    green_record: 1
+    record_3: 0.5
+    record_4: 0.3
+    record_5: 0.2
+    record_6: 0.1
+    record_7: 0.1
+    record_8: 0.1
+    record_9: 0.1
+    record_10: 0.1
+    record_11: 0.1
+    record_12: 0.1
+
+tools:
+    compass: 0.1
+    iron_pickaxe: 1
+        
+iron_armour:
+    iron_leggings: 1
+    iron_boots: 1
+    iron_chestplate: 1
+    iron_helmet: 1
+gold_armour:
+    gold_leggings: 1
+    gold_boots: 1
+    gold_chestplate: 1
+    gold_helmet: 1
+leather_armour:
+    leather_leggings: 1
+    leather_boots: 1
+    leather_chestplate: 1
+    leather_helmet: 1
+chainmail_armour:
+    chainmail_leggings: 1
+    chainmail_boots: 1
+    chainmail_chestplate: 1
+    chainmail_helmet: 1
+diamond_armour:
+    diamond_leggings: 1
+    diamond_boots: 1
+    diamond_chestplate: 1
+    diamond_helmet: 1
+
+# separate entries for the four loot grades, 1 being the nastiest
+# bits of the castle. Each entry has a list of includes with chance
+# multipliers, which refer to the lists above; and a list of items
+# with chances for specific things.
+
+loot:
+    1:
+        include:
+            # include "stuff", multiplying all chances by 1
+            stuff: 3
+            food: 2
+            tools: 1
+            diamond_armour: 0.1
+            chainmail_armour: 0.4
+        list:
+            # 0.3 chance of a gold ingot
+            gold_ingot: 0.3
+            diamond: 0.2
+            diamond_sword: 0.1
+            diamond_axe: 0.2
+            
+    2:
+        include:
+            records: 0.1
+            stuff: 2
+            food: 3
+            tools: 3
+            chainmail_armour: 1
+            iron_armour: 2
+        list:
+            iron_sword: 0.2
+            iron_axe: 0.1
+    3:
+        include:
+            records: 0.1
+            stuff: 2
+            food: 3
+            tools: 1
+            leather_armour: 1
+            iron_armour: 0.4
+        list:
+            iron_sword: 0.2
+            iron_axe: 0.1
+    4:
+        include:
+            stuff: 3
+            food: 2
+            tools: 1
+            records: 1
+            leather_armour: 0.3
+            iron_armour: 0.4

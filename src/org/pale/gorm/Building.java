@@ -151,6 +151,7 @@ public abstract class Building {
 	 * "standard" buildings.
 	 */
 	public void build(MaterialManager mgr) {
+		GormPlugin.getInstance().getLogger().info("New building: primary is "+mgr.getPrimary().m);
 		BoxBuilder.build(mgr, extent); // make the walls
 		makeRooms(mgr); // and make the internal rooms
 		underfill(mgr, false); // build "stilts" if required
@@ -685,16 +686,17 @@ public abstract class Building {
 									// that'll do.
 									b2.setType(Material.VINE);
 									// if this is right, this is *horrible*
-									BlockState bs = b2.getState();
-									Vine vine = (Vine) bs.getData();
+									//BlockState bs = b2.getState();
+									
+									Vine vine = new Vine();
 									vine.removeFromFace(BlockFace.NORTH);
 									vine.removeFromFace(BlockFace.SOUTH);
 									vine.removeFromFace(BlockFace.EAST);
 									vine.removeFromFace(BlockFace.WEST);
 									vine.putOnFace(d.opposite().vec
 											.toBlockFace());
-									bs.setData(vine);
-									bs.update();
+									b.setData(vine.getData());
+									//bs.update();
 								}
 							}
 						}

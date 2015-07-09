@@ -39,7 +39,7 @@ public class FurnitureItems {
 	
 	public static final String[] defaultChoices = {
 		chair1,sofa1,shelves1,shelves2,chest,flowerPot,
-		chair1,sofa1,shelves1,shelves2,chest,flowerPot,
+		chair1,sofa1,shelves1,shelves2,
 		chair1,sofa1,shelves1,shelves2,chest,flowerPot,
 		chair1,sofa1,shelves1,shelves2,chest,loot
 	};
@@ -63,7 +63,7 @@ public class FurnitureItems {
 	};
 	
 	public static final String[] poshChoices = {
-		loot,chest,chest,chest,shelves1,shelves2,sofa1,brewingStand,
+		loot,chest,chest,shelves1,shelves2,sofa1,brewingStand,
 		flowerPot,flowerPot,sofa1,sofa1
 	};
 	

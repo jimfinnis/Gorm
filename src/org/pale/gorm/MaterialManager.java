@@ -144,26 +144,25 @@ public class MaterialManager {
 	
 
 	private static HashMap<Biome,List<String>> biomeMetaListNames;
-	public static void loadMats(){
+	public static void loadMats(FileConfiguration f){
 		// first, we load the material metalists for each biome. These are lists
 		// of material list names from which we select at random to generate some terrain
 		// in that biome. The material lists themselves contain the material data.
 		Logger log = GormPlugin.getInstance().getLogger();
-		FileConfiguration conf = GormPlugin.getInstance().getConfig();
 		Map<String,MaterialDataPair[][]> materialLists = new HashMap<String,MaterialDataPair[][]>();
 		biomeMetaListNames = new HashMap<Biome,List<String>>();
 		biomeMetaList = new HashMap<Biome,MaterialDataPair[][][]>();
 		for(Biome b: Biome.values()){
-			loadMatMetaListForBiome(b);
+			loadMatMetaListForBiome(f,b);
 		}
 		// and the default
-		loadMatMetaListForBiome(null);
+		loadMatMetaListForBiome(f,null);
 		List<String> defaultMetaListNames = biomeMetaListNames.get(null);
 		if(defaultMetaListNames==null)
 			log.severe("no default metalist given - could cause problems!");
 
 		// first build a list of patterns and the matlists to which they resolve.
-		ConfigurationSection sec = conf.getConfigurationSection("matmatch");
+		ConfigurationSection sec = f.getConfigurationSection("matmatch");
 		List<Map.Entry<Pattern,List<String>>> patternList = new ArrayList<Map.Entry<Pattern,List<String>>>();
 		for(Map.Entry<String, Object> e: sec.getValues(false).entrySet()){
 			String regex = e.getKey();
@@ -180,6 +179,7 @@ public class MaterialManager {
 				patternList.add(ne);
 			} else throw new RuntimeException("value not a string list in matmatch block");
 		}
+		log.info("Matchers: "+patternList.size());
 
 		// now go through the biome list and see if we can find a match for those with no matlist already
 		// set. There are, no doubt, more efficient ways.
@@ -203,9 +203,9 @@ public class MaterialManager {
 
 
 		// load the actual matlists
-		sec = conf.getConfigurationSection("mats");
+		sec = f.getConfigurationSection("mats");
 		for(String s:sec.getKeys(false)){
-			MaterialDataPair[][] list = getMats("mats."+s); // getMats uses the whole file namespace.
+			MaterialDataPair[][] list = getMats(f,"mats."+s); // getMats uses the whole file namespace.
 			log.info("Retrieved matlist "+s+", size: "+(list==null?"null":list.length));
 			materialLists.put("mats."+s, list);
 			//			log.info("Matlist stored as mats."+s+":");
@@ -244,7 +244,7 @@ public class MaterialManager {
 		do {
 			repeat=false;
 			for(String name:materialLists.keySet()){
-				String baseName = conf.getString(name+".base");
+				String baseName = f.getString(name+".base");
 				if(baseName==null)baseName="mats.default";
 				MaterialDataPair matList[][] = materialLists.get(name);
 				MaterialDataPair baseList[][] = materialLists.get(baseName);
@@ -271,11 +271,10 @@ public class MaterialManager {
 		} while(repeat);
 
 	}
-	private static void loadMatMetaListForBiome(Biome biome){
+	private static void loadMatMetaListForBiome(FileConfiguration f,Biome biome){
 		String name = biome==null ? "default" : biome.toString().toLowerCase();
 		Logger log = GormPlugin.getInstance().getLogger();
-		List<String> lst = GormPlugin.getInstance().getConfig()
-				.getStringList("matlist."+name);
+		List<String> lst = f.getStringList("matlist."+name);
 		if(lst==null || lst.size()==0){
 			log.info("No metalist for biome: "+name+", using default or match");
 		}else{
@@ -292,21 +291,21 @@ public class MaterialManager {
 	 * to select from. The first material is the most likely.
 	 * @param key
 	 */
-	private static MaterialDataPair[][] getMats(String key){
+	private static MaterialDataPair[][] getMats(FileConfiguration f,String key){
 		MaterialDataPair mats[][] = new MaterialDataPair[MATLISTCT][];
 
-		mats[PRIMARY]=ConfigUtils.getMaterialDataPairs(key+".primary"); 
-		mats[SECONDARY]=ConfigUtils.getMaterialDataPairs(key+".secondary"); 
-		mats[SUPSECONDARY]=ConfigUtils.getMaterialDataPairs(key+".supsecondary"); 
-		mats[ORNAMENT]= ConfigUtils.getMaterialDataPairs(key+".ornament"); 
-		mats[STAIR]= ConfigUtils.getMaterialDataPairs(key+".stair"); 
-		mats[FENCE]= ConfigUtils.getMaterialDataPairs(key+".fence"); 
-		mats[ROOFSTEPS]= ConfigUtils.getMaterialDataPairs(key+".roofsteps"); 
-		mats[GROUND]= ConfigUtils.getMaterialDataPairs(key+".ground"); 
-		mats[POLE]= ConfigUtils.getMaterialDataPairs(key+".pole"); 
-		mats[WINDOW]= ConfigUtils.getMaterialDataPairs(key+".window"); 
-		mats[DOOR]= ConfigUtils.getMaterialDataPairs(key+".door"); 
-		mats[FLOOR]= ConfigUtils.getMaterialDataPairs(key+".floor"); 
+		mats[PRIMARY]=ConfigUtils.getMaterialDataPairs(f,key+".primary"); 
+		mats[SECONDARY]=ConfigUtils.getMaterialDataPairs(f,key+".secondary"); 
+		mats[SUPSECONDARY]=ConfigUtils.getMaterialDataPairs(f,key+".supsecondary"); 
+		mats[ORNAMENT]= ConfigUtils.getMaterialDataPairs(f,key+".ornament"); 
+		mats[STAIR]= ConfigUtils.getMaterialDataPairs(f,key+".stair"); 
+		mats[FENCE]= ConfigUtils.getMaterialDataPairs(f,key+".fence"); 
+		mats[ROOFSTEPS]= ConfigUtils.getMaterialDataPairs(f,key+".roofsteps"); 
+		mats[GROUND]= ConfigUtils.getMaterialDataPairs(f,key+".ground"); 
+		mats[POLE]= ConfigUtils.getMaterialDataPairs(f,key+".pole"); 
+		mats[WINDOW]= ConfigUtils.getMaterialDataPairs(f,key+".window"); 
+		mats[DOOR]= ConfigUtils.getMaterialDataPairs(f,key+".door"); 
+		mats[FLOOR]= ConfigUtils.getMaterialDataPairs(f,key+".floor"); 
 		return mats;
 	}
 }

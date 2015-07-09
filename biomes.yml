@@ -13,7 +13,7 @@ aliases.matpairs:
     poldiorite: stone/4
     andesite: stone/5
     polandesite: stone/6
-    brick: smooth_brick/0
+    block: smooth_brick/0
     carvedbrick: smooth_brick/3
     stairs: smooth_stairs/0
     clay: stained_clay/0
@@ -43,7 +43,7 @@ matlist:
         - mats.default
     desert:
         - mats.sand
-    nether:
+    hell:
         - mats.nether
 
 # These lists define material sets for those biomes not in the matlist
@@ -92,7 +92,12 @@ matmatch:
 mats:
     default:
         primary:
+            - block
             - brick
+            - stone
+            - polandesite
+            - sandstone/1
+            - granite
         secondary:
             - stone
             - polandesite
@@ -224,3 +229,5 @@ mats:
         ground:
             - snow_block
             - grass
+
+

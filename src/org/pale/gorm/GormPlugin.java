@@ -60,10 +60,10 @@ public final class GormPlugin extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		instance = this;
-		saveDefaultConfig();
+		//saveDefaultConfig();
 		getLogger().info("Gorm has been enabled");
 		ConfigUtils.load();
-		MaterialManager.loadMats();
+		getLogger().info("Brick : "+Material.getMaterial("BRICK").getId());
 	}
 
 

@@ -3,11 +3,13 @@ package org.pale.gorm;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 
 /**
  * Handy class for reading materials and material lists from a config
@@ -16,23 +18,63 @@ import org.bukkit.configuration.ConfigurationSection;
  */
 public class ConfigUtils {
 	public static HashMap<String,String> matPairAliases;
+	// arrays and generics don't mix. Bloody java.
+	private static List<RandomCollection<MaterialDataPair>> loot = 
+			new ArrayList<RandomCollection<MaterialDataPair>>();
 
 	public static void load(){
-		loadAliases();
-		MaterialManager.loadMats();
+		ConfigAccessor a = new ConfigAccessor("biomes.yml");
+		loadAliases(a.getConfig());
+		MaterialManager.loadMats(a.getConfig());
+		loadLoots(new ConfigAccessor("loot.yml").getConfig());
 	}
-	private static void loadAliases() {
-		ConfigurationSection c = GormPlugin.getInstance().getConfig().getConfigurationSection("aliases.matpairs");
-		matPairAliases = new HashMap<String,String>();
-		for(String k: c.getKeys(false)){
-			matPairAliases.put(k, (String)c.get(k));
+
+	public static MaterialDataPair getLoot(int grade){
+		return loot.get(grade-1).next();
+	}
+
+	private static void loadLoots(FileConfiguration f) {
+		for(int i=1;i<=4;i++){
+			RandomCollection<MaterialDataPair> l = new RandomCollection<MaterialDataPair>();
+			loot.add(l);
+			// deal with included lists
+			ConfigurationSection inc = f.getConfigurationSection("loot."+i+".include");
+			if(null!=inc){
+				for(String k: inc.getKeys(false)){
+					double chanceMult = inc.getDouble(k);
+					loadWeightedMDPList(f,k,chanceMult,l);
+				}
+			}
+			// and load the list itself
+			loadWeightedMDPList(f,"loot."+i+".list", 1.0, l);
 		}
 	}
 
-	public static Material[] getMaterialList(String key){
+	/// load a hash of weights keyed by MaterialDataPair, and append to a RandomCollection
+	/// of MDPs so we can generate one randomly.
+	private static void loadWeightedMDPList(FileConfiguration f,String k,double chanceMult, RandomCollection<MaterialDataPair> toAppendTo) {
+		ConfigurationSection c = f.getConfigurationSection(k);
+		if(null!=c){
+			for(String item: c.getKeys(false)){
+				double chance = c.getDouble(item)*chanceMult;
+				toAppendTo.add(chance, makeMatDataPair(item));
+			}
+		}
+	}
+	private static void loadAliases(FileConfiguration f) {
+		ConfigurationSection c = f.getConfigurationSection("aliases.matpairs");
+		matPairAliases = new HashMap<String,String>();
+		if(c!=null){
+			for(String k: c.getKeys(false)){
+				matPairAliases.put(k, (String)c.get(k));
+			}
+		}
+	}
+
+	public static Material[] getMaterialList(FileConfiguration f,String key){
 		Logger log = GormPlugin.getInstance().getLogger();
 		List<Material> l = new ArrayList<Material>();
-		for(String s: GormPlugin.getInstance().getConfig().getStringList(key)){
+		for(String s: f.getStringList(key)){
 			Material m = Material.getMaterial(s.toUpperCase());
 			if(m==null){
 				log.log(Level.SEVERE, "Cannot find material in "+key+": "+s);
@@ -73,23 +115,24 @@ public class ConfigUtils {
 		return new MaterialDataPair(m,Integer.parseInt(parts[1]));
 	}
 
-	public static MaterialDataPair getMaterialDataPair(String key){
-		String s = GormPlugin.getInstance().getConfig().getString(key);
+	public static MaterialDataPair getMaterialDataPair(FileConfiguration f,String key){
+		String s = f.getString(key);
 		return makeMatDataPair(s);
 	}
 
-	public static MaterialDataPair[] getMaterialDataPairs(String key){
+	public static MaterialDataPair[] getMaterialDataPairs(FileConfiguration f,String key){
 		Logger log = GormPlugin.getInstance().getLogger();
 		List<MaterialDataPair> l = new ArrayList<MaterialDataPair>();
-		List<String> lst = GormPlugin.getInstance().getConfig().getStringList(key);
+		List<String> lst = f.getStringList(key);
 		if(lst==null){
 			log.info("Unable to load key, must inherit from base: "+key);
 			return null;
 		}
 		log.info("Strings for "+key+": "+lst.size());
-		for(String s: GormPlugin.getInstance().getConfig().getStringList(key)){
+		for(String s: f.getStringList(key)){
 			MaterialDataPair mp = makeMatDataPair(s);
 			l.add(mp);
+			log.info("   "+s+"->"+mp.m);
 		}
 		return  l.toArray(new MaterialDataPair[l.size()]);
 	}

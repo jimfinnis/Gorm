@@ -107,7 +107,7 @@ public class Garden extends Building {
 			c.fill(floor.expand(-1, Extent.X | Extent.Z), ground);
 		}
 		// room
-		Gardener.plant(floor); // plant some things
+		Gardener.plant(mgr,floor); // plant some things
 		floorLights(extent.expand(-1, Extent.ALL)); // light the inner region
 	}
 

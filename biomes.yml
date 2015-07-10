@@ -81,7 +81,14 @@ matmatch:
 # window -      for windows. If this is thin_glass, the window may
 #               become a patterned stained-glass window.
 #
+# Each entry is a hash of material/data pairs, such as those used
+# in the aliases, or an alias. The values are weights used in the
+# selection. Whenever a new material manager is created, at the start
+# of a new building, a new set of materials is created by weighted
+# random selection from the entries.
+#
 # Inheritance
+#
 # It is possible for one material set to inherit any lists it doesn't
 # explicitly specify from another, either using YAML's merge facility
 # or by setting a base: key to the name of another material set,
@@ -92,142 +99,166 @@ matmatch:
 mats:
     default:
         primary:
-            - block
-            - brick
-            - stone
-            - polandesite
-            - sandstone/1
-            - granite
+            # block is very likely, stone about 1/3 as likely, and
+            # brick 1/10 as likely. Other types are very rare.
+            block: 10
+            stone: 3
+            brick: 1
+            polandesite: 0.1
+            sandstone/1: 0.1
+            granite: 0.1
         secondary:
-            - stone
-            - polandesite
-            - poldiorite
+            stone: 2
+            polandesite: 1
+            poldiorite: 0.2
+            sandstone/1: 0.2
         supsecondary:
-            - gravel
+            gravel: 1
         ornament:
-            - carvedbrick
+            carvedbrick: 1
         door:
-            - wood_door
-            - wood_door
-            - wood_door
-            - spruce_door
-            - dark_oak_door
-            - acacia_door
-            - birch_door
-            - iron_door
-            - jungle_door
+            wood_door: 3
+            spruce_door: 2
+            dark_oak_door: 2
+            acacia_door: 1
+            birch_door: 1
+            iron_door: 0.5
+            jungle_door: 0.2
         stair:
-            - stairs
-            - birch_wood_stairs
-            - jungle_wood_stairs
-            - spruce_wood_stairs
+            stairs: 3
+            birch_wood_stairs: 2
+            jungle_wood_stairs: 1
+            spruce_wood_stairs: 1
         fence:
-            - fence
-            - cobble_wall
-            - iron_fence
+            fence: 2
+            cobble_wall: 1
+            iron_fence: 0.4
         roofsteps:
-            - smooth_stairs
-            - wood_stairs
-            - birch_wood_stairs
-            - jungle_wood_stairs
-            - spruce_wood_stairs
-            - obsidian
+            smooth_stairs: 6
+            wood_stairs: 2
+            birch_wood_stairs: 1
+            jungle_wood_stairs: 1
+            spruce_wood_stairs: 1
+            obsidian: 0.2
         ground:
-            - grass
-            - gravel
-            - sand
+            grass: 5
+            gravel: 1
+            sand: 1
         pole:
-            - wood
-            - cobble_wall
+            wood: 1
+            cobble_wall: 1
         window:
-            - thin_glass
+            thin_glass: 1
         floor:
-            - stone
-            - polandesite
-            - birchwood
+            stone: 5
+            polandesite: 1
+            birchwood: 2
+        flowers:
+            red_rose: 20
+            yellow_flower: 20
+            sapling: 0.2
+            long_grass/1: 3
+            red_rose/1: 1
+            red_rose/2: 1
+            red_rose/3: 1
+            red_rose/4: 1
+            red_rose/5: 1
+            red_rose/6: 1
+            red_rose/7: 1
+            red_rose/8: 1
+        rareflowers:
+            red_rose/1: 1
+            red_rose/2: 1
+            red_rose/3: 1
+            red_rose/4: 1
+            red_rose/5: 1
+            red_rose/6: 1
+            red_rose/7: 1
+            red_rose/8: 1
+            
     sand:
         primary:
-            - sandstone/1
+            sandstone/1: 1
         secondary:
-            - sandstone/0
+            sandstone/0: 1
         supsecondary:
-            - sand
+            sand
         ornament:
-            - sandstone/2
+            sandstone/2: 1
         stair:
-            - sandstone_stairs
-            - birch_wood_stairs
+            sandstone_stairs: 2
+            birch_wood_stairs: 0.3
         fence:
-            - fence
-            - iron_fence
+            fence: 1
+            iron_fence: 1
         roofsteps:
-            - sandstone_stairs
-            - birch_wood_stairs
+            sandstone_stairs: 4
+            birch_wood_stairs: 1
         ground:
-            - sand
+            sand: 1
         pole:
-            - wood
+            wood: 1
         window:
-            - thin_glass
+            thin_glass: 1
     nether:
         primary:
-            - nether_brick
+            nether_brick: 1
         secondary:
-            - nether_brick
+            nether_brick: 1
         supsecondary:
-            - gravel
+            gravel: 1
         ornament:
-            - red_sandstone
+            red_sandstone: 1
         stair:
-            - nether_brick_stairs
-            - red_sandstone_stairs
+            nether_brick_stairs: 4
+            red_sandstone_stairs: 1
         fence:
-            - nether_fence
-            - iron_fence
+            nether_fence: 1
+            iron_fence: 1
         roofsteps:
-            - nether_brick_stairs
-            - red_sandstone_stairs
+            nether_brick_stairs: 4
+            red_sandstone_stairs: 1
         ground:
-            - soul_sand
-            - netherrack
+            soul_sand: 3
+            netherrack: 1
         pole:
-            - nether_brick
+            nether_brick: 1
         window:
-            - iron_fence
+            iron_fence: 1
     cobble:
         primary:
-            - cobblestone
+            cobblestone: 1
         secondary:
-            - cobblestone
+            cobblestone: 1
         supsecondary:
-            - gravel
+            gravel: 1
         ornament:
-            - cobblestone/3
+            cobblestone/3: 1
         stair:
-            - cobblestone_stairs
+            cobblestone_stairs: 1
         fence:
-            - iron_fence
-            - cobble_wall
-            - fence
+            iron_fence: 2
+            cobble_wall: 1
+            fence: 0.2
         roofsteps:
-            - wood_stairs
-            - cobblestone_stairs
+            wood_stairs: 1
+            cobblestone_stairs: 3
         ground:
-            - gravel
+            gravel: 1
         pole:
-            - cobble_wall
-            - fence
+            cobble_wall: 3
+            fence: 1
         window:
-            - thin_glass
+            thin_glass: 1
     taiga:
         stair:
-            - spruce_wood_stairs
-            - stairs
+            spruce_wood_stairs: 1
+            stairs: 1
         fence:
-            - cobble_wall
-            - iron_fence
+            cobble_wall: 1
+            iron_fence: 1
         ground:
-            - snow_block
-            - grass
+            snow_block: 2
+            grass: 1
 
 

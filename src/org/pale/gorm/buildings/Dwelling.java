@@ -18,7 +18,7 @@ public class Dwelling extends Building {
 		return BuildingFactory.createRandom2(this, 
 				BuildingType.CORRIDOR,3,
 				BuildingType.DWELLING,8,
-				BuildingType.GARDEN,7,
+				BuildingType.GARDEN,4,
 				BuildingType.FARM,2,
 				BuildingType.HALL,5);
 	}

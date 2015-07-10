@@ -181,7 +181,7 @@ public class Builder {
 			if (e.getMinHeightAboveWorld() < 3
 					&& e.getMaxHeightAboveWorld() < 10 && // stupid stilt
 															// avoidance!
-					parentRoom.intersects(eOuter)) {
+					parentRoom.intersects(eOuter) &&!e.entirelyOnWater()) {
 				// that'll do!
 				b.setExtent(eOuter);
 				GormPlugin.log("amount in ground: " + Double.toString(filled));

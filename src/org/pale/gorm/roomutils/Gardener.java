@@ -5,7 +5,9 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
+import org.pale.gorm.GormPlugin;
 import org.pale.gorm.MaterialDataPair;
+import org.pale.gorm.MaterialManager;
 
 public class Gardener {
 	/**
@@ -14,45 +16,21 @@ public class Gardener {
 	 * @param floor
 	 *            INNER extent of floor
 	 */
-	public static void plant(Extent floor) {
+	public static void plant(final MaterialManager mgr,Extent floor) {
 		final Castle c = Castle.getInstance();
 		final World w = c.getWorld();
-
-		// note the hardwired material codes. Probably best change these!
+		final double chance = 0.7; // chance of each square popping up a flower
+		final double rareChance = 0.1; // chance of that flower being rare!
 
 		floor = floor.addvec(0, 1, 0);
 		floor.runOnAllLocations(new Extent.LocationRunner() {
 
 			@Override
 			public void run(int x, int y, int z) {
-				MaterialDataPair mat = null;
-
-				if (c.r.nextFloat() < 0.7) {
-					switch (c.r.nextInt(10)) {
-					case 0:
-						mat = new MaterialDataPair(Material.YELLOW_FLOWER, 0);
-						break;
-					case 1:
-						mat = new MaterialDataPair(Material.RED_ROSE, 0);
-						break;
-					case 2:
-						if (c.r.nextFloat() < 0.1)
-							mat = new MaterialDataPair(Material.SAPLING, 0);
-						break;
-					case 3:
-					case 4:
-					case 5:
-					case 6:
-					case 7:
-					case 8:
-					case 9:
-						mat = new MaterialDataPair(Material.LONG_GRASS, 1);
-						break;
-					default:
-						break;
-					}
-				}
-				if (mat != null) {
+				MaterialDataPair mat;
+				if(c.r.nextDouble()<chance){
+					mat = mgr.getRandom(c.r.nextDouble()<rareChance ? 
+							MaterialManager.MatType.RAREFLOWERS:MaterialManager.MatType.FLOWERS); 
 					Block b = w.getBlockAt(x, y - 1, z);
 					if (b.getType() == Material.GRASS
 							|| b.getType() == Material.DIRT) {
@@ -70,7 +48,7 @@ public class Gardener {
 	}
 
 	private static final Material[] crops = { Material.CROPS, Material.CROPS,
-			Material.CROPS, Material.CARROT, Material.POTATO };
+		Material.CROPS, Material.CARROT, Material.POTATO };
 
 	public static void makeFarm(Extent floor) {
 		Castle c = Castle.getInstance();

@@ -3,27 +3,20 @@ package org.pale.gorm;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.HashSet;
 
-//SNARK import net.minecraft.server.v1_7_R3.TileEntity;
-
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-//SNARK import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
 import org.bukkit.entity.Villager.Profession;
 import org.bukkit.material.Stairs;
 import org.bukkit.material.Torch;
-import org.pale.gorm.roomutils.ExitDecorator;
+//SNARK import net.minecraft.server.v1_7_R3.TileEntity;
+//SNARK import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
 
 /**
  * Singleton class for the whole castle.
@@ -653,6 +646,14 @@ public class Castle {
 	public void incDenizenCount(Profession p) {
 		denizenCounts.put(p, denizenCounts.get(p) + 1);
 
+	}
+
+	public boolean onWater(int x, int z) {
+		// really this should be just one call.
+		int y = world.getHighestBlockYAt(x, z);
+		Block b = world.getBlockAt(x, y-1, z);
+		GormPlugin.getInstance().getLogger().info("Cornercheck: "+x+","+z+" = "+b.getType().toString());
+		return b.getType()==Material.STATIONARY_WATER;
 	}
 
 }

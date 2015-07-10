@@ -3,14 +3,10 @@ package org.pale.gorm.rooms;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
-import org.pale.gorm.GormPlugin;
-import org.pale.gorm.IntVector;
 import org.pale.gorm.MaterialDataPair;
 import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
-import org.pale.gorm.roomutils.DungeonObjects;
 import org.pale.gorm.roomutils.Furniture;
-import org.pale.gorm.roomutils.FurnitureItems;
 
 /**
  * Was the chest room, now may contain no chest! That's done using the standard furniture

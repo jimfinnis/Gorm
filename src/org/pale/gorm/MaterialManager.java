@@ -3,16 +3,13 @@ package org.pale.gorm;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -29,23 +26,13 @@ public class MaterialManager {
 
 
 	// indices into the material lists
-	private static final int PRIMARY = 0;
-	private static final int SECONDARY = 1;
-	private static final int SUPSECONDARY = 2;
-	private static final int ORNAMENT = 3;
-	private static final int STAIR = 4;
-	private static final int FENCE = 5;
-	private static final int ROOFSTEPS = 6;
-	private static final int GROUND = 7;
-	private static final int POLE = 8;
-	private static final int WINDOW = 9;
-	private static final int FLOOR = 10;
-	private static final int DOOR = 11;
-	private static final int MATLISTCT = 12;
-
+	public enum MatType {
+		PRIMARY,SECONDARY,SUPSECONDARY,ORNAMENT,STAIR,FENCE,ROOFSTEPS,GROUND,
+		POLE,WINDOW,FLOOR,DOOR,FLOWERS,RAREFLOWERS
+	}
 
 	private MaterialDataPair primary, secondary, supSecondary, ornament, fence,
-	ground, pole, window, floor, door,stairs,roofSteps;
+	ground, pole, window, floor, door,stairs,roofSteps,flowers,rareFlowers;
 
 	// three level array for each biome!
 	// Top level, set of top level data for the biome to pick from randomly
@@ -53,35 +40,34 @@ public class MaterialManager {
 	// Next level, different types as indexed by function with  the constants above
 	// Bottom level, list of material/data pairs to pick from for that function.
 
-	private static Map<Biome,MaterialDataPair[][][]> biomeMetaList;
+	private static Map<Biome,List<Map<MatType,RandomCollection<MaterialDataPair>>>> biomeMetaList;
+	private Map<MatType,RandomCollection<MaterialDataPair>> baseMats;
 
 	public MaterialManager(Biome b) {
 		Random r = Castle.getInstance().r;
 
-		MaterialDataPair[][][] lst = biomeMetaList.get(b);
-		MaterialDataPair[][] baseMats = lst[r.nextInt(lst.length)];
+		List<Map<MatType,RandomCollection<MaterialDataPair>>> lst = biomeMetaList.get(b);
+		baseMats = lst.get(r.nextInt(lst.size()));
 
-		primary = getRandom(r, baseMats[PRIMARY]);
-		secondary = getRandom(r, baseMats[SECONDARY]);
-		supSecondary = getRandom(r, baseMats[SUPSECONDARY]);
-		ornament = getRandom(r, baseMats[ORNAMENT]);
-		stairs = getRandom(r, baseMats[STAIR]);
-		ground = getRandom(r, baseMats[GROUND]);
-		fence = getRandom(r, baseMats[FENCE]);
-		pole = getRandom(r, baseMats[POLE]);
-		roofSteps = getRandom(r, baseMats[ROOFSTEPS]);
-		window = getRandom(r, baseMats[WINDOW]);
-		door = getRandom(r, baseMats[DOOR]);
-		floor = getRandom(r, baseMats[FLOOR]);
+		primary = baseMats.get(MatType.PRIMARY).next();
+		secondary = baseMats.get(MatType.SECONDARY).next();
+		supSecondary = baseMats.get(MatType.SUPSECONDARY).next();
+		ornament = baseMats.get(MatType.ORNAMENT).next();
+		stairs = baseMats.get(MatType.STAIR).next();
+		ground = baseMats.get(MatType.GROUND).next();
+		fence = baseMats.get(MatType.FENCE).next();
+		pole = baseMats.get(MatType.POLE).next();
+		roofSteps = baseMats.get(MatType.ROOFSTEPS).next();
+		window = baseMats.get(MatType.WINDOW).next();
+		door = baseMats.get(MatType.DOOR).next();
+		floor = baseMats.get(MatType.FLOOR).next();
+		flowers = baseMats.get(MatType.FLOWERS).next();
+		rareFlowers = baseMats.get(MatType.RAREFLOWERS).next();
 	}
 
-	private MaterialDataPair getRandom(Random r,
-			MaterialDataPair[] materialDataPairs) {
-		if (materialDataPairs.length == 1)
-			return materialDataPairs[0];
-		else
-			return materialDataPairs[Util
-			                         .randomExp(r, materialDataPairs.length)];
+	// this will get a new mdp every time it is called, which isn't usually what you want.
+	public MaterialDataPair getRandom(MatType m){
+		return baseMats.get(m).next();
 	}
 
 	public MaterialDataPair getPrimary() {
@@ -142,16 +128,25 @@ public class MaterialManager {
 		return floor;
 	}
 	
+	public MaterialDataPair getFlowers(){
+		return flowers;
+	}
+	
+	public MaterialDataPair getRareFlowers(){
+		return rareFlowers;
+	}
 
 	private static HashMap<Biome,List<String>> biomeMetaListNames;
+
 	public static void loadMats(FileConfiguration f){
 		// first, we load the material metalists for each biome. These are lists
 		// of material list names from which we select at random to generate some terrain
 		// in that biome. The material lists themselves contain the material data.
 		Logger log = GormPlugin.getInstance().getLogger();
-		Map<String,MaterialDataPair[][]> materialLists = new HashMap<String,MaterialDataPair[][]>();
+		Map<String,Map<MatType, RandomCollection<MaterialDataPair>>> materialLists = 
+				new HashMap<String,Map<MatType, RandomCollection<MaterialDataPair>>>();
 		biomeMetaListNames = new HashMap<Biome,List<String>>();
-		biomeMetaList = new HashMap<Biome,MaterialDataPair[][][]>();
+		biomeMetaList = new HashMap<Biome,List<Map<MatType,RandomCollection<MaterialDataPair>>>>();
 		for(Biome b: Biome.values()){
 			loadMatMetaListForBiome(f,b);
 		}
@@ -205,8 +200,8 @@ public class MaterialManager {
 		// load the actual matlists
 		sec = f.getConfigurationSection("mats");
 		for(String s:sec.getKeys(false)){
-			MaterialDataPair[][] list = getMats(f,"mats."+s); // getMats uses the whole file namespace.
-			log.info("Retrieved matlist "+s+", size: "+(list==null?"null":list.length));
+			Map<MatType, RandomCollection<MaterialDataPair>> list = getMats(f,"mats."+s); // getMats uses the whole file namespace.
+			log.info("Retrieved matlist "+s+", size: "+(list==null?"null":list.size()));
 			materialLists.put("mats."+s, list);
 			//			log.info("Matlist stored as mats."+s+":");
 			//			for(int i=0;i<MATLISTCT;i++){
@@ -217,22 +212,23 @@ public class MaterialManager {
 		// we now have the biome meta lists, which are lists of names of material lists.
 		// Now we can dereference those. But first we resolve the default (null key)
 
-		List<MaterialDataPair[][]> list = new ArrayList<MaterialDataPair[][]>();
+		List<Map<MatType, RandomCollection<MaterialDataPair>>> list = 
+				new ArrayList<Map<MatType, RandomCollection<MaterialDataPair>>>();
 		for(String s: biomeMetaListNames.get(null)){
 			list.add(materialLists.get(s));
 		}
-		biomeMetaList.put(null,list.toArray(new MaterialDataPair[0][][]));
+		biomeMetaList.put(null,list);
 
 
 		for(Biome b: Biome.values()){
-			list = new ArrayList<MaterialDataPair[][]>();
+			list = new ArrayList<Map<MatType, RandomCollection<MaterialDataPair>>>();
 			for(String s: biomeMetaListNames.get(b)){
 				list.add(materialLists.get(s));
 			}
 			if(list.size()==0) // use default if no list
 				biomeMetaList.put(b,biomeMetaList.get(null));
 			else
-				biomeMetaList.put(b,list.toArray(new MaterialDataPair[0][][]));
+				biomeMetaList.put(b,list);
 		}
 
 		/**
@@ -246,8 +242,8 @@ public class MaterialManager {
 			for(String name:materialLists.keySet()){
 				String baseName = f.getString(name+".base");
 				if(baseName==null)baseName="mats.default";
-				MaterialDataPair matList[][] = materialLists.get(name);
-				MaterialDataPair baseList[][] = materialLists.get(baseName);
+				Map<MatType, RandomCollection<MaterialDataPair>> matList = materialLists.get(name);
+				Map<MatType, RandomCollection<MaterialDataPair>> baseList = materialLists.get(baseName);
 				//log.info("Matlist to resolve: "+name+", Base to resolve to: "+baseName);
 				if(baseList==null)
 					log.severe("Base material list not found:"+baseName);
@@ -256,11 +252,11 @@ public class MaterialManager {
 				//				for(int i=0;i<MATLISTCT;i++){
 				//					log.info("Baselist ["+i+"] :"+(baseList[i]==null?"null":baseList[i].length));
 				//				}
-				for(int i=0;i<MATLISTCT;i++){
-					if(matList[i]==null || matList[i].length==0){
+				for(MatType i: MatType.values()){
+					if(matList.get(i)==null || matList.get(i).size()==0){
 						repeat=true;
 						//						log.info("No material list found for "+name+":"+i+", attempting base deref to "+baseName+":"+i);
-						matList[i] = baseList[i];
+						matList.put(i, baseList.get(i));
 					}
 				}
 			}
@@ -282,6 +278,8 @@ public class MaterialManager {
 		}
 		biomeMetaListNames.put(biome, lst);
 	}
+	
+	
 
 
 
@@ -291,21 +289,23 @@ public class MaterialManager {
 	 * to select from. The first material is the most likely.
 	 * @param key
 	 */
-	private static MaterialDataPair[][] getMats(FileConfiguration f,String key){
-		MaterialDataPair mats[][] = new MaterialDataPair[MATLISTCT][];
+	private static Map<MatType,RandomCollection<MaterialDataPair>> getMats(FileConfiguration f,String key){
+		Map<MatType,RandomCollection<MaterialDataPair>> mats = new HashMap<MatType,RandomCollection<MaterialDataPair>>();
 
-		mats[PRIMARY]=ConfigUtils.getMaterialDataPairs(f,key+".primary"); 
-		mats[SECONDARY]=ConfigUtils.getMaterialDataPairs(f,key+".secondary"); 
-		mats[SUPSECONDARY]=ConfigUtils.getMaterialDataPairs(f,key+".supsecondary"); 
-		mats[ORNAMENT]= ConfigUtils.getMaterialDataPairs(f,key+".ornament"); 
-		mats[STAIR]= ConfigUtils.getMaterialDataPairs(f,key+".stair"); 
-		mats[FENCE]= ConfigUtils.getMaterialDataPairs(f,key+".fence"); 
-		mats[ROOFSTEPS]= ConfigUtils.getMaterialDataPairs(f,key+".roofsteps"); 
-		mats[GROUND]= ConfigUtils.getMaterialDataPairs(f,key+".ground"); 
-		mats[POLE]= ConfigUtils.getMaterialDataPairs(f,key+".pole"); 
-		mats[WINDOW]= ConfigUtils.getMaterialDataPairs(f,key+".window"); 
-		mats[DOOR]= ConfigUtils.getMaterialDataPairs(f,key+".door"); 
-		mats[FLOOR]= ConfigUtils.getMaterialDataPairs(f,key+".floor"); 
+		mats.put(MatType.PRIMARY,ConfigUtils.getMaterialDataPairs(f,key+".primary")); 
+		mats.put(MatType.SECONDARY,ConfigUtils.getMaterialDataPairs(f,key+".secondary")); 
+		mats.put(MatType.SUPSECONDARY,ConfigUtils.getMaterialDataPairs(f,key+".supsecondary")); 
+		mats.put(MatType.ORNAMENT,ConfigUtils.getMaterialDataPairs(f,key+".ornament")); 
+		mats.put(MatType.STAIR,ConfigUtils.getMaterialDataPairs(f,key+".stair")); 
+		mats.put(MatType.FENCE,ConfigUtils.getMaterialDataPairs(f,key+".fence")); 
+		mats.put(MatType.ROOFSTEPS,ConfigUtils.getMaterialDataPairs(f,key+".roofsteps")); 
+		mats.put(MatType.GROUND,ConfigUtils.getMaterialDataPairs(f,key+".ground")); 
+		mats.put(MatType.POLE,ConfigUtils.getMaterialDataPairs(f,key+".pole")); 
+		mats.put(MatType.WINDOW,ConfigUtils.getMaterialDataPairs(f,key+".window")); 
+		mats.put(MatType.DOOR,ConfigUtils.getMaterialDataPairs(f,key+".door")); 
+		mats.put(MatType.FLOOR,ConfigUtils.getMaterialDataPairs(f,key+".floor")); 
+		mats.put(MatType.FLOWERS,ConfigUtils.getMaterialDataPairs(f,key+".flowers")); 
+		mats.put(MatType.RAREFLOWERS,ConfigUtils.getMaterialDataPairs(f,key+".rareflowers")); 
 		return mats;
 	}
 }

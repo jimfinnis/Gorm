@@ -172,7 +172,7 @@ public class RoofGarden extends Room {
 	public void furnish(MaterialManager mgr) {
 		Extent floor = e.getWall(Direction.DOWN);
 		if (Castle.getInstance().r.nextFloat() < 0.5)
-			Gardener.plant(floor.expand(-1, Extent.X | Extent.Z));
+			Gardener.plant(mgr,floor.expand(-1, Extent.X | Extent.Z));
 	}
 
 }

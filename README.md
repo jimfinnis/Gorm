@@ -45,6 +45,16 @@ File/Export.../Java/Export JAR. Make sure you include plugin.yml
 and export it to the craftbukkit plugins directory.
 
 
+Configuration
+-------------
+
+- **biomes.yml** contains information about which materials are used in which biomes;
+- **loot.yml** contains information about the contents of treasure chests.
+
+More configurability is on the way - it's a slow process of converting hardwired
+stuff into YAML data.
+
+
 The turtle
 ----------
 

@@ -21,6 +21,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Villager;
 import org.bukkit.material.Ladder;
+import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.roomutils.ExitDecorator;
 import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.FurnitureItems;
@@ -177,7 +178,7 @@ public abstract class Room implements Comparable<Room> {
 		if (gallerySize > 8)
 			gallerySize = 8;
 
-		if (gallerySize < 2)
+		if (gallerySize < 4)
 			return; // gallery won't be big enough in this room
 
 		// work out where to place the columns, and do so
@@ -210,11 +211,41 @@ public abstract class Room implements Comparable<Room> {
 		if (!b.rooms.isEmpty() && canHaveHoleInFloor()) {
 			// make the fence
 			Room below = b.rooms.getFirst();
+
 			if (below.galleryColumnExtent != null) {
-				Extent fence = new Extent(below.galleryColumnExtent)
-						.setY(e.miny + 1);
-				c.checkFill(fence, mgr.getFence());
-				// make the hole (overwriting most of the fence we just made)
+				World w = c.getWorld();
+				Extent fence = new Extent(below.galleryColumnExtent).setY(e.miny + 1);
+				
+				// ugly code, mainly to deal with the fact that as well as not overwriting the usual
+				// materials, we don't want to overwrite STONE. Columns are made of it sometimes.
+				
+				MaterialDataPair fenceMat = mgr.getFence();
+				for(int x=fence.minx;x<=fence.maxx;x++){
+					Block k = w.getBlockAt(x,fence.miny,fence.minz);
+					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+						k.setType(fenceMat.m);
+						k.setData((byte) fenceMat.d);
+					}
+					k = w.getBlockAt(x,fence.miny,fence.maxz);
+					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+						k.setType(fenceMat.m);
+						k.setData((byte) fenceMat.d);
+					}							
+				}
+				for(int z=fence.minz;z<=fence.maxz;z++){
+					Block k = w.getBlockAt(fence.minx,fence.miny,z);
+					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+						k.setType(fenceMat.m);
+						k.setData((byte) fenceMat.d);
+					}
+					k = w.getBlockAt(fence.maxx,fence.miny,z);
+					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+						k.setType(fenceMat.m);
+						k.setData((byte) fenceMat.d);
+					}							
+				}
+
+				// make the hole
 				/// (and also part of the underfloor)
 				Extent hole = fence.setY(e.miny-1).expand(-1,
 						Extent.X | Extent.Z).setHeight(4);
@@ -318,7 +349,7 @@ public abstract class Room implements Comparable<Room> {
 	 */
 	public void furnishUniques(MaterialManager mgr) {
 		if (b.grade() < 0.1) // we ONLY place really scary things if the whole
-								// building is lowgrade
+			// building is lowgrade
 			Furniture.place(mgr, this,
 					FurnitureItems.random(FurnitureItems.uniqueScaryChoices));
 	}
@@ -434,7 +465,7 @@ public abstract class Room implements Comparable<Room> {
 		// a window or existing exit
 
 		IntVector offsetVec = dir.vec.rotate(1); // get a perpendicular to slide
-													// along
+		// along
 		for (int tries = 0; tries < offsets.length; tries++) {
 			int offset = offsets[tries];
 
@@ -448,7 +479,7 @@ public abstract class Room implements Comparable<Room> {
 
 			Extent e = new Extent(centreOfIntersection.x, this.e.miny + 1,
 					centreOfIntersection.z, centreOfIntersection.x, this.e.miny
-							+ height, centreOfIntersection.z);
+					+ height, centreOfIntersection.z);
 
 			// don't allow an exit if it is hits the top of either room
 			if (e.maxy + 1 >= this.e.maxy || e.maxy >= that.e.maxy) {
@@ -459,11 +490,11 @@ public abstract class Room implements Comparable<Room> {
 					Extent.Y);
 
 			// don't allow an exit if there's a window in the way!
-/*			if (this.windowIntersects(wideexit)
+			/*			if (this.windowIntersects(wideexit)
 					|| that.windowIntersects(wideexit)) {
 				continue;
 			}
-*/
+			 */
 			// the exit must not intersect any other exits in either building
 			if (this.exitIntersects(wideexit) || that.exitIntersects(wideexit)) {
 				continue;
@@ -518,10 +549,10 @@ public abstract class Room implements Comparable<Room> {
 			// add the exit structures to the rooms
 			this.exits.add(src);
 			this.exitMap.put(that, src); // exit 'src' leads to room
-											// 'r'
+			// 'r'
 			that.exits.add(dest);
 			that.exitMap.put(this, dest); // exit 'dest' leads back
-											// here
+			// here
 			// blow the hole
 			c.fill(src.getExtent(), Material.AIR, 1);
 			// GormPlugin.log("hole blown: " + src.getExtent().toString());
@@ -740,8 +771,8 @@ public abstract class Room implements Comparable<Room> {
 		// c.fill(ex, Material.LAPIS_BLOCK,0);
 		sb.heightCheckSubtract = 5; // so we don't end up stopping too early
 		Extent result = sb.dropExitStairs(ex, d, this, 30);// allow pretty much
-															// any length of
-															// flight
+		// any length of
+		// flight
 
 		if (result == null) {
 			// shouldn't happen, but just in case

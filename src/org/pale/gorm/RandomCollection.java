@@ -22,6 +22,10 @@ public class RandomCollection<E> {
         total += weight;
         map.put(total, result);
     }
+    
+    public int size(){
+    	return map.size();
+    }
 
     public E next() {
         double value = random.nextDouble() * total;

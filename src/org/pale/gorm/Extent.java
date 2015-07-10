@@ -103,12 +103,12 @@ public class Extent {
 	@Override
 	public String toString() {
 		if(isset)
-		return String.format("[%d - %d, %d - %d, %d - %d]", minx, maxx, miny,
-				maxy, minz, maxz);
+			return String.format("[%d - %d, %d - %d, %d - %d]", minx, maxx, miny,
+					maxy, minz, maxz);
 		else
 			return "[invalid]";
 	}
-	
+
 
 
 	/**
@@ -129,7 +129,7 @@ public class Extent {
 			minx = x2;
 			maxx = x1;			
 		}
-		
+
 		if(y1<y2){
 			miny = y1;
 			maxy = y2;			
@@ -214,7 +214,7 @@ public class Extent {
 		isset = e.isset;
 
 	}
-	
+
 	public Extent setX(int x){
 		Extent e = new Extent(this);
 		e.minx = x;
@@ -245,7 +245,7 @@ public class Extent {
 	public int zsize() {
 		return (maxz - minz) + 1;
 	}
-	
+
 	/**
 	 * Similar to union with a point, but acts in place.
 	 * @param x
@@ -276,7 +276,7 @@ public class Extent {
 				maxz = z;
 		}
 	}
-	
+
 	/**
 	 * produce a vector from the extent, with some fields set to the minimum, and some set
 	 * to the maximum. 
@@ -464,10 +464,10 @@ public class Extent {
 
 	public boolean intersects(Extent e) {
 
-            return
-                  e.minx <= maxx && e.maxx >= minx && 
-                  e.miny <= maxy && e.maxy >= miny &&
-                  e.minz <= maxz && e.maxz >= minz;
+		return
+				e.minx <= maxx && e.maxx >= minx && 
+				e.miny <= maxy && e.maxy >= miny &&
+				e.minz <= maxz && e.maxz >= minz;
 	}
 
 	/**
@@ -514,7 +514,7 @@ public class Extent {
 				}
 			}
 		}
-		
+
 		return ((double)count)/((double)volume());
 	}
 
@@ -816,4 +816,10 @@ public class Extent {
 	}
 
 
+	/// returns true if all four corners are over water
+
+	public boolean entirelyOnWater() {
+		Castle c  = Castle.getInstance();
+		return c.onWater(minx,minz)&&c.onWater(maxx,minz)&&c.onWater(maxx,maxz)&&c.onWater(minx,maxz);
+	}
 }

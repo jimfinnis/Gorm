@@ -3,7 +3,6 @@ package org.pale.gorm;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +55,7 @@ public class ConfigUtils {
 		ConfigurationSection c = f.getConfigurationSection(k);
 		if(null!=c){
 			for(String item: c.getKeys(false)){
+				GormPlugin.getInstance().getLogger().info("-- "+item);
 				double chance = c.getDouble(item)*chanceMult;
 				toAppendTo.add(chance, makeMatDataPair(item));
 			}
@@ -71,19 +71,7 @@ public class ConfigUtils {
 		}
 	}
 
-	public static Material[] getMaterialList(FileConfiguration f,String key){
-		Logger log = GormPlugin.getInstance().getLogger();
-		List<Material> l = new ArrayList<Material>();
-		for(String s: f.getStringList(key)){
-			Material m = Material.getMaterial(s.toUpperCase());
-			if(m==null){
-				log.log(Level.SEVERE, "Cannot find material in "+key+": "+s);
-				m = Material.DIAMOND_BLOCK;
-			}
-			l.add(m);
-		}
-		return l.toArray(new Material[l.size()]);
-	}
+
 
 	private static MaterialDataPair makeMatDataPair(String name){
 		Logger log = GormPlugin.getInstance().getLogger();
@@ -120,20 +108,16 @@ public class ConfigUtils {
 		return makeMatDataPair(s);
 	}
 
-	public static MaterialDataPair[] getMaterialDataPairs(FileConfiguration f,String key){
+	public static RandomCollection<MaterialDataPair> getMaterialDataPairs(FileConfiguration f,String key){
 		Logger log = GormPlugin.getInstance().getLogger();
-		List<MaterialDataPair> l = new ArrayList<MaterialDataPair>();
-		List<String> lst = f.getStringList(key);
-		if(lst==null){
-			log.info("Unable to load key, must inherit from base: "+key);
+		RandomCollection<MaterialDataPair> collection = new RandomCollection<MaterialDataPair>();
+		ConfigurationSection c = f.getConfigurationSection(key);
+		if(c==null){
+			log.info("Unable to load material list, must inherit from base: "+key);
 			return null;
 		}
-		log.info("Strings for "+key+": "+lst.size());
-		for(String s: f.getStringList(key)){
-			MaterialDataPair mp = makeMatDataPair(s);
-			l.add(mp);
-			log.info("   "+s+"->"+mp.m);
-		}
-		return  l.toArray(new MaterialDataPair[l.size()]);
+		loadWeightedMDPList(f, key, 1, collection);
+		log.info("Strings for "+key+": "+collection.size());
+		return collection;
 	}
 }

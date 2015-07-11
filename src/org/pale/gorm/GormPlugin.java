@@ -1,11 +1,7 @@
 package org.pale.gorm;
 
-import java.lang.Class;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,7 +14,6 @@ import org.bukkit.entity.Villager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 public final class GormPlugin extends JavaPlugin {
 
@@ -68,8 +63,8 @@ public final class GormPlugin extends JavaPlugin {
 
 
 	public boolean getIsDungeon() {
-            //		return getConfig().getBoolean("dungeon");
-            return true;
+		//		return getConfig().getBoolean("dungeon");
+		return true;
 	}
 
 	private boolean playerCheck(CommandSender sender) {
@@ -83,8 +78,8 @@ public final class GormPlugin extends JavaPlugin {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
-                  String label, String[] args) {
-            String cn = command.getName();
+			String label, String[] args) {
+		String cn = command.getName();
 		if (cn.equalsIgnoreCase("build")) {
 			if (!playerCheck(sender))
 				return false;
@@ -102,7 +97,7 @@ public final class GormPlugin extends JavaPlugin {
 
 					@Override
 					public void run() {
-                                            buildRandomRoom(p);
+						buildRandomRoom(p);
 					}
 
 				};
@@ -115,6 +110,8 @@ public final class GormPlugin extends JavaPlugin {
 		} else if (cn.equalsIgnoreCase("razegorm")) {
 			Castle.getInstance().raze();
 			return true;
+		} else if (cn.equalsIgnoreCase("resetgorm")){
+			Castle.reset();
 		} else if (cn.equalsIgnoreCase("gt")) {
 			if (!playerCheck(sender))
 				return false;
@@ -152,6 +149,20 @@ public final class GormPlugin extends JavaPlugin {
 			Player p = (Player) sender;
 			roomInfo(p);
 			return true;
+		} else if (cn.equalsIgnoreCase("splode")){
+			if (!playerCheck(sender))
+				return false;
+			Player p = (Player) sender;
+			Location loc = p.getLocation();
+			Castle.getInstance().getWorld().createExplosion(loc, 20.0f, false);
+			return true;
+		} else if (cn.equalsIgnoreCase("snark")){
+			if (!playerCheck(sender))
+				return false;
+			Player p = (Player) sender;
+			Location loc = p.getLocation();
+			p.sendMessage("Height: "+Castle.getInstance().getWorld().getHighestBlockYAt(loc));
+			return true;
 		}
 		return false;
 	}
@@ -162,9 +173,9 @@ public final class GormPlugin extends JavaPlugin {
 
 			@Override
 			public void run(int x, int y, int z) {
-//				if(r.isBlocked(new Extent(x,y,z))){
-					c.getWorld().getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK);
-//				}
+				//				if(r.isBlocked(new Extent(x,y,z))){
+				c.getWorld().getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK);
+				//				}
 
 			}});
 
@@ -264,14 +275,14 @@ public final class GormPlugin extends JavaPlugin {
 	}
 
 	private void gt(Player p, String str) {
-            Location loc = p.getLocation();
+		Location loc = p.getLocation();
 
-            float f = loc.getYaw();
-            Direction dir = IntVector.yawToDir(f);
-            IntVector pos = new IntVector(p.getTargetBlock((HashSet<Byte>)null, 100).getLocation());
-            MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
-            Turtle t = new Turtle(mgr, p.getWorld(), pos, dir);
-            t.run(str);
+		float f = loc.getYaw();
+		Direction dir = IntVector.yawToDir(f);
+		IntVector pos = new IntVector(p.getTargetBlock((HashSet<Byte>)null, 100).getLocation());
+		MaterialManager mgr = new MaterialManager(pos.getBlock().getBiome());
+		Turtle t = new Turtle(mgr, p.getWorld(), pos, dir);
+		t.run(str);
 
 	}
 

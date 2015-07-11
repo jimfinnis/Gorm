@@ -28,6 +28,9 @@ public class MaterialDataPair {
 			case 3:
 				m = Material.JUNGLE_WOOD_STAIRS;
 				break;
+			case 4:
+				m = Material.ACACIA_STAIRS;
+				break;
 			default:
 				m = Material.WOOD_STAIRS;
 				break;
@@ -45,6 +48,9 @@ public class MaterialDataPair {
 		case SAND:
 		case SANDSTONE:
 			return new MaterialDataPair(Material.SANDSTONE_STAIRS, 0);
+		case RED_SANDSTONE:
+		case HARD_CLAY:
+			return new MaterialDataPair(Material.RED_SANDSTONE_STAIRS,0);
 		default:
 		case STONE:
 		case SMOOTH_BRICK:
@@ -75,9 +81,12 @@ public class MaterialDataPair {
 			return new MaterialDataPair(Material.NETHER_BRICK, 0);
 		case COBBLESTONE_STAIRS:
 			return new MaterialDataPair(Material.COBBLESTONE, 0);
+		case ACACIA_STAIRS:
+			return new MaterialDataPair(Material.WOOD,4);
+		case RED_SANDSTONE_STAIRS:
+			return new MaterialDataPair(Material.RED_SANDSTONE,1);
 		default:
-			GormPlugin.log("cannot get steps for material "+m.toString());
-			return null;
+			throw new RuntimeException("cannot get material from steps for material "+m.toString());
 
 		}
 

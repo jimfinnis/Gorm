@@ -23,14 +23,15 @@ public class Gardener {
 		final double rareChance = 0.1; // chance of that flower being rare!
 
 		floor = floor.addvec(0, 1, 0);
+		final MaterialManager.MatType mt = c.r.nextDouble()<rareChance ? 
+				MaterialManager.MatType.RAREFLOWERS:MaterialManager.MatType.FLOWERS;
 		floor.runOnAllLocations(new Extent.LocationRunner() {
 
 			@Override
 			public void run(int x, int y, int z) {
 				MaterialDataPair mat;
 				if(c.r.nextDouble()<chance){
-					mat = mgr.getRandom(c.r.nextDouble()<rareChance ? 
-							MaterialManager.MatType.RAREFLOWERS:MaterialManager.MatType.FLOWERS); 
+					mat = mgr.getRandom(mt); 
 					Block b = w.getBlockAt(x, y - 1, z);
 					if (b.getType() == Material.GRASS
 							|| b.getType() == Material.DIRT) {

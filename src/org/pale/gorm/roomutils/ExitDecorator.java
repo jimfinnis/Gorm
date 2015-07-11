@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.material.Door;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Direction;
 import org.pale.gorm.Exit;
@@ -57,6 +58,9 @@ public class ExitDecorator {
 		Extent x = e.getExtent();
 
 		Material m = mgr.getDoor(c.r).m;
+
+		
+		GormPlugin.getInstance().getLogger().info("door material: "+m);
 		x = x.getWall(Direction.DOWN);
 		c.fill(x, m, 0); // bottom
 		c.fill(x.addvec(Direction.UP.vec), m, 8); // then top

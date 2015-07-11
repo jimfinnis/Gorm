@@ -216,30 +216,30 @@ public abstract class Room implements Comparable<Room> {
 				World w = c.getWorld();
 				Extent fence = new Extent(below.galleryColumnExtent).setY(e.miny + 1);
 				
-				// ugly code, mainly to deal with the fact that as well as not overwriting the usual
-				// materials, we don't want to overwrite STONE. Columns are made of it sometimes.
+				// ugly code, mainly to deal with simpler overwriting logic - the 
+				// fence must not overwrite anything already there.
 				
 				MaterialDataPair fenceMat = mgr.getFence();
 				for(int x=fence.minx;x<=fence.maxx;x++){
 					Block k = w.getBlockAt(x,fence.miny,fence.minz);
-					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+					if(k.isEmpty()){
 						k.setType(fenceMat.m);
 						k.setData((byte) fenceMat.d);
 					}
 					k = w.getBlockAt(x,fence.miny,fence.maxz);
-					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+					if(k.isEmpty()){
 						k.setType(fenceMat.m);
 						k.setData((byte) fenceMat.d);
 					}							
 				}
 				for(int z=fence.minz;z<=fence.maxz;z++){
 					Block k = w.getBlockAt(fence.minx,fence.miny,z);
-					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+					if(k.isEmpty()){
 						k.setType(fenceMat.m);
 						k.setData((byte) fenceMat.d);
 					}
 					k = w.getBlockAt(fence.maxx,fence.miny,z);
-					if(Castle.canOverwrite(k) && k.getType()!=Material.STONE){
+					if(k.isEmpty()){
 						k.setType(fenceMat.m);
 						k.setData((byte) fenceMat.d);
 					}							

@@ -60,7 +60,9 @@ matmatch:
     "frozen*":
         - mats.taiga
     "ice*":
-        - mats.taiga    
+        - mats.taiga
+    "*mesa*":
+        - mats.mesa
 
 # These are the material sets which are referred to by the lists above.
 # Each entry within a set is used for a particular type of block inside
@@ -117,22 +119,26 @@ mats:
         ornament:
             carvedbrick: 1
         door:
-            wood_door: 3
+            wooden_door: 3
             spruce_door: 2
             dark_oak_door: 2
             acacia_door: 1
             birch_door: 1
-            iron_door: 0.5
+            iron_door_block: 0.5
             jungle_door: 0.2
         stair:
             stairs: 3
             birch_wood_stairs: 2
             jungle_wood_stairs: 1
             spruce_wood_stairs: 1
-        fence:
+        fence: &DEF_FENCE
             fence: 2
-            cobble_wall: 1
-            iron_fence: 0.4
+            spruce_fence: 1
+            dark_oak_fence: 1
+            birch_fence: 2
+            acacia_fence: 0.2
+            cobble_wall: 4
+            iron_fence: 1
         roofsteps:
             smooth_stairs: 6
             wood_stairs: 2
@@ -145,8 +151,9 @@ mats:
             gravel: 1
             sand: 1
         pole:
-            wood: 1
-            cobble_wall: 1
+            <<: *DEF_FENCE
+            wood: 4
+            cobble_wall: 8
         window:
             thin_glass: 1
         floor:
@@ -188,15 +195,17 @@ mats:
         stair:
             sandstone_stairs: 2
             birch_wood_stairs: 0.3
-        fence:
+        fence: &SAND_FENCE
+            birch_fence: 1
             fence: 1
-            iron_fence: 1
+            iron_fence: 2
         roofsteps:
             sandstone_stairs: 4
             birch_wood_stairs: 1
         ground:
             sand: 1
         pole:
+            <<: *SAND_FENCE
             wood: 1
         window:
             thin_glass: 1
@@ -240,6 +249,8 @@ mats:
             iron_fence: 2
             cobble_wall: 1
             fence: 0.2
+            birch_fence: 0.2
+            dark_oak_fence: 1
         roofsteps:
             wood_stairs: 1
             cobblestone_stairs: 3
@@ -255,10 +266,50 @@ mats:
             spruce_wood_stairs: 1
             stairs: 1
         fence:
-            cobble_wall: 1
+            cobble_wall: 2
             iron_fence: 1
         ground:
             snow_block: 2
             grass: 1
-
-
+    mesa:
+        primary:
+            red_sandstone/0: 1
+            red_sandstone/2: 0.2
+            hard_clay: 1
+        secondary:
+            hard_clay: 5
+            clay/1: 4      # orange
+            clay/14: 4     # red
+            clay/4:  2     # yellow
+            clay/12: 4     # brown  
+            clay/0: 1      # white
+            clay/8: 1      # light grey
+        supsecondary:
+            sand/1: 1
+        ornament:
+            red_sandstone/1: 1
+        door:
+            wooden_door: 10
+            iron_door_block: 1
+        stair:
+            red_sandstone_stairs: 3
+            acacia_stairs: 1
+        fence:
+            acacia_fence: 1
+        roofsteps:
+            red_sandstone_stairs: 3
+            acacia_stairs: 1
+        ground:
+            sand/1: 7
+            gravel: 1            
+            sand: 1
+            grass: 1
+            dirt: 1
+        pole:
+            acacia_fence: 1
+            iron_fence: 0.1
+        floor:
+            acaciawood: 1
+            red_sandstone/2: 0.3
+            red_sandstone/0: 0.3
+            hard_clay: 0.3

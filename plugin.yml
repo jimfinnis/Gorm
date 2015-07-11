@@ -57,3 +57,18 @@ commands:
     usage: /roominfo
     permission: Gorm.build
     permission-message: You don't have permission
+  resetgorm:
+    description: Delete the castle data structures
+    usage: /resetgorm
+    permission: Gorm.build
+    permission-message: You don't have permission
+  snark:
+    description: general debugging command
+    usage: /snark
+    permission: Gorm.build
+    permission-message: You don't have permission
+  splode:
+    description: make a huge bang, for demolishing tests
+    usage: /splode
+    permission: Gorm.build
+    permission-message: You don't have permission

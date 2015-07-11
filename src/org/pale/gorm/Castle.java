@@ -426,7 +426,7 @@ public class Castle {
 
 		if(m == Material.SMOOTH_BRICK || m == Material.WOOD
 				|| m == Material.BRICK || m == Material.COBBLESTONE
-				|| (m == Material.SANDSTONE && data != 0) || isStairs(m))
+				|| ((m == Material.SANDSTONE || m == Material.RED_SANDSTONE) && data != 0) || isStairs(m))
 			return false;
 
 		return true;
@@ -507,7 +507,9 @@ public class Castle {
 	public static boolean isStairs(Material m) {
 		return (m == Material.COBBLESTONE_STAIRS || m == Material.WOOD_STAIRS
 				|| m == Material.BIRCH_WOOD_STAIRS
+				|| m == Material.ACACIA_STAIRS
 				|| m == Material.SANDSTONE_STAIRS
+				|| m == Material.RED_SANDSTONE_STAIRS
 				|| m == Material.SMOOTH_STAIRS || m == Material.BRICK_STAIRS
 				|| m == Material.QUARTZ_STAIRS
 				|| m == Material.NETHER_BRICK_STAIRS
@@ -546,8 +548,10 @@ public class Castle {
 	public void raze() {
 		for (Building r : buildings) {
 			Extent e = r.getExtent().expand(4, Extent.X|Extent.Z);
+			IntVector p = e.getCentre();
+			MaterialManager mgr = new MaterialManager(world.getBiome(p.x, p.z));
 			fill(e.growDirection(Direction.UP, 5), Material.AIR, 0);
-			fill(e.getWall(Direction.DOWN), Material.GRASS, 0);
+			fill(e.getWall(Direction.DOWN), mgr.getGround().m, 0);
 		}
 		buildings.clear();
 	}
@@ -654,6 +658,10 @@ public class Castle {
 		Block b = world.getBlockAt(x, y-1, z);
 		GormPlugin.getInstance().getLogger().info("Cornercheck: "+x+","+z+" = "+b.getType().toString());
 		return b.getType()==Material.STATIONARY_WATER;
+	}
+
+	public static void reset() {
+		instance=null;
 	}
 
 }

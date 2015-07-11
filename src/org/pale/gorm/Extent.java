@@ -816,10 +816,14 @@ public class Extent {
 	}
 
 
-	/// returns true if all four corners are over water
+	/// returns true if all four INTERIOR corners are over water
 
 	public boolean entirelyOnWater() {
+		Extent e = this.expand(-1, X|Z);
 		Castle c  = Castle.getInstance();
-		return c.onWater(minx,minz)&&c.onWater(maxx,minz)&&c.onWater(maxx,maxz)&&c.onWater(minx,maxz);
+		return c.onWater(e.minx,e.minz)&&
+				c.onWater(e.maxx,e.minz)&&
+				c.onWater(e.maxx,e.maxz)&&
+				c.onWater(e.minx,e.maxz);
 	}
 }

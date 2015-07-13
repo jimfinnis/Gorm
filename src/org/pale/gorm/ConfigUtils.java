@@ -21,11 +21,15 @@ public class ConfigUtils {
 	private static List<RandomCollection<MaterialDataPair>> loot = 
 			new ArrayList<RandomCollection<MaterialDataPair>>();
 
+	public static FileConfiguration buildings;
+	
 	public static void load(){
 		ConfigAccessor a = new ConfigAccessor("biomes.yml");
 		loadAliases(a.getConfig());
 		MaterialManager.loadMats(a.getConfig());
 		loadLoots(new ConfigAccessor("loot.yml").getConfig());
+		buildings = new ConfigAccessor("buildings.yml").getConfig();
+		
 	}
 
 	public static MaterialDataPair getLoot(int grade){

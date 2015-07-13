@@ -65,13 +65,4 @@ public class Corridor extends Building {
 	protected Room createRoom(MaterialManager mgr, Extent roomExt, Building bld) {
 		return new EmptyRoom(mgr, roomExt, bld, false);
 	}
-
-	@Override
-	public void build(MaterialManager mgr) {
-		BoxBuilder.build(mgr, extent); // make the walls
-		makeRooms(mgr); // and make the internal rooms
-		underfill(mgr, false); // build "stilts" if required
-		generateRoof(mgr);
-	}
-
 }

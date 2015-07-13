@@ -1,6 +1,7 @@
 #Notes:
 # - not sure "aspect" will work well
-# - 
+# - note that denizens are both at room and building level (buildings
+#   if single blank room)
 
 std:
     - &STDROOMS

@@ -1,0 +1,53 @@
+# blank room has no entry. It does nothing.
+
+dwelling:
+    furnish:
+        amount: 0.1
+        list:
+            loot: 0.5
+            chest: 0.5
+            bed: 0.5
+            sofa1: 1
+            chair1: 2
+            shelves1: 1
+            flowerPot: 1
+            
+library:
+    furnish:
+        amount: 0.2
+        list:
+            shelves1: 1
+            shelves2: 0.5
+            chair1: 0.5
+            shelfcol: 0.5
+    denizen:
+        list:
+            librarian: 1
+        chance: grade
+
+genericshop:
+    furnish:
+        amount: 0.1
+        list:
+            chest: 2
+            loot: 1
+            table: 1
+    denizen:
+        chance: 0.5
+        list:
+            butcher: 1
+
+smithy:
+    furnish:
+        amount: 0.1
+        list:
+            chest: 2
+            loot: 1
+            table: 1
+            anvil: 1
+            cauldron: 0.5
+            furnace: 3
+    denizen:
+        chance: 0.5
+        list:
+            smith: 1

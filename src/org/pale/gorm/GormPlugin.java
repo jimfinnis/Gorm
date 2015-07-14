@@ -57,7 +57,7 @@ public final class GormPlugin extends JavaPlugin {
 		instance = this;
 		//saveDefaultConfig();
 		getLogger().info("Gorm has been enabled");
-		ConfigUtils.load();
+		Config.load();
 		getLogger().info("Brick : "+Material.getMaterial("BRICK").getId());
 	}
 
@@ -136,7 +136,7 @@ public final class GormPlugin extends JavaPlugin {
 			makeExitManually(p);
 			return true;
 		} else if(cn.equalsIgnoreCase("gormconf")){
-			ConfigUtils.load();
+			Config.load();
 		} else if (cn.equalsIgnoreCase("flatten")) {
 			if (!playerCheck(sender))
 				return false;

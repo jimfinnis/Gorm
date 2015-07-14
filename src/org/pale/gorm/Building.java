@@ -8,8 +8,10 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.material.Vine;
 import org.pale.gorm.Extent.LocationRunner;
+import org.pale.gorm.config.BuildingDimensionConfig;
 import org.pale.gorm.rooms.BlankRoom;
 import org.pale.gorm.rooms.EmptyRoom;
 import org.pale.gorm.rooms.PlainRoom;
@@ -26,7 +28,28 @@ import org.pale.gorm.roomutils.WindowMaker;
  * @author white
  * 
  */
-public abstract class Building {
+public class Building {
+	private String type; //!< config type
+	private Building parent;
+	/**
+	 * Constructor - build a building from a config entry. Only generates
+	 * the name and extent, doesn't do any block placement - it needs to
+	 * be moved around first.
+	 * @param name
+	 */
+	Building(Building p,String name){
+		parent = p;
+		ConfigurationSection c = Config.rooms.getConfigurationSection(name);
+		if(c==null){
+			GormPlugin.getInstance().getLogger().severe("Cannot get room config: "+name);
+			return;
+		}
+		BuildingDimensionConfig d = new BuildingDimensionConfig(parent,c);
+		IntVector v = d.getDimensions();
+		setInitialExtent(parent,v.x,v.y,v.z);
+	}
+	
+	
 	/**
 	 * Given a parent building and a size, produce an extent for a building
 	 * which can be slid around by the Builder.
@@ -101,39 +124,6 @@ public abstract class Building {
 	
 	
 	
-	/**
-	 * Generate the "standard" extent, used by most room types - but can
-	 * be tweaked afterwards
-	 */
-	protected void setStandardInitialExtent(Building parent,double xzscale,double yscale){
-		Random rnd = Castle.getInstance().r;
-
-		// get the new building's extent (i.e. location and size)
-		int x = rnd.nextInt(10) + 5;
-		int z = rnd.nextInt(10) + 5;
-		int y;
-		
-		IntVector loc = parent.getExtent().getCentre();
-		
-		double height = Noise.noise2Dfractal(loc.x, loc.z, 1, 2, 3, 0.5); //0-1 noise
-		double variance = Noise.noise2Dfractal(loc.x,loc.z,2,1,3,0.5);
-
-		// TODO this is a blatant special case hack.
-		if(parent.rooms.getFirst().tallNeighbourRequired() && rnd.nextFloat()<0.8) {
-			// if the top room of the parent has a garden, high chance that we're a good bit taller.
-			y = parent.extent.ysize() + 4 + rnd.nextInt((int)(height*10.0));
-		} else {
-			y = rnd.nextInt(5+Noise.scale(15, variance))+10;
-			y = Noise.scale(y,height)+5;
-		}
-		
-		x = (int)(((double)x)*xzscale);
-		z = (int)(((double)z)*xzscale);
-		y = (int)(((double)y)*yscale);
-		
-		setInitialExtent(parent, x, y, z);
-
-	}
 
 	/**
 	 * The standard operation for single-room buildings
@@ -159,12 +149,13 @@ public abstract class Building {
 	}
 
 	/**
-	 * Fill this in to generate the sort of building that's typically attached
-	 * to this one. Typically overridden in subclasses.
+	 * Generates a child building attached to this one
 	 * 
 	 * @return
 	 */
-	public abstract Building createChildBuilding(Random r);
+	public Building createChildBuilding(Random r){
+		return null; //TODO
+	}
 
 	/**
 	 * Attempt to build a number of internal floors in tall buildings. Floors

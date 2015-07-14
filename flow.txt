@@ -23,3 +23,20 @@ GormPlugin.buildRandomRoom
         makeRandomExit twice
             
 
+
+Within a building:
+    Building constructor: 
+        get type
+        read config to build dimension data and get initial extent
+    build:
+        follow processing instructions:
+            box - build box
+            clear (mutex with above) - just fill with air
+            makerooms - construct rooms
+                parameters: rooms
+            singleroom (mutex with above) - make it one BlankRoom
+            underfill OR underfill_stilts
+            roof
+    furnish:
+        calls furnish for each room
+        

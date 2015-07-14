@@ -292,20 +292,20 @@ public class MaterialManager {
 	private static Map<MatType,RandomCollection<MaterialDataPair>> getMats(FileConfiguration f,String key){
 		Map<MatType,RandomCollection<MaterialDataPair>> mats = new HashMap<MatType,RandomCollection<MaterialDataPair>>();
 
-		mats.put(MatType.PRIMARY,ConfigUtils.getMaterialDataPairs(f,key+".primary")); 
-		mats.put(MatType.SECONDARY,ConfigUtils.getMaterialDataPairs(f,key+".secondary")); 
-		mats.put(MatType.SUPSECONDARY,ConfigUtils.getMaterialDataPairs(f,key+".supsecondary")); 
-		mats.put(MatType.ORNAMENT,ConfigUtils.getMaterialDataPairs(f,key+".ornament")); 
-		mats.put(MatType.STAIR,ConfigUtils.getMaterialDataPairs(f,key+".stair")); 
-		mats.put(MatType.FENCE,ConfigUtils.getMaterialDataPairs(f,key+".fence")); 
-		mats.put(MatType.ROOFSTEPS,ConfigUtils.getMaterialDataPairs(f,key+".roofsteps")); 
-		mats.put(MatType.GROUND,ConfigUtils.getMaterialDataPairs(f,key+".ground")); 
-		mats.put(MatType.POLE,ConfigUtils.getMaterialDataPairs(f,key+".pole")); 
-		mats.put(MatType.WINDOW,ConfigUtils.getMaterialDataPairs(f,key+".window")); 
-		mats.put(MatType.DOOR,ConfigUtils.getMaterialDataPairs(f,key+".door")); 
-		mats.put(MatType.FLOOR,ConfigUtils.getMaterialDataPairs(f,key+".floor")); 
-		mats.put(MatType.FLOWERS,ConfigUtils.getMaterialDataPairs(f,key+".flowers")); 
-		mats.put(MatType.RAREFLOWERS,ConfigUtils.getMaterialDataPairs(f,key+".rareflowers")); 
+		mats.put(MatType.PRIMARY,Config.getMaterialDataPairs(f,key+".primary")); 
+		mats.put(MatType.SECONDARY,Config.getMaterialDataPairs(f,key+".secondary")); 
+		mats.put(MatType.SUPSECONDARY,Config.getMaterialDataPairs(f,key+".supsecondary")); 
+		mats.put(MatType.ORNAMENT,Config.getMaterialDataPairs(f,key+".ornament")); 
+		mats.put(MatType.STAIR,Config.getMaterialDataPairs(f,key+".stair")); 
+		mats.put(MatType.FENCE,Config.getMaterialDataPairs(f,key+".fence")); 
+		mats.put(MatType.ROOFSTEPS,Config.getMaterialDataPairs(f,key+".roofsteps")); 
+		mats.put(MatType.GROUND,Config.getMaterialDataPairs(f,key+".ground")); 
+		mats.put(MatType.POLE,Config.getMaterialDataPairs(f,key+".pole")); 
+		mats.put(MatType.WINDOW,Config.getMaterialDataPairs(f,key+".window")); 
+		mats.put(MatType.DOOR,Config.getMaterialDataPairs(f,key+".door")); 
+		mats.put(MatType.FLOOR,Config.getMaterialDataPairs(f,key+".floor")); 
+		mats.put(MatType.FLOWERS,Config.getMaterialDataPairs(f,key+".flowers")); 
+		mats.put(MatType.RAREFLOWERS,Config.getMaterialDataPairs(f,key+".rareflowers")); 
 		return mats;
 	}
 }

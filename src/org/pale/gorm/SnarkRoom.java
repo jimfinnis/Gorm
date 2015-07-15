@@ -1,5 +1,7 @@
-package org.pale.gorm.rooms;
-
+package org.pale.gorm;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.pale.gorm.Building;
 import org.pale.gorm.Castle;
 import org.pale.gorm.Extent;
@@ -16,11 +18,9 @@ import org.pale.gorm.roomutils.Furniture;
  * @author domos
  *
  */
-public class EmptyRoom extends Room {
-	private boolean hasChest=false;
-	public EmptyRoom(MaterialManager mgr,Extent e, Building b, boolean addChest) {
+public class SnarkRoom extends Room {
+	public SnarkRoom(MaterialManager mgr,Extent e, Building b) {
 		super(mgr, e, b);
-		hasChest=addChest;
 	}
 
 	@Override
@@ -36,16 +36,20 @@ public class EmptyRoom extends Room {
 
 		lightsAndCarpets(true);
 		
-		addSignHack();
+		
+		IntVector pos = e.getCentre(); pos.y = e.miny + 1;
+		
+		 Block blk = Castle.getInstance().getBlockAt(pos);
+		 blk.setType(Material.SIGN_POST); Sign s = (Sign) blk.getState();
+		 s.setLine(0, "SNARK ROOM");
+		 s.update();
+		
 		
 		return null; // we don't modify the building extent
 	}
 
 	@Override
 	public void furnish(MaterialManager mgr) {
-		// This places a chest somewhere
-		if(hasChest)
-			Furniture.place(mgr,this, "Ccw");
 	}
 
 }

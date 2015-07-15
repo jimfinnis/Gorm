@@ -1,8 +1,10 @@
 package org.pale.gorm;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -12,13 +14,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.material.Vine;
 import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.config.BuildingDimensionConfig;
-import org.pale.gorm.rooms.BlankRoom;
-import org.pale.gorm.rooms.EmptyRoom;
-import org.pale.gorm.rooms.PlainRoom;
-import org.pale.gorm.rooms.RoofFarm;
-import org.pale.gorm.rooms.RoofGarden;
-import org.pale.gorm.rooms.SpawnerRoom;
+import org.pale.gorm.config.ConfigUtils;
+import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 import org.pale.gorm.roomutils.BoxBuilder;
+import org.pale.gorm.roomutils.Gardener;
 import org.pale.gorm.roomutils.RoofBuilder;
 import org.pale.gorm.roomutils.WindowMaker;
 
@@ -29,8 +28,16 @@ import org.pale.gorm.roomutils.WindowMaker;
  * 
  */
 public class Building {
-	private String type; //!< config type
+	public String type; //!< config type
 	private Building parent;
+	private ConfigurationSection c;
+	
+
+	public String getType() {
+		return type;
+	}
+
+
 	/**
 	 * Constructor - build a building from a config entry. Only generates
 	 * the name and extent, doesn't do any block placement - it needs to
@@ -39,32 +46,60 @@ public class Building {
 	 */
 	Building(Building p,String name){
 		parent = p;
-		ConfigurationSection c = Config.rooms.getConfigurationSection(name);
-		if(c==null){
-			GormPlugin.getInstance().getLogger().severe("Cannot get room config: "+name);
-			return;
+		type = name;
+		try {
+			c = Config.buildings.getConfigurationSection(name);
+			if(c==null){
+				throw new RuntimeException("Cannot get building config: "+name);
+			}
+			BuildingDimensionConfig d = new BuildingDimensionConfig(parent,parent.extent.getCentre(),c);
+			IntVector v = d.getDimensions();
+			setInitialExtent(parent,v.x,v.y,v.z);
+		} catch(MissingAttributeException e){
+			throw new RuntimeException("cannot find attribute '"+e.name+"' in building '"+type+"'");
 		}
-		BuildingDimensionConfig d = new BuildingDimensionConfig(parent,c);
-		IntVector v = d.getDimensions();
-		setInitialExtent(parent,v.x,v.y,v.z);
 	}
-	
-	
+
+	/**
+	 * Constructor for a building without a parent - the first one in the system.
+	 * @param p
+	 * @param name
+	 */
+	Building(Location loc,String name){
+		parent = null;
+		type = name;
+		try {
+			c = Config.buildings.getConfigurationSection(name);
+			if(c==null){
+				throw new RuntimeException("Cannot get building config: "+name);
+			}
+			BuildingDimensionConfig d = new BuildingDimensionConfig(null,new IntVector(loc),c);
+			IntVector v = d.getDimensions();
+			Extent e = new Extent(new IntVector(loc),v.x,v.y,v.z);
+			setInitialExtent(e);
+		} catch(MissingAttributeException e){
+			throw new RuntimeException("cannot find attribute '"+e.name+"' in building '"+type+"'");
+		}
+	}
+
 	/**
 	 * Given a parent building and a size, produce an extent for a building
-	 * which can be slid around by the Builder.
+	 * which can be slid around by the Builder. If there is no parent,
+	 * centre the extent around the player
 	 * 
 	 * @param parent
-	 * @param e
+	 * @param x length
+	 * @param y height
+	 * @param z width
 	 */
 	public void setInitialExtent(Building parent, int x, int y, int z) {
-		Extent e = new Extent(parent.originalExtent.getCentre(), x, 1, z); // y
-		// unused
+		Extent e;
+		e = new Extent(parent.originalExtent.getCentre(), x, 1, z);
 		e.miny = parent.originalExtent.miny; // make ground floors align
 		setInitialExtent(e.setHeight(y));
 	}
-	
-	
+
+
 	public void setInitialExtent(Extent e){
 		extent = new Extent(e);
 	}
@@ -98,7 +133,7 @@ public class Building {
 	 * The extent of the entire building INCLUDING the basement
 	 */
 	public Extent extent;
-	
+
 	/**
 	 * The original extent of the building before any basements etc.
 	 */
@@ -112,7 +147,7 @@ public class Building {
 	public Extent getExtent() {
 		return extent;
 	}
-	
+
 	/**
 	 * This is used once the building is fitted into place to set the originalExtent,
 	 * which records where the unmodified building is before basements etc. are added;
@@ -121,31 +156,85 @@ public class Building {
 	public void fixOriginalExtent(){
 		originalExtent = new Extent(extent);
 	}
-	
-	
-	
+
 
 	/**
-	 * The standard operation for single-room buildings
-	 * 
-	 */
-	public Room makeSingleRoom(MaterialManager mgr) {
-		rooms = new LinkedList<Room>(); // make sure any old ones are gone
-		Room r = new BlankRoom(mgr, originalExtent, this);
-		addRoomTop(r);
-		return r;
-	}
-
-	/**
-	 * Draw into the world - call this *before* adding the building! This builds
-	 * "standard" buildings.
+	 * Draw into the world - call this *before* adding the building! Reads the
+	 * list of build steps for this building type and executes them in order.
+	 * Some may have parameters which are read from the main building config
+	 * space.
 	 */
 	public void build(MaterialManager mgr) {
-		BoxBuilder.build(mgr, extent); // make the walls
-		makeRooms(mgr); // and make the internal rooms
-		underfill(mgr, false); // build "stilts" if required
-		generateRoof(mgr);
+		Castle cs = Castle.getInstance();
+		if(!c.isList("build")){
+			throw new RuntimeException("cannot load build steps for: "+type);
+		}
 
+		try {
+			for(String step: c.getStringList("build")){
+				if(step.equalsIgnoreCase("box")){
+					BoxBuilder.build(mgr, extent); // make the walls				
+				}else if(step.equalsIgnoreCase("clear")){
+					Extent inner = extent.expand(-1, Extent.ALL);
+					cs.checkFill(inner, Material.AIR, 0); // fill the inner area
+				}else if(step.equalsIgnoreCase("makerooms")){
+					makeRooms(mgr); // and make the internal rooms				
+				}else if(step.equalsIgnoreCase("singleroom")){
+					rooms = new LinkedList<Room>(); // make sure any old ones are gone
+					Room r = new BlankRoom(mgr, originalExtent, this);
+					addRoomTop(r);
+				}else if(step.equalsIgnoreCase("underfill")){
+					if(!c.isDouble("underfill"))
+						throw new RuntimeException("attribute 'underfill' not found in building: "+type);
+					double chance = c.getDouble("underfill");
+					underfill(mgr, cs.r.nextDouble() < chance);
+				}else if(step.equalsIgnoreCase("roof")){
+					generateRoof(mgr);
+				}else if(step.equalsIgnoreCase("patternfloor")){
+					patternFloor(mgr,cs);
+				}else if(step.equalsIgnoreCase("underfloor")){
+					Extent floor = extent.getWall(Direction.DOWN);
+					cs.checkFill(floor.subvec(0, 1, 0), mgr.getPrimary());
+				}else if(step.equalsIgnoreCase("garden")){
+					Extent floor = extent.getWall(Direction.DOWN);
+					Gardener.plant(mgr,floor); // plant some things
+				}else if(step.equalsIgnoreCase("floorlights")){
+					floorLights(extent.expand(-1, Extent.ALL)); // light the inner region				
+				}else if(step.equalsIgnoreCase("outside")){
+					rooms.getFirst().setOutside();
+				}else if(step.equalsIgnoreCase("allsidesopen")){
+					rooms.getFirst().setAllSidesOpen();
+				}else if(step.equalsIgnoreCase("farm")){
+					Extent floor = extent.getWall(Direction.DOWN);
+					Gardener.makeFarm(floor);				
+				}else throw new RuntimeException("unknown build step '"+step+"' in room type '"+type+"'");
+			}
+		} catch(MissingAttributeException e){
+			throw new RuntimeException("cannot find attribute '"+e.name+"in building '"+type+"'");
+		}
+
+	}
+
+	private void patternFloor(MaterialManager mgr, Castle cs) throws MissingAttributeException{
+		Extent floor = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z);
+		ConfigurationSection pf = c.getConfigurationSection("patternfloor");
+		if(pf==null)
+			throw new RuntimeException("map 'patternfloor' not found in building: "+type);
+		double chance = pf.isDouble("chance") ? pf.getDouble("chance"):0;
+
+		if(cs.r.nextDouble()<chance){
+			int n = ConfigUtils.getRandomValueInRangeInt(pf, "count");
+			List<String> matnames = pf.getStringList("mats");
+			if(matnames==null)throw new MissingAttributeException("mats",pf);
+			MaterialDataPair mats[] = new MaterialDataPair[n];
+			for(int i=0;i<n;i++){
+				mats[i] = Config.makeMatDataPair(matnames.get(i));
+			}
+			cs.patternFill(floor, mats, n, null);
+		} else {
+			MaterialDataPair ground = cs.r.nextDouble()<0.2 ? mgr.getSupSecondary() : mgr.getGround();
+			cs.fill(floor, ground);
+		}
 	}
 
 	/**
@@ -154,7 +243,12 @@ public class Building {
 	 * @return
 	 */
 	public Building createChildBuilding(Random r){
-		return null; //TODO
+		try {
+			String s = ConfigUtils.getWeightedRandom(c, "children");
+			return new Building(this,s);			
+		} catch (MissingAttributeException e) {
+			throw new RuntimeException("missing (or wrong) children block in building: "+type);
+		}
 	}
 
 	/**
@@ -213,9 +307,9 @@ public class Building {
 	private void buildRoofGarden(MaterialManager mgr, Extent e) {
 		Room r;
 		if(Castle.getInstance().r.nextFloat()<0.2)
-			r = new RoofFarm(mgr, e, this);
+			r = new SnarkRoom(mgr, e, this);
 		else
-			r = new RoofGarden(mgr, e, this);
+			r = new SnarkRoom(mgr, e, this);
 		addRoomAndBuildExitDown(r, true);
 	}
 
@@ -242,19 +336,19 @@ public class Building {
 	 */
 	private boolean createRoomAt(MaterialManager mgr, int yAboveFloor,
 			int yBelowCeiling) {
-		
+
 		boolean rv;
 		if(extent.maxy - yBelowCeiling < 5){
 			yBelowCeiling = extent.maxy-2;
 			rv=true;
 		}
 		else rv=false;
-		
+
 		// work out the extent of this room
 		Extent roomExt = new Extent(extent);
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
-		
+
 		Room r = createRoom(mgr, roomExt, this);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
@@ -310,41 +404,9 @@ public class Building {
 	 */
 
 	protected Room createRoom(MaterialManager mgr, Extent roomExt, Building bld) {
-		double grade = bld.grade();
-		if (grade <= 0.35) {
-			return gradeLow(mgr, roomExt, bld);
-		} else if (grade <= 0.5) {
-			return gradeMidLow(mgr, roomExt, bld);
-		} else {
-			return gradeHigh(mgr, roomExt, bld);
-		}
+		return new SnarkRoom(mgr,roomExt,bld);
 	}
 
-	private Room gradeLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		switch (Castle.getInstance().r.nextInt(15)) {
-		case 0:
-			return new EmptyRoom(mgr, roomExt, bld, true); // with treasure
-		case 1:
-		case 2:
-			return new SpawnerRoom(mgr, roomExt, bld);
-		default:
-			return new EmptyRoom(mgr, roomExt, bld, false); // actually empty
-		}
-	}
-
-	private Room gradeMidLow(MaterialManager mgr, Extent roomExt, Building bld) {
-		switch (Castle.getInstance().r.nextInt(3)) {
-		default:
-			return new PlainRoom(mgr, roomExt, bld);
-		}
-	}
-
-	private Room gradeHigh(MaterialManager mgr, Extent roomExt, Building bld) {
-		switch (Castle.getInstance().r.nextInt(5)) {
-		default:
-			return new PlainRoom(mgr, roomExt, bld);
-		}
-	}
 
 	/**
 	 * add a new room, attempting to build an exit down from this room to the
@@ -400,9 +462,9 @@ public class Building {
 	public void lightWalls(Extent e) {
 		int y = e.miny + 4;
 		if (y > e.maxy)
-                    y = e.maxy;
-            
-                Castle c = Castle.getInstance();
+			y = e.maxy;
+
+		Castle c = Castle.getInstance();
 		for (int x = e.minx; x <= e.maxx; x++) {
 			if (Castle.requiresLight(x, y, e.minz))
 				c.addLightToWall(x, y, e.minz,BlockFace.SOUTH);
@@ -470,7 +532,7 @@ public class Building {
 			dz = extent.zsize() <= 8 ? extent.zsize() - 1
 					: calcUnderfill(extent.zsize() - 1);
 		}
-		
+
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
@@ -534,7 +596,7 @@ public class Building {
 			// we'll succeed eventually unless the world has gone very strange
 			// now we add a new room onto the bottom of the building (i.e. at
 			// the start)
-			Room r = new PlainRoom(mgr, e, this);
+			Room r = new SnarkRoom(mgr, e, this);
 			addRoomAndBuildExitUp(r, false);
 			GormPlugin.log("basement done! " + e.toString());
 			extent = extent.union(e); // Doesn't modify originalExtent
@@ -569,7 +631,7 @@ public class Building {
 	public void setExtent(Extent e) {
 		extent = new Extent(e);
 	}
-	
+
 
 
 	/**
@@ -660,7 +722,7 @@ public class Building {
 							* edgeFactor) {
 						int holeh = rnd.nextInt(5) + 1;
 						Extent e = new Extent(x, y, z, x, y + holeh, z)
-								.intersect(extent);
+						.intersect(extent);
 						if (e != null)
 							c.fill(e, Material.AIR, 0);
 					} else if (rnd.nextDouble() < 0.1 && b.getType().isSolid()) {

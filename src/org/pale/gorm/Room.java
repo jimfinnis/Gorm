@@ -631,7 +631,8 @@ public abstract class Room implements Comparable<Room> {
 		 * String.format("Grade %d (%.2f)", b.gradeInt(), b.grade()));
 		 * s.setLine(2, getClass().getSimpleName() + "/" +
 		 * b.getClass().getSimpleName()); s.update();
-		 */}
+		 */
+		}
 
 	/**
 	 * Force updates of the modified chunk to be sent to all players. Not sure

@@ -11,9 +11,9 @@ std:
                 spawner: 2
                 empty: 14
             medium:
-                plain: 1
+                plainmedgrade: 1
             high:
-                plain: 1
+                plainhighgrade: 1
     - &STDDIMS   
         dimensions:
             type: standard
@@ -24,8 +24,9 @@ std:
         build:
             - box
             - makerooms
-            - underfill_stilts
+            - underfill
             - roof
+        underfill: 0.5
 
 hall:
     <<: *STDBUILD
@@ -74,15 +75,15 @@ garden:
         - clear
         - singleroom
         - outside
-        - allopen
-        - underfill_solid
+        - allsidesopen
+        - underfill
         - underfloor
         - patternfloor
         - garden
         - floorlights
     singleroom: true
     outside: true
-    underfill: true
+    underfill_solid: 1
     patternfloor: 
         count: [2,5]
         mats: [ground,ground,secondary,supsecondary,supsecondary]
@@ -101,9 +102,10 @@ farm:
         - singleroom
         - outside
         - allopen
-        - underfill_solid
+        - underfill
         - underfloor
         - farm
+    underfill_solid: 1
     denizen:
         list:
             farmer: 1

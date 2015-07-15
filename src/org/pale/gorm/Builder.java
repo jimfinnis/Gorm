@@ -5,9 +5,6 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.material.Sign;
-import org.pale.gorm.buildings.Garden;
-import org.pale.gorm.buildings.Hall;
-import org.pale.gorm.buildings.Path;
 
 /**
  * This object actually does the building inside the castle
@@ -36,9 +33,7 @@ public class Builder {
 
 		if (castle.getBuildingCount() == 0) {
 			// create the first building if there aren't any
-			IntVector v = new IntVector(loc).subtract(0, 1, 0);
-			Extent e = new Extent(v, 30, 0, 20).setHeight(30);
-			b = new Hall(e);
+			b = new Building(loc,"hall");
 		} else {
 			// first, create the required building, with its extents
 			// set around some other building, and slide it around until it fits
@@ -75,7 +70,7 @@ public class Builder {
 	private boolean makeRandomExit() {
 		for (Room r : castle.getRooms()) {
 			// corridors have lots of exits. Hack hack hack.
-			if (r.b instanceof org.pale.gorm.buildings.Corridor) {
+			if (r.b.getType().equals("corridor")) {
 				if (r.attemptMakeExit())
 					r.update();
 			}

@@ -1,4 +1,5 @@
-package org.pale.gorm.rooms;
+package org.pale.gorm;
+
 
 import org.pale.gorm.Building;
 import org.pale.gorm.Extent;
@@ -7,7 +8,7 @@ import org.pale.gorm.MaterialManager;
 import org.pale.gorm.Room;
 
 /**
- * A plain, carpeted room.
+ * A completely blank room
  * @author white
  *
  */

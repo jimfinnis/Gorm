@@ -33,10 +33,16 @@ Within a building:
             box - build box
             clear (mutex with above) - just fill with air
             makerooms - construct rooms
-                parameters: rooms
+                parameter: rooms: weighted lists of room types for each grade
             singleroom (mutex with above) - make it one BlankRoom
-            underfill OR underfill_stilts
+            underfill
+                parameter: underfill: % chance of solid
             roof
+            garden
+            farm
+            floorlights
+            outside - singleroom MUST have run
+            allsidesopen - singleroom MUST have run
     furnish:
         calls furnish for each room
-        
+    ruin

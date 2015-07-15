@@ -1,5 +1,35 @@
 # blank room has no entry. It does nothing.
 
+plainlowgrade:
+    furnish:
+        amount: 0.1
+        list:
+            loot: 1
+            column: 4
+
+plainmedgrade:
+    furnish:
+        amount: 0.1
+        list:
+            loot: 0.5
+            chest: 0.5
+            sofa1: 1
+            chair1: 2
+            shelves1: 1
+            flowerPot: 1
+
+plainhighgrade:
+    furnish:
+        amount: 0.1
+        list:
+            loot: 2
+            brewingstand: 0.2
+            chest: 0.5
+            sofa1: 1
+            chair1: 2
+            shelves1: 1
+            flowerPot: 1
+
 dwelling:
     furnish:
         amount: 0.1

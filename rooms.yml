@@ -1,13 +1,39 @@
-# blank room has no entry. It does nothing.
+std:
+    - &OUTSIDEROOM
+        outside: true
+        columns: false
+        allsidesopen: true
+        haswindows: false
+    - &INSIDEROOM
+        build:
+            - floor
+            - carpet|med2+high
+            - light|med1+med2+high
+            
+            
+blank:
+    note: "blank room used for single room buildings"
 
-plainlowgrade:
+basement:
+    <<: *INSIDEROOM
+    furnish:
+        amount: 0.05
+        list:
+            loot: 1
+            chest: 2
+
+empty:
+    <<: *INSIDEROOM
+
+emptywithtreasure:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
             loot: 1
-            column: 4
 
 plainmedgrade:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
@@ -19,6 +45,7 @@ plainmedgrade:
             flowerPot: 1
 
 plainhighgrade:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
@@ -31,6 +58,7 @@ plainhighgrade:
             flowerPot: 1
 
 dwelling:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
@@ -43,6 +71,12 @@ dwelling:
             flowerPot: 1
             
 library:
+    <<: *INSIDEROOM
+    build:
+        - floor
+        - carpet|med2+high
+        - light|med1+med2+high
+        - stainedglasswall|0.2
     furnish:
         amount: 0.2
         list:
@@ -56,6 +90,7 @@ library:
         chance: grade
 
 genericshop:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
@@ -68,6 +103,7 @@ genericshop:
             butcher: 1
 
 smithy:
+    <<: *INSIDEROOM
     furnish:
         amount: 0.1
         list:
@@ -81,3 +117,25 @@ smithy:
         chance: 0.5
         list:
             smith: 1
+
+spawner:
+    <<: *INSIDEROOM
+    haswindows: false
+
+rooffarm:
+    <<: *OUTSIDEROOM
+    tallneighbour: true
+    holeinfloor: false
+    build:
+        - underfloor
+        - farmfloor
+        - roofedge
+
+roofgarden:
+    <<: *OUTSIDEROOM
+    tallneighbour: true
+    build:
+        - underfloor
+        - gardenfloor
+        - roofedge
+        - flowers

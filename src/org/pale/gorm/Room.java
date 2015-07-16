@@ -18,14 +18,19 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Villager;
 import org.bukkit.material.Ladder;
 import org.pale.gorm.Extent.LocationRunner;
+import org.pale.gorm.config.ConfigUtils;
+import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 import org.pale.gorm.roomutils.ExitDecorator;
 import org.pale.gorm.roomutils.Furniture;
 import org.pale.gorm.roomutils.FurnitureItems;
+import org.pale.gorm.roomutils.Gardener;
 import org.pale.gorm.roomutils.StairBuilder;
+import org.pale.gorm.roomutils.WindowMaker;
 
 /**
  * A room is a level of a building. Typically it's indoors, but the roof can
@@ -34,7 +39,7 @@ import org.pale.gorm.roomutils.StairBuilder;
  * @author white
  *
  */
-public abstract class Room implements Comparable<Room> {
+public class Room implements Comparable<Room> {
 
 	@Override
 	public int compareTo(Room that) {
@@ -92,11 +97,17 @@ public abstract class Room implements Comparable<Room> {
 		return exits.size();
 	}
 
+
+	public String getType() {
+		return type;
+	}
 	/**
 	 * This is a list of the extents which are blocked by furniture or exits
 	 * (such as steps). Add to it with addBlock() and check with isBlocked().
 	 */
 	Collection<Extent> blocks = new ArrayList<Extent>();
+	private ConfigurationSection c;
+	private String type;
 
 	/**
 	 * Add a new extent to the list of blocked extents.
@@ -151,7 +162,7 @@ public abstract class Room implements Comparable<Room> {
 	 * @return
 	 */
 	public boolean hasWindows() {
-		return true;
+		return c.getBoolean("haswindows",true);
 	}
 
 	public void spawnVillager(Villager.Profession p) {
@@ -161,10 +172,6 @@ public abstract class Room implements Comparable<Room> {
 		Castle.getInstance().incDenizenCount(p);
 	}
 
-	protected void spawnIronGolem() {
-		Location l = e.getCentre().toLocation();
-		Castle.getInstance().getWorld().spawn(l, IronGolem.class);
-	}
 
 	/**
 	 * Make this room the room below a gallery. This needs to be done before the
@@ -191,18 +198,35 @@ public abstract class Room implements Comparable<Room> {
 
 	}
 
-	protected Room(MaterialManager mgr, Extent e, Building b) {
+	protected Room(String name, MaterialManager mgr, Extent e, Building b) {
 		this.b = b;
 		this.e = new Extent(e);
+		Castle cs = Castle.getInstance();
+
+		c = Config.rooms.getConfigurationSection(name);
+		if(c==null)
+			throw new RuntimeException("cannot find room config: "+name);
+		type = name;
+		GormPlugin.log("Creating room: "+name);
+		
+		for(String k : c.getKeys(false)){
+			GormPlugin.log("   "+k+":  "+c.get(k).toString());
+		}
+
+		// set initial properties
+		indoors = !c.getBoolean("outside",false);
+		if(c.getBoolean("allsidesopen",false))
+			setAllSidesOpen();
+
+
 		// it's possible that some rooms may modify the building extent - all
 		// room build methods return either null or the new building extent
 		Extent modifiedBldgExtent = build(mgr, b.getExtent());
 		if (modifiedBldgExtent != null)
 			b.setExtent(modifiedBldgExtent);
 
-		// maybe make this room into a gallery base
-		Castle c = Castle.getInstance();
-		if (c.r.nextFloat() < 0.7 && canBeBelowGallery())
+		// maybe make this room into a gallery base, filling it with columns.
+		if (cs.r.nextFloat() < 0.7 && canBeBelowGallery())
 			makeBelowGallery(mgr);
 		// and if the room below is a gallery base, blow the necessary hole
 		// and fence it.
@@ -213,12 +237,12 @@ public abstract class Room implements Comparable<Room> {
 			Room below = b.rooms.getFirst();
 
 			if (below.galleryColumnExtent != null) {
-				World w = c.getWorld();
+				World w = cs.getWorld();
 				Extent fence = new Extent(below.galleryColumnExtent).setY(e.miny + 1);
-				
+
 				// ugly code, mainly to deal with simpler overwriting logic - the 
 				// fence must not overwrite anything already there.
-				
+
 				MaterialDataPair fenceMat = mgr.getFence();
 				for(int x=fence.minx;x<=fence.maxx;x++){
 					Block k = w.getBlockAt(x,fence.miny,fence.minz);
@@ -252,7 +276,7 @@ public abstract class Room implements Comparable<Room> {
 				GormPlugin.log("Room extent:  " + e.toString());
 				GormPlugin.log("Fence extent: " + fence.toString());
 				GormPlugin.log("Hole extent:  " + hole.toString());
-				c.fill(hole, new MaterialDataPair(Material.AIR, 0));
+				cs.fill(hole, new MaterialDataPair(Material.AIR, 0));
 				// it would be stupid to make furniture in the hole or fence.
 				addBlock(hole.expand(1, Extent.X | Extent.Z));
 			}
@@ -262,15 +286,13 @@ public abstract class Room implements Comparable<Room> {
 	}
 
 	public boolean canHaveHoleInFloor() {
-		// all rooms can have a hole in the floor, it seems.
-		return true;
+		return c.getBoolean("holeinfloor",true);
 	}
 
 	public boolean canBeBelowGallery() {
 		// by default, only indoors rooms can be a "below gallery", and
 		// so filled with columns.
-		// Other classes might override this,
-		return indoors;
+		return c.getBoolean("columns",indoors);
 	}
 
 	protected Room setOpenSide(Direction d) {
@@ -340,18 +362,6 @@ public abstract class Room implements Comparable<Room> {
 			b.floorLights(inner);
 		}
 		return carpetCol;
-	}
-
-	/**
-	 * Add generic unique items, such as a possible spawner in low-grade rooms
-	 *
-	 * @param mgr
-	 */
-	public void furnishUniques(MaterialManager mgr) {
-		if (b.grade() < 0.1) // we ONLY place really scary things if the whole
-			// building is lowgrade
-			Furniture.place(mgr, this,
-					FurnitureItems.random(FurnitureItems.uniqueScaryChoices));
 	}
 
 	public Extent getExtent() {
@@ -632,7 +642,7 @@ public abstract class Room implements Comparable<Room> {
 		 * s.setLine(2, getClass().getSimpleName() + "/" +
 		 * b.getClass().getSimpleName()); s.update();
 		 */
-		}
+	}
 
 	/**
 	 * Force updates of the modified chunk to be sent to all players. Not sure
@@ -852,6 +862,101 @@ public abstract class Room implements Comparable<Room> {
 		e.maxy = upper.e.maxy - 1;
 		upper.addBlock(e);
 	}
+	
+	protected void perimeter(MaterialManager mgr, Castle c) {
+		// bitfield describing the perimeter posts
+		// bits 0-2 are the post types
+		// bit 4 if means 'alternate block with secondary if wall is odd length'
+		// bit 5 means alts have torches
+		// bits 6-7 if both are 11 means 'use steps instead of primary block'
+		int tp = c.r.nextInt();
+		Furniture.placePost(mgr, this, c, e.minx, e.miny, e.minz, tp);
+		Furniture.placePost(mgr, this, c, e.maxx, e.miny, e.minz, tp);
+		Furniture.placePost(mgr, this, c, e.minx, e.miny, e.maxz, tp);
+		Furniture.placePost(mgr, this, c, e.maxx, e.miny, e.maxz, tp);
+
+		boolean alternate = (tp & 16) == 1;
+		boolean useStepsAsWall = ((tp >> 5) & 3) == 3;
+		boolean altTorch = (tp & 32) == 1;
+
+		alternate = true;
+		useStepsAsWall = true;
+
+		// for each side, use turtle to place wall. If walls are odd length,
+		// consider alternating
+		// wall blocks.
+
+		Turtle t;
+		for (Direction d : Direction.values()) {
+			IntVector v;
+			int len;
+			switch (d) {
+			case NORTH:
+				v = new IntVector(e.minx, e.miny, e.maxz);
+				len = e.zsize();
+				break;
+			case SOUTH:
+				v = new IntVector(e.maxx, e.miny, e.minz);
+				len = e.zsize();
+				break;
+			case EAST:
+				v = new IntVector(e.minx, e.miny, e.minz);
+				len = e.xsize();
+				break;
+			case WEST:
+				v = new IntVector(e.maxx, e.miny, e.maxz);
+				len = e.xsize();
+				break;
+			default:
+				v = null;
+				len = 0;
+			}
+
+			if ((len & 1) == 0) // make sure we can't alternate on even walls.
+								// Looks weird.
+				alternate = false;
+
+			MaterialDataPair main = mgr.getFence();
+			MaterialDataPair alt = mgr.getSupSecondary();
+
+			if (v != null) {
+				t = new Turtle(mgr, c.getWorld(), v, d);
+				if (useStepsAsWall)
+					t.setMaterial(mgr.getStair());
+				else
+					t.setMaterial(main);
+
+				t.setMaterial(main);
+				t.up();
+				for (int i = 0; i < 200; i++) {
+					t.forwards();
+					if (useStepsAsWall) {
+						if (alternate) {
+							if ((i & 1) != 0)
+								t.setMaterial(alt);
+							else
+								t.setMaterial(mgr.getStair());
+						}
+						t.rotate(1);
+						if (!t.write())
+							break;
+						t.rotate(-1);
+					} else {
+						if (alternate)
+							t.setMaterial((i & 1) == 0 ? main : alt);
+						if (!t.write())
+							break;
+						if (alternate && altTorch)
+							t.run("Mtuwd");
+					}
+
+				}
+			}
+
+		}
+
+	}
+
 
 	/**
 	 * actually make the room's walls (the building's outer walls should already
@@ -859,13 +964,84 @@ public abstract class Room implements Comparable<Room> {
 	 * building extent is returned. Furniture should be added in furnish()
 	 * although carpets should be added here.
 	 */
-	public abstract Extent build(MaterialManager mgr, Extent buildingExtent);
+	public Extent build(MaterialManager mgr, Extent buildingExtent){
+		if(!c.isList("build")){
+			throw new RuntimeException("cannot load build steps for room: "+type);
+		}
+		
+		Castle cs = Castle.getInstance();
+		Extent modifiedBuildingExtent=null;
+		Extent floor = e.expand(-1, Extent.X|Extent.Z);
+		floor.maxy=floor.miny;
+
+		for(String ent: c.getStringList("build")){
+			String step;
+			double chance=0;
+			if(ent.contains("|")){
+				// the forms step|0.5, step|low, step|low+med1 are all valid
+				String[] a = ent.split("|");
+				step = a[0];
+				if(a[1].contains("low") && b.gradeInt()==1)chance=1;
+				if(a[1].contains("med1") && b.gradeInt()==2)chance=1;
+				if(a[1].contains("med2") && b.gradeInt()==3)chance=1;
+				if(a[1].contains("high") && b.gradeInt()==4)chance=1;
+				try{
+					chance = Double.parseDouble(a[1]);
+				} catch(NumberFormatException e){}
+			} else {
+				step = ent;
+				chance = 1;
+			}
+			if(cs.r.nextDouble() < chance){
+				if(step.equalsIgnoreCase("underfloor")){
+					// note *not* floor, we're using the edges in xz too
+					Extent f = e.getWall(Direction.DOWN);
+					Material m = f.getCentre().getBlock().getType();
+					cs.fill(f.subvec(0,1,0), m,0); // underfloor
+					cs.fill(e.expand(-1, Extent.ALL), Material.AIR,0);
+					cs.checkFill(f,m,0);
+				}
+				else if(step.equalsIgnoreCase("gardenfloor")){	
+					cs.fill(floor, mgr.getGround());
+				}
+				else if(step.equalsIgnoreCase("farmfloor")){
+					Gardener.makeFarm(floor);
+				}
+				else if(step.equalsIgnoreCase("floor")){
+					cs.fill(floor,mgr.getFloor());
+				}
+				else if(step.equalsIgnoreCase("roofedge")){
+					perimeter(mgr,cs);
+				}
+				else if(step.equalsIgnoreCase("carpet")){
+					int carpetcol = cs.r.nextInt(14);
+					b.carpet(floor.addvec(0,1,0), carpetcol);
+				}
+				else if(step.equalsIgnoreCase("light")){
+					Extent inner = e.expand(-1,Extent.ALL);
+					b.lightWalls(inner);
+					b.floorLights(inner);
+				}
+				else if(step.equalsIgnoreCase("stainedglasswall")){
+					WindowMaker.makeStainedGlassWall(mgr, this);
+				}
+				else if(step.equalsIgnoreCase("flowers")){
+					Gardener.plant(mgr, floor);
+				}
+				else throw new RuntimeException("unknown build step '"+step+"' in room type '"+type+"'");
+			}
+		}
+
+		return modifiedBuildingExtent;
+	}
 
 	/**
 	 * Furnish a room after all exits and windows have been made - this should
 	 * be the last thing done to a room
 	 */
-	public abstract void furnish(MaterialManager mgr);
+	public void furnish(MaterialManager mgr){
+
+	}
 
 	/**
 	 * Remove windows intersecting with an extent
@@ -882,7 +1058,38 @@ public abstract class Room implements Comparable<Room> {
 	}
 
 	public boolean tallNeighbourRequired() {
-		return false;
+		return c.getBoolean("tallneighbour",false);
 	}
+
+	public void makeDenizens(ConfigurationSection c){
+		ConfigurationSection cf = c.getConfigurationSection("denizens");
+		if(cf==null)return;
+
+		if(Castle.getInstance().r.nextDouble() < cf.getDouble("chance",1)){
+			try {
+				String s = ConfigUtils.getWeightedRandom(cf, "list");
+				if(s.equalsIgnoreCase("farmer"))
+					spawnVillager(Villager.Profession.FARMER);
+				else if(s.equalsIgnoreCase("smith"))
+					spawnVillager(Villager.Profession.BLACKSMITH);
+				else if(s.equalsIgnoreCase("butcher"))
+					spawnVillager(Villager.Profession.BUTCHER);
+				else if(s.equalsIgnoreCase("librarian"))
+					spawnVillager(Villager.Profession.LIBRARIAN);
+				else if(s.equalsIgnoreCase("priest"))
+					spawnVillager(Villager.Profession.PRIEST);
+				else if(s.equalsIgnoreCase("irongolem")){
+					Location l = e.getCentre().toLocation();
+					Castle.getInstance().getWorld().spawn(l, IronGolem.class);
+
+				}else
+					throw new RuntimeException("Unknown denizen type '"+s+"' in room '"+type+"'");
+			} catch (MissingAttributeException e) {
+				throw new RuntimeException("No list in denizens, in room '"+type+"'");
+			}
+		}
+	}
+
+
 
 }

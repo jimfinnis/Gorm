@@ -29,7 +29,7 @@ std:
         underfill: 0.5
 
 hall:
-    <<: *STDBUILD
+    <<: [*STDBUILD,*STDROOMS]
     dimensions:
         type: standard
         size: 2
@@ -55,6 +55,10 @@ corridor:
         dwelling: 2
         shop: 2
         garden: 2
+    rooms:
+        low: {empty: 1}
+        medium: {empty: 1}
+        high: {empty: 1}
 
 dwelling:
     <<: [*STDDIMS,*STDBUILD]
@@ -83,7 +87,7 @@ garden:
         - floorlights
     singleroom: true
     outside: true
-    underfill_solid: 1
+    underfill: 1
     patternfloor: 
         count: [2,5]
         mats: [ground,ground,secondary,supsecondary,supsecondary]
@@ -131,10 +135,20 @@ path:
         size: [3,5]
         aspect: [3,10]
         height: 10
+    patternfloor: 
+        count: [2,5]
+        mats: [ground,ground,secondary,supsecondary,supsecondary]
 
 shop:
     <<: [*STDDIMS,*STDBUILD]
     rooms:
-        smithy: 1
-        genericshop: 4
+        low:
+            smithy: 1
+            genericshop: 4
+        medium:
+            smithy: 1
+            genericshop: 4
+        high:
+            smithy: 1
+            genericshop: 4
         

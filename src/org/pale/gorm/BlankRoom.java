@@ -15,7 +15,7 @@ import org.pale.gorm.Room;
 public class BlankRoom extends Room {
 
 	public BlankRoom(MaterialManager mgr,Extent e, Building b) {
-		super(mgr, e, b);
+		super("blank",mgr, e, b);
 		GormPlugin.log("Blank room: "+e.toString());
 	}
 

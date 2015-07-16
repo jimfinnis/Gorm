@@ -204,8 +204,8 @@ public final class GormPlugin extends JavaPlugin {
 			p.sendMessage("no room at current location");
 			return;
 		}
-		p.sendMessage("Room class: "+r.getClass().getSimpleName());
-		p.sendMessage("Building: "+r.getBuilding().getClass().getSimpleName());
+		p.sendMessage("Room: "+r.getType());
+		p.sendMessage("Building: "+r.getBuilding().getType());
 	}
 
 	private void makeExitManually(Player p) {

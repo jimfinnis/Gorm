@@ -172,6 +172,7 @@ public class Building {
 
 		try {
 			for(String step: c.getStringList("build")){
+				GormPlugin.log("Step: "+step);
 				if(step.equalsIgnoreCase("box")){
 					BoxBuilder.build(mgr, extent); // make the walls				
 				}else if(step.equalsIgnoreCase("clear")){
@@ -184,9 +185,7 @@ public class Building {
 					Room r = new BlankRoom(mgr, originalExtent, this);
 					addRoomTop(r);
 				}else if(step.equalsIgnoreCase("underfill")){
-					if(!c.isDouble("underfill"))
-						throw new RuntimeException("attribute 'underfill' not found in building: "+type);
-					double chance = c.getDouble("underfill");
+					double chance = c.getDouble("underfill",0.7);
 					underfill(mgr, cs.r.nextDouble() < chance);
 				}else if(step.equalsIgnoreCase("roof")){
 					generateRoof(mgr);
@@ -207,14 +206,18 @@ public class Building {
 				}else if(step.equalsIgnoreCase("farm")){
 					Extent floor = extent.getWall(Direction.DOWN);
 					Gardener.makeFarm(floor);				
-				}else throw new RuntimeException("unknown build step '"+step+"' in room type '"+type+"'");
+				}else throw new RuntimeException("unknown build step '"+step+"' in building type '"+type+"'");
 			}
+	
+			// if the building has denizens (rather than denizens defined at
+			// room level) put them here.
+			rooms.getFirst().makeDenizens(c);
+			
 		} catch(MissingAttributeException e){
 			throw new RuntimeException("cannot find attribute '"+e.name+"in building '"+type+"'");
 		}
-
 	}
-
+	
 	private void patternFloor(MaterialManager mgr, Castle cs) throws MissingAttributeException{
 		Extent floor = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z);
 		ConfigurationSection pf = c.getConfigurationSection("patternfloor");
@@ -307,9 +310,9 @@ public class Building {
 	private void buildRoofGarden(MaterialManager mgr, Extent e) {
 		Room r;
 		if(Castle.getInstance().r.nextFloat()<0.2)
-			r = new SnarkRoom(mgr, e, this);
+			r = new Room("rooffarm",mgr, e, this); //farm
 		else
-			r = new SnarkRoom(mgr, e, this);
+			r = new Room("roofgarden",mgr, e, this); //garden
 		addRoomAndBuildExitDown(r, true);
 	}
 
@@ -349,7 +352,7 @@ public class Building {
 		roomExt.miny = yAboveFloor - 1;
 		roomExt.maxy = yBelowCeiling + 1;
 
-		Room r = createRoom(mgr, roomExt, this);
+		Room r = createRoom(mgr, roomExt);
 		addRoomAndBuildExitDown(r, false);
 		WindowMaker.buildWindows(mgr, r);
 		return rv;
@@ -395,16 +398,29 @@ public class Building {
 	}
 
 	/**
-	 * Delegate generation of new room to 1 of 4 grade sets
+	 * Create a random room
 	 * 
 	 * @param mgr
 	 * @param roomExt
-	 * @param bld
 	 * @return Room
 	 */
 
-	protected Room createRoom(MaterialManager mgr, Extent roomExt, Building bld) {
-		return new SnarkRoom(mgr,roomExt,bld);
+	protected Room createRoom(MaterialManager mgr, Extent roomExt) {
+		int grade = gradeInt();
+		ConfigurationSection rc = c.getConfigurationSection("rooms");
+		if(rc==null)throw new RuntimeException("no rooms section in building: "+type);
+		String s;
+		switch(grade){
+		case 1:s="low";break;
+		case 2:case 3:s="medium";break;
+		default:s="high";break;
+		}
+		try {
+			s = ConfigUtils.getWeightedRandom(rc, s);
+		} catch (MissingAttributeException e) {
+			throw new RuntimeException("cannot find rooms."+s+"in building '"+type+"'");
+		}
+		return new Room(s,mgr,roomExt,this);
 	}
 
 
@@ -516,6 +532,9 @@ public class Building {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		int dx, dz;
+		
+		// don't bother if somehow we're on top of the castle.
+		if(c.intersects(extent.getWall(Direction.DOWN)))return;
 
 		// maybe try to build a basement down here!
 		if (c.r.nextFloat()<0.7 && attemptNewRoomUnder(mgr))
@@ -532,7 +551,7 @@ public class Building {
 			dz = extent.zsize() <= 8 ? extent.zsize() - 1
 					: calcUnderfill(extent.zsize() - 1);
 		}
-
+		
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {
@@ -596,7 +615,7 @@ public class Building {
 			// we'll succeed eventually unless the world has gone very strange
 			// now we add a new room onto the bottom of the building (i.e. at
 			// the start)
-			Room r = new SnarkRoom(mgr, e, this);
+			Room r = new Room("basement",mgr, e, this);
 			addRoomAndBuildExitUp(r, false);
 			GormPlugin.log("basement done! " + e.toString());
 			extent = extent.union(e); // Doesn't modify originalExtent
@@ -739,15 +758,18 @@ public class Building {
 									b2.setType(Material.VINE);
 									// if this is right, this is *horrible*
 									BlockState bs = b2.getState();
-									Vine vine = (Vine) bs.getData();
-									vine.removeFromFace(BlockFace.NORTH);
-									vine.removeFromFace(BlockFace.SOUTH);
-									vine.removeFromFace(BlockFace.EAST);
-									vine.removeFromFace(BlockFace.WEST);
-									vine.putOnFace(d.opposite().vec
-											.toBlockFace());
-									bs.setData(vine);
-									bs.update();
+									try {
+										// loathsome code.
+										Vine vine = (Vine) bs.getData();
+										vine.removeFromFace(BlockFace.NORTH);
+										vine.removeFromFace(BlockFace.SOUTH);
+										vine.removeFromFace(BlockFace.EAST);
+										vine.removeFromFace(BlockFace.WEST);
+										vine.putOnFace(d.opposite().vec
+												.toBlockFace());
+										bs.setData(vine);
+										bs.update();
+									} catch(ClassCastException e){}
 								}
 							}
 						}

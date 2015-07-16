@@ -41,6 +41,7 @@ Within a building:
             garden
             farm
             floorlights
+            underfloor
             outside - singleroom MUST have run
             allsidesopen - singleroom MUST have run
     furnish:

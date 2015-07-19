@@ -81,7 +81,8 @@ public class WindowMaker {
 		int y; // base of window within the wall
 
 		// window heights are more common at certain fixed positions
-		switch (c.r.nextInt(5)) {
+		int method = c.r.nextInt(5);
+		switch (method) {
 		case 0:
 			y = 1;
 			break; // windows on the floor
@@ -96,6 +97,7 @@ public class WindowMaker {
 			y = c.r.nextInt(roomExt.ysize() - 4) + 1;
 			break; // random
 		}
+		GormPlugin.log("Windowmaker: method "+method+" yields y="+y+" from ysize="+roomExt.ysize());
 		int height = c.r.nextInt(roomExt.ysize() - y);
 		if (y == 1 && height < 2)
 			height = 2; // deal with silly windows.
@@ -115,7 +117,7 @@ public class WindowMaker {
 				Extent wallExtent = roomExt.getWall(d); // the wall on that side
 				int width = 1 + Util.randomExp(c.r, 2);
 				int len = wallExtent.getLengthOfAxis(Extent.LONGESTXZ);
-				int step = c.r.nextInt(Math.min(len / 3, 1)) + width + 1;
+				int step = c.r.nextInt(Math.max(len / 3, 1)) + width + 1;
 				int offset = (len % step + (step - width)) / 2;
 
 				// pull the wall in by 2 to avoid putting windows in the corner.

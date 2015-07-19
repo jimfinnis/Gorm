@@ -142,8 +142,9 @@ public class Furniture {
 	/**
 	 * Generate columns at the edges of an extent
 	 * @param e
+	 * @return should always be true now
 	 */
-	public static void columns(Room r,Extent e, MaterialManager mgr) {
+	public static boolean columns(Room r,Extent e, MaterialManager mgr) {
 		// we need a columnar spacing such that (width-1)%spacing and (height-1)%spacing
 		// are both zero.
 		Castle c = Castle.getInstance();
@@ -155,8 +156,16 @@ public class Furniture {
 			if((x-1)%spacing==0 && ((z-1)%spacing==0))
 				spacings.add(spacing);
 		}
-		if(spacings.size()==0)
-			return; // couldn't do it.
+		if(spacings.size()==0){
+			// couldn't do regular spacing; just hold up the corners.
+			int tp = c.r.nextInt(); // column type
+			placeColumn(mgr,r,c,e.minx,e.miny,e.minz,tp);
+			placeColumn(mgr,r,c,e.minx,e.miny,e.maxz,tp);
+			placeColumn(mgr,r,c,e.maxx,e.miny,e.maxz,tp);
+			placeColumn(mgr,r,c,e.maxx,e.miny,e.minz,tp);
+			return true;
+		}
+		
 		spacing = spacings.get(c.r.nextInt(spacings.size()));
 		
 		// now do the fills.
@@ -172,7 +181,7 @@ public class Furniture {
 			placeColumn(mgr,r,c,e.minx,e.miny,z,tp);
 			placeColumn(mgr,r,c,e.maxx,e.miny,z,tp);
 		}
-		
+		return true;
 	}
 
 	/**

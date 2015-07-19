@@ -185,16 +185,19 @@ public class Room implements Comparable<Room> {
 		if (gallerySize > 8)
 			gallerySize = 8;
 
-		if (gallerySize < 4)
+		if (gallerySize < 2){
+			GormPlugin.log("abandoning, gallery not big enough");
 			return; // gallery won't be big enough in this room
-
+		}
 		// work out where to place the columns, and do so
 		galleryColumnExtent = e.expand(-1, Extent.X | Extent.Z)
 				.getWall(Direction.DOWN)
 				.expand(-gallerySize, Extent.X | Extent.Z).addvec(0, 1, 0);
 
 		galleryColumnExtent.maxy = e.maxy;
-		Furniture.columns(this, galleryColumnExtent, mgr);
+		GormPlugin.log("Gallery col extent: "+galleryColumnExtent);
+		if(!Furniture.columns(this, galleryColumnExtent, mgr))
+			galleryColumnExtent=null;
 
 	}
 
@@ -210,13 +213,15 @@ public class Room implements Comparable<Room> {
 		GormPlugin.log("Creating room: "+name);
 		
 		for(String k : c.getKeys(false)){
-			GormPlugin.log("   "+k+":  "+c.get(k).toString());
+			GormPlugin.log("   "+k+":  "+c.get(k).toString()+" -- "+c.isBoolean(k));
 		}
 
 		// set initial properties
-		indoors = !c.getBoolean("outside",false);
-		if(c.getBoolean("allsidesopen",false))
+		indoors = !c.getBoolean("outside",b.isDefaultOutside());
+		GormPlugin.log("Indoors: "+indoors);
+		if(c.getBoolean("allsidesopen",false)||!indoors){
 			setAllSidesOpen();
+		}
 
 
 		// it's possible that some rooms may modify the building extent - all
@@ -226,8 +231,13 @@ public class Room implements Comparable<Room> {
 			b.setExtent(modifiedBldgExtent);
 
 		// maybe make this room into a gallery base, filling it with columns.
-		if (cs.r.nextFloat() < 0.7 && canBeBelowGallery())
+		if (cs.r.nextFloat() < 0.7 && canBeBelowGallery()){
+			GormPlugin.log("making belowgallery");
 			makeBelowGallery(mgr);
+			if(c.getBoolean("outside"))GormPlugin.log("shouldn't happen, outside");
+			if(!c.getBoolean("columns")&& !indoors)GormPlugin.log("shouldn't happen, no cols");
+			
+		}
 		// and if the room below is a gallery base, blow the necessary hole
 		// and fence it.
 		// this room won't have been added, so the last room added - that at
@@ -286,12 +296,16 @@ public class Room implements Comparable<Room> {
 	}
 
 	public boolean canHaveHoleInFloor() {
-		return c.getBoolean("holeinfloor",true);
+		boolean h=c.getBoolean("holeinfloor",true);
+		GormPlugin.log("Can have hole in floor:" +h);
+		return h;
 	}
 
 	public boolean canBeBelowGallery() {
 		// by default, only indoors rooms can be a "below gallery", and
 		// so filled with columns.
+		GormPlugin.log("Can make columns? Columns="+c.getBoolean("columns",false)+", indoors="+indoors+
+				", so result="+c.getBoolean("columns",indoors));
 		return c.getBoolean("columns",indoors);
 	}
 

@@ -31,10 +31,14 @@ public class Building {
 	public String type; //!< config type
 	private Building parent;
 	private ConfigurationSection c;
+	private boolean defaultOutside;
 	
 
 	public String getType() {
 		return type;
+	}
+	boolean isDefaultOutside(){
+		return defaultOutside;
 	}
 
 
@@ -54,6 +58,7 @@ public class Building {
 			}
 			BuildingDimensionConfig d = new BuildingDimensionConfig(parent,parent.extent.getCentre(),c);
 			IntVector v = d.getDimensions();
+			defaultOutside = c.getBoolean("outside",false);
 			setInitialExtent(parent,v.x,v.y,v.z);
 		} catch(MissingAttributeException e){
 			throw new RuntimeException("cannot find attribute '"+e.name+"' in building '"+type+"'");
@@ -199,10 +204,6 @@ public class Building {
 					Gardener.plant(mgr,floor); // plant some things
 				}else if(step.equalsIgnoreCase("floorlights")){
 					floorLights(extent.expand(-1, Extent.ALL)); // light the inner region				
-				}else if(step.equalsIgnoreCase("outside")){
-					rooms.getFirst().setOutside();
-				}else if(step.equalsIgnoreCase("allsidesopen")){
-					rooms.getFirst().setAllSidesOpen();
 				}else if(step.equalsIgnoreCase("farm")){
 					Extent floor = extent.getWall(Direction.DOWN);
 					Gardener.makeFarm(floor);				
@@ -341,7 +342,7 @@ public class Building {
 			int yBelowCeiling) {
 
 		boolean rv;
-		if(extent.maxy - yBelowCeiling < 5){
+		if(extent.maxy - yBelowCeiling < 7){
 			yBelowCeiling = extent.maxy-2;
 			rv=true;
 		}
@@ -534,7 +535,10 @@ public class Building {
 		int dx, dz;
 		
 		// don't bother if somehow we're on top of the castle.
-		if(c.intersects(extent.getWall(Direction.DOWN)))return;
+		if(c.intersects(extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z).subvec(0,2,0))){
+			GormPlugin.log("cannot underfill - over castle");
+			return;
+		}
 
 		// maybe try to build a basement down here!
 		if (c.r.nextFloat()<0.7 && attemptNewRoomUnder(mgr))

@@ -2,6 +2,7 @@ package org.pale.gorm.config;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.pale.gorm.Castle;
+import org.pale.gorm.GormPlugin;
 import org.pale.gorm.RandomCollection;
 
 public class ConfigUtils {
@@ -12,6 +13,25 @@ public class ConfigUtils {
 			super("Missing attribute: "+cf.getName()+"."+s);
 			name = cf.getName()+"."+s;
 		}
+	}
+	
+	/**
+	 * Read a min and max value. It's either a single value or a 2-tuple. Similar
+	 * to getRandomValueInRange, but that actually does the randomisation too.
+	 * @throws MissingAttributeException 
+	 */
+	public static double[] getDoubleRange(ConfigurationSection c,String string) throws MissingAttributeException{
+		double r[] = new double[2];
+		if(c.isList(string)){
+			r[0] = c.getDoubleList(string).get(0);
+			r[1] = c.getDoubleList(string).get(1);
+		} else if(c.isDouble(string) || c.isInt(string)) {
+			r[0] = c.getDouble(string);
+			r[1] = c.getDouble(string);
+		} else {
+			throw new MissingAttributeException(string,c);
+		}
+		return r;
 	}
 		
 
@@ -30,13 +50,15 @@ public class ConfigUtils {
 			double a,b;
 			a = c.getDoubleList(string).get(0);
 			b = c.getDoubleList(string).get(1);
-			return Castle.getInstance().r.nextDouble()*(b-a)+a;
+			double r = Castle.getInstance().r.nextDouble()*(b-a)+a;
+			return r;
 		} else if(c.isDouble(string) || c.isInt(string)) {
 			return c.getDouble(string);
 		} else {
 			throw new MissingAttributeException(string,c);
 		}
 	}
+	
 
 	/**
 	 * Read either an int, in which case it is returned; or a list [a,b],
@@ -53,7 +75,7 @@ public class ConfigUtils {
 			int a,b;
 			a = c.getIntegerList(string).get(0);
 			b = c.getIntegerList(string).get(1);
-			return Castle.getInstance().r.nextInt(b-a)+1;
+			return Castle.getInstance().r.nextInt(b-a)+a;
 		} else if(!c.isInt(string)) {
 			throw new MissingAttributeException(string,c);
 		} else {

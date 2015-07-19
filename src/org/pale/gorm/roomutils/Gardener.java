@@ -32,14 +32,16 @@ public class Gardener {
 				MaterialDataPair mat;
 				if(c.r.nextDouble()<chance){
 					mat = mgr.getRandom(mt); 
-					Block b = w.getBlockAt(x, y - 1, z);
-					if (b.getType() == Material.GRASS
-							|| b.getType() == Material.DIRT) {
-						b = w.getBlockAt(x, y, z);
-						if (b.getType() == Material.AIR) {
+					if(w.getBlockAt(x,y,z).getType()==Material.AIR){
+						Block b = w.getBlockAt(x, y - 1, z);
+						if (b.getType() == Material.GRASS
+								|| b.getType() == Material.DIRT) {
 							b = w.getBlockAt(x, y, z);
-							b.setType(mat.m);
-							b.setData((byte) mat.d);
+							if (b.getType() == Material.AIR) {
+								b = w.getBlockAt(x, y, z);
+								b.setType(mat.m);
+								b.setData((byte) mat.d);
+							}
 						}
 					}
 				}

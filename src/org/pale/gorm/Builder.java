@@ -45,8 +45,8 @@ public class Builder {
 			b.fixOriginalExtent();
 			MaterialManager mgr = new MaterialManager(b.getExtent().getCentre()
 					.getBlock().getBiome());
-			GormPlugin.log("** " + b.getClass().getName() + " "
-					+ Integer.toString(b.id) + " created and added!");
+			GormPlugin.log("** " + b.getType() + " "
+					+ Integer.toString(b.id) + " created and added at "+b.getExtent());
 			b.build(mgr);
 			castle.addBuilding(b);
 			b.furnish(mgr);

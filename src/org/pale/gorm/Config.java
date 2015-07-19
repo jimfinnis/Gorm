@@ -23,6 +23,7 @@ public class Config {
 
 	public static FileConfiguration buildings;
 	public static FileConfiguration rooms;
+	public static FileConfiguration furniture;
 	
 	public static void load(){
 		ConfigAccessor a = new ConfigAccessor("biomes.yml");
@@ -31,6 +32,7 @@ public class Config {
 		loadLoots(new ConfigAccessor("loot.yml").getConfig());
 		buildings = new ConfigAccessor("buildings.yml").getConfig();
 		rooms = new ConfigAccessor("rooms.yml").getConfig();
+		furniture = new ConfigAccessor("furniture.yml").getConfig();
 	}
 
 	public static MaterialDataPair getLoot(int grade){

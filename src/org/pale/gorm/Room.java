@@ -11,23 +11,19 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Villager;
 import org.bukkit.material.Ladder;
-import org.pale.gorm.Extent.LocationRunner;
 import org.pale.gorm.config.ConfigUtils;
 import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 import org.pale.gorm.roomutils.ExitDecorator;
 import org.pale.gorm.roomutils.Furniture;
-import org.pale.gorm.roomutils.FurnitureItems;
 import org.pale.gorm.roomutils.Gardener;
 import org.pale.gorm.roomutils.StairBuilder;
 import org.pale.gorm.roomutils.WindowMaker;
@@ -1052,9 +1048,25 @@ public class Room implements Comparable<Room> {
 	/**
 	 * Furnish a room after all exits and windows have been made - this should
 	 * be the last thing done to a room
+	 * @throws MissingAttributeException 
 	 */
-	public void furnish(MaterialManager mgr){
+	public void furnish(MaterialManager mgr) throws MissingAttributeException{
+		ConfigurationSection cf = c.getConfigurationSection("furnish");
+		if(cf==null)throw new MissingAttributeException("furnish", cf);
+		double amount = ConfigUtils.getRandomValueInRange(cf,"amount");
+		double area =  e.xsize()*e.zsize();
+		if(galleryColumnExtent!=null)
+			area -= galleryColumnExtent.xsize() * galleryColumnExtent.zsize();
+		int n = (int)(area * amount);
 
+		for(int i=0;i<n;i++){
+			// get the item name
+			String s = ConfigUtils.getWeightedRandom(cf, "list");
+			// get the item string
+			s = Config.furniture.getString(s);
+			// and plonk
+			Furniture.place(mgr,this,s);
+		}
 	}
 
 	/**

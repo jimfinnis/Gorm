@@ -28,7 +28,7 @@ public class DungeonObjects {
 		for (int i = 1; i < items; i++) {
 			// Choose an item ID from those available for this grade of room
 			MaterialDataPair pair = Config.getLoot(grade);
-			GormPlugin.getInstance().getLogger().info("--Adding "+pair.m.toString());
+//			GormPlugin.getInstance().getLogger().info("--Adding "+pair.m.toString());
 			chest.getBlockInventory().addItem(new ItemStack(pair.m));
 		}
 

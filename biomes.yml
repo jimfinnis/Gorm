@@ -41,8 +41,6 @@ aliases.matpairs:
 matlist:
     default:
         - mats.default
-    desert:
-        - mats.sand
     hell:
         - mats.nether
 
@@ -63,6 +61,8 @@ matmatch:
         - mats.taiga
     "*mesa*":
         - mats.mesa
+    "*desert*":
+        - mats.sand
 
 # These are the material sets which are referred to by the lists above.
 # Each entry within a set is used for a particular type of block inside

@@ -20,8 +20,8 @@ public class BlankRoom extends Room {
 	}
 
 	@Override
-	public Extent build(MaterialManager mgr, Extent buildingExtent) {
-		addSignHack();
+	public Extent build(MaterialManager mgr, Extent buildingExtent,boolean postHolePhase) {
+		if(!postHolePhase)addSignHack();
 		return null; // we don't modify the building extent
 	}
 

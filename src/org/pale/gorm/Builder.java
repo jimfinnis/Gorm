@@ -5,6 +5,7 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.material.Sign;
+import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 
 /**
  * This object actually does the building inside the castle
@@ -27,8 +28,9 @@ public class Builder {
 	 * 
 	 * @param loc
 	 *            initial room location
+	 * @throws MissingAttributeException 
 	 */
-	public void build(Location loc) {
+	public void build(Location loc) throws MissingAttributeException {
 		Building b;
 
 		if (castle.getBuildingCount() == 0) {

@@ -32,7 +32,7 @@ public class Building {
 	private Building parent;
 	private ConfigurationSection c;
 	private boolean defaultOutside;
-	
+
 
 	public String getType() {
 		return type;
@@ -188,6 +188,10 @@ public class Building {
 				}else if(step.equalsIgnoreCase("singleroom")){
 					rooms = new LinkedList<Room>(); // make sure any old ones are gone
 					Room r = new BlankRoom(mgr, originalExtent, this);
+					if(defaultOutside){
+						r.setOutside();
+						r.setAllSidesOpen();
+					}
 					addRoomTop(r);
 				}else if(step.equalsIgnoreCase("underfill")){
 					double chance = c.getDouble("underfill",0.7);
@@ -209,16 +213,16 @@ public class Building {
 					Gardener.makeFarm(floor);				
 				}else throw new RuntimeException("unknown build step '"+step+"' in building type '"+type+"'");
 			}
-	
+
 			// if the building has denizens (rather than denizens defined at
 			// room level) put them here.
 			rooms.getFirst().makeDenizens(c);
-			
+
 		} catch(MissingAttributeException e){
 			throw new RuntimeException("cannot find attribute '"+e.name+"in building '"+type+"'");
 		}
 	}
-	
+
 	private void patternFloor(MaterialManager mgr, Castle cs) throws MissingAttributeException{
 		Extent floor = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z);
 		ConfigurationSection pf = c.getConfigurationSection("patternfloor");
@@ -319,8 +323,9 @@ public class Building {
 
 	/**
 	 * Furnish rooms after building
+	 * @throws MissingAttributeException 
 	 */
-	public void furnish(MaterialManager mgr) {
+	public void furnish(MaterialManager mgr) throws MissingAttributeException {
 		for (Room r : rooms) {
 			r.furnish(mgr);
 		}
@@ -465,9 +470,16 @@ public class Building {
 	 */
 	public void carpet(Extent floor, int col) {
 		Castle c = Castle.getInstance();
-		floor = new Extent(floor);
-		floor.maxy = floor.miny;
-		c.fill(floor, Material.CARPET, col);
+		World w = c.getWorld();
+		for(int x = floor.minx;x<=floor.maxx;x++){
+			for(int z=floor.minz;z<=floor.maxz;z++){
+				Block b = w.getBlockAt(x, floor.miny, z);
+				if(b.isEmpty()){
+					b.setType(Material.CARPET);
+					b.setData((byte) col);
+				}
+			}
+		}
 	}
 
 	/**
@@ -501,6 +513,7 @@ public class Building {
 	 * Lights on the floor if needed
 	 * 
 	 * @param e
+	 * @param galleryColumnExtent 
 	 */
 	public void floorLights(Extent e) {
 		World w = Castle.getInstance().getWorld();
@@ -509,7 +522,7 @@ public class Building {
 		for (int x = e.minx + 2; x < e.maxx - 2; x += 5) {
 			for (int z = e.minz + 2; z < e.maxz - 2; z += 5) {
 				Block b = w.getBlockAt(x, y, z);
-				if (b.getLightLevel() < 7) {
+				if (b.getLightLevel() < 7){
 					b.setData((byte) 0);
 					b.setType(Material.FENCE);
 					b = w.getBlockAt(x, y + 1, z);
@@ -533,7 +546,7 @@ public class Building {
 		Castle c = Castle.getInstance();
 		World w = c.getWorld();
 		int dx, dz;
-		
+
 		// don't bother if somehow we're on top of the castle.
 		if(c.intersects(extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z).subvec(0,2,0))){
 			GormPlugin.log("cannot underfill - over castle");
@@ -555,7 +568,7 @@ public class Building {
 			dz = extent.zsize() <= 8 ? extent.zsize() - 1
 					: calcUnderfill(extent.zsize() - 1);
 		}
-		
+
 		for (int x = extent.minx; x <= extent.maxx; x += dx) {
 			for (int z = extent.minz; z <= extent.maxz; z += dz) {
 				for (int y = extent.miny - 1;; y--) {

@@ -207,24 +207,24 @@ public class Room implements Comparable<Room> {
 			throw new RuntimeException("cannot find room config: "+name);
 		type = name;
 		GormPlugin.log("Creating room: "+name);
-		
+
 		for(String k : c.getKeys(false)){
 			GormPlugin.log("   "+k+":  "+c.get(k).toString()+" -- "+c.isBoolean(k));
 		}
 
 		// set initial properties
-		indoors = !c.getBoolean("outside",b.isDefaultOutside());
+		indoors = !c.getBoolean("outside");//,b.isDefaultOutside());
 		GormPlugin.log("Indoors: "+indoors);
 		if(c.getBoolean("allsidesopen",false)||!indoors){
 			setAllSidesOpen();
 		}
 
-
 		// it's possible that some rooms may modify the building extent - all
 		// room build methods return either null or the new building extent
-		Extent modifiedBldgExtent = build(mgr, b.getExtent());
+		Extent modifiedBldgExtent = build(mgr, b.getExtent(),false);
 		if (modifiedBldgExtent != null)
 			b.setExtent(modifiedBldgExtent);
+
 
 		// maybe make this room into a gallery base, filling it with columns.
 		if (cs.r.nextFloat() < 0.7 && canBeBelowGallery()){
@@ -232,7 +232,7 @@ public class Room implements Comparable<Room> {
 			makeBelowGallery(mgr);
 			if(c.getBoolean("outside"))GormPlugin.log("shouldn't happen, outside");
 			if(!c.getBoolean("columns")&& !indoors)GormPlugin.log("shouldn't happen, no cols");
-			
+
 		}
 		// and if the room below is a gallery base, blow the necessary hole
 		// and fence it.
@@ -286,9 +286,8 @@ public class Room implements Comparable<Room> {
 				// it would be stupid to make furniture in the hole or fence.
 				addBlock(hole.expand(1, Extent.X | Extent.Z));
 			}
-
 		}
-
+		build(mgr, b.getExtent(),true);
 	}
 
 	public boolean canHaveHoleInFloor() {
@@ -349,29 +348,6 @@ public class Room implements Comparable<Room> {
 
 	public void addWindow(Extent e) {
 		windows.add(new Extent(e));
-	}
-
-	/**
-	 * add carpets (if this room should be carpeted) and lights to a standard
-	 * room, taking into a account the state of repair of the building.
-	 *
-	 * @param mayHaveCarpets
-	 *            *may* have carpets, depending on grade
-	 * @return carpet colour code or -1 for no carpet
-	 */
-	public int lightsAndCarpets(boolean mayHaveCarpets) {
-		Extent inner = e.expand(-1, Extent.ALL);
-		int carpetCol;
-		if (b.gradeInt() > 2) {
-			carpetCol = Castle.getInstance().r.nextInt(14);
-			b.carpet(inner, carpetCol);
-		} else
-			carpetCol = -1;
-		if (b.gradeInt() > 1) {
-			b.lightWalls(inner);
-			b.floorLights(inner);
-		}
-		return carpetCol;
 	}
 
 	public Extent getExtent() {
@@ -872,7 +848,7 @@ public class Room implements Comparable<Room> {
 		e.maxy = upper.e.maxy - 1;
 		upper.addBlock(e);
 	}
-	
+
 	protected void perimeter(MaterialManager mgr, Castle c) {
 		// bitfield describing the perimeter posts
 		// bits 0-2 are the post types
@@ -923,7 +899,7 @@ public class Room implements Comparable<Room> {
 			}
 
 			if ((len & 1) == 0) // make sure we can't alternate on even walls.
-								// Looks weird.
+				// Looks weird.
 				alternate = false;
 
 			MaterialDataPair main = mgr.getFence();
@@ -964,8 +940,8 @@ public class Room implements Comparable<Room> {
 			}
 
 		}
-
 	}
+
 
 
 	/**
@@ -974,11 +950,11 @@ public class Room implements Comparable<Room> {
 	 * building extent is returned. Furniture should be added in furnish()
 	 * although carpets should be added here.
 	 */
-	public Extent build(MaterialManager mgr, Extent buildingExtent){
+	public Extent build(MaterialManager mgr, Extent buildingExtent,boolean postHolePhase){
 		if(!c.isList("build")){
 			throw new RuntimeException("cannot load build steps for room: "+type);
 		}
-		
+
 		Castle cs = Castle.getInstance();
 		Extent modifiedBuildingExtent=null;
 		Extent floor = e.expand(-1, Extent.X|Extent.Z);
@@ -989,56 +965,68 @@ public class Room implements Comparable<Room> {
 			double chance=0;
 			if(ent.contains("|")){
 				// the forms step|0.5, step|low, step|low+med1 are all valid
-				String[] a = ent.split("|");
+				String[] a = ent.split("\\|");
 				step = a[0];
-				if(a[1].contains("low") && b.gradeInt()==1)chance=1;
-				if(a[1].contains("med1") && b.gradeInt()==2)chance=1;
-				if(a[1].contains("med2") && b.gradeInt()==3)chance=1;
-				if(a[1].contains("high") && b.gradeInt()==4)chance=1;
-				try{
-					chance = Double.parseDouble(a[1]);
-				} catch(NumberFormatException e){}
+				String chstr=a[1];
+				GormPlugin.log("Step "+step+" has chance "+chstr);
+				if(chstr.contains("low") && b.gradeInt()==1)chance=1;
+				if(chstr.contains("med1") && b.gradeInt()==2)chance=1;
+				if(chstr.contains("med2") && b.gradeInt()==3)chance=1;
+				if(chstr.contains("high") && b.gradeInt()==4)chance=1;
+				if(chance==0)
+					try{
+						chance = Double.parseDouble(chstr);
+					} catch(NumberFormatException e){}
 			} else {
 				step = ent;
 				chance = 1;
 			}
 			if(cs.r.nextDouble() < chance){
 				if(step.equalsIgnoreCase("underfloor")){
-					// note *not* floor, we're using the edges in xz too
-					Extent f = e.getWall(Direction.DOWN);
-					Material m = f.getCentre().getBlock().getType();
-					cs.fill(f.subvec(0,1,0), m,0); // underfloor
-					cs.fill(e.expand(-1, Extent.ALL), Material.AIR,0);
-					cs.checkFill(f,m,0);
+					if(!postHolePhase){
+						// note *not* floor, we're using the edges in xz too
+						Extent f = e.getWall(Direction.DOWN);
+						Material m = f.getCentre().getBlock().getType();
+						cs.fill(f.subvec(0,1,0), m,0); // underfloor
+						// this appears to fill the entire room extent with air. Not sure why.
+						cs.fill(e.expand(-1, Extent.ALL), Material.AIR,0);
+						// and then fills the (walls included) floor itself!
+						cs.checkFill(f,m,0);
+					}
 				}
 				else if(step.equalsIgnoreCase("gardenfloor")){	
-					cs.fill(floor, mgr.getGround());
+					if(!postHolePhase)cs.fill(floor, mgr.getGround());
 				}
 				else if(step.equalsIgnoreCase("farmfloor")){
-					Gardener.makeFarm(floor);
+					if(!postHolePhase)Gardener.makeFarm(floor);
 				}
 				else if(step.equalsIgnoreCase("floor")){
-					cs.fill(floor,mgr.getFloor());
+					if(!postHolePhase)cs.fill(floor,mgr.getFloor());
 				}
 				else if(step.equalsIgnoreCase("roofedge")){
-					perimeter(mgr,cs);
+					if(!postHolePhase)perimeter(mgr,cs);
 				}
 				else if(step.equalsIgnoreCase("carpet")){
-					int carpetcol = cs.r.nextInt(14);
-					b.carpet(floor.addvec(0,1,0), carpetcol);
+					if(postHolePhase){
+						int carpetcol = cs.r.nextInt(14);
+						GormPlugin.log("carpeting");
+						b.carpet(floor.addvec(0,1,0),carpetcol);
+					}
 				}
 				else if(step.equalsIgnoreCase("light")){
-					Extent inner = e.expand(-1,Extent.ALL);
-					b.lightWalls(inner);
-					b.floorLights(inner);
+					if(!postHolePhase){
+						Extent inner = e.expand(-1,Extent.ALL);
+						GormPlugin.log("lighting");
+						b.lightWalls(inner);
+						b.floorLights(inner);
+					}
 				}
 				else if(step.equalsIgnoreCase("stainedglasswall")){
-					WindowMaker.makeStainedGlassWall(mgr, this);
+					if(!postHolePhase)WindowMaker.makeStainedGlassWall(mgr, this);
 				}
 				else if(step.equalsIgnoreCase("flowers")){
-					Gardener.plant(mgr, floor);
+					if(postHolePhase)Gardener.plant(mgr, floor);
 				}
-				else throw new RuntimeException("unknown build step '"+step+"' in room type '"+type+"'");
 			}
 		}
 
@@ -1052,20 +1040,23 @@ public class Room implements Comparable<Room> {
 	 */
 	public void furnish(MaterialManager mgr) throws MissingAttributeException{
 		ConfigurationSection cf = c.getConfigurationSection("furnish");
-		if(cf==null)throw new MissingAttributeException("furnish", cf);
-		double amount = ConfigUtils.getRandomValueInRange(cf,"amount");
-		double area =  e.xsize()*e.zsize();
-		if(galleryColumnExtent!=null)
-			area -= galleryColumnExtent.xsize() * galleryColumnExtent.zsize();
-		int n = (int)(area * amount);
+		if(cf!=null){
+			double amount = ConfigUtils.getRandomValueInRange(cf,"amount");
+			double area =  e.xsize()*e.zsize();
+			if(galleryColumnExtent!=null)
+				area -= galleryColumnExtent.xsize() * galleryColumnExtent.zsize();
+			int n = (int)(area * amount);
 
-		for(int i=0;i<n;i++){
-			// get the item name
-			String s = ConfigUtils.getWeightedRandom(cf, "list");
-			// get the item string
-			s = Config.furniture.getString(s);
-			// and plonk
-			Furniture.place(mgr,this,s);
+			for(int i=0;i<n;i++){
+				// get the item name
+				String name = ConfigUtils.getWeightedRandom(cf, "list");
+				// get the item string
+				String s = Config.furniture.getString(name);
+				if(s==null)
+					throw new MissingAttributeException(name, Config.furniture);
+				// and plonk
+				Furniture.place(mgr,this,s);
+			}
 		}
 	}
 

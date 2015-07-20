@@ -14,6 +14,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 
 public final class GormPlugin extends JavaPlugin {
 
@@ -297,7 +298,14 @@ public final class GormPlugin extends JavaPlugin {
 		if (builder == null) {
 			builder = new Builder(p.getWorld());
 		}
-		builder.build(p.getLocation());
+		try {
+			builder.build(p.getLocation());
+		} catch (MissingAttributeException e) {
+			if(e.cf == null)
+				throw new RuntimeException("Missing attribute: "+e.name+" in <null>");
+			else
+				throw new RuntimeException("Missing attribute: "+e.name+" in "+e.cf.getCurrentPath());
+		}
 	}
 
 	public static void stopGormProcess() {

@@ -52,9 +52,11 @@ public class Exit {
 	}
 
 	/**
-	 * Get the 'type' of this exit, which depends on the nature of the rooms it connects
+	 * Get the 'type' of this exit, which depends on the nature of the rooms it connects;
+	 * or INWARDS if the exit is not attached formally to rooms (used for ad-hoc exits)
 	 */
 	public ExitType getType(){
+		if(source == null || destination == null)return ExitType.INWARDS;
 		if(source.isOpen(d)){
 			if(destination.isOpen(d.opposite()))
 				return ExitType.OUTSIDE;

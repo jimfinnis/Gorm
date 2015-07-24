@@ -199,7 +199,8 @@ public class Building {
 				}else if(step.equalsIgnoreCase("roof")){
 					generateRoof(mgr);
 				}else if(step.equalsIgnoreCase("patternfloor")){
-					patternFloor(mgr,cs);
+					Extent floor = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z);
+					cs.patternFloor(c,floor,mgr);
 				}else if(step.equalsIgnoreCase("underfloor")){
 					Extent floor = extent.getWall(Direction.DOWN);
 					cs.checkFill(floor.subvec(0, 1, 0), mgr.getPrimary());
@@ -223,27 +224,6 @@ public class Building {
 		}
 	}
 
-	private void patternFloor(MaterialManager mgr, Castle cs) throws MissingAttributeException{
-		Extent floor = extent.getWall(Direction.DOWN).expand(-1,Extent.X|Extent.Z);
-		ConfigurationSection pf = c.getConfigurationSection("patternfloor");
-		if(pf==null)
-			throw new RuntimeException("map 'patternfloor' not found in building: "+type);
-		double chance = pf.isDouble("chance") ? pf.getDouble("chance"):0;
-
-		if(cs.r.nextDouble()<chance){
-			int n = ConfigUtils.getRandomValueInRangeInt(pf, "count");
-			List<String> matnames = pf.getStringList("mats");
-			if(matnames==null)throw new MissingAttributeException("mats",pf);
-			MaterialDataPair mats[] = new MaterialDataPair[n];
-			for(int i=0;i<n;i++){
-				mats[i] = Config.makeMatDataPair(matnames.get(i));
-			}
-			cs.patternFill(floor, mats, n, null);
-		} else {
-			MaterialDataPair ground = cs.r.nextDouble()<0.2 ? mgr.getSupSecondary() : mgr.getGround();
-			cs.fill(floor, ground);
-		}
-	}
 
 	/**
 	 * Generates a child building attached to this one
@@ -794,5 +774,15 @@ public class Building {
 				}
 			}
 		});
+	}
+	
+	/**
+	 * attempt to make a random exit which does not feature in the exits list,
+	 * to the outside world. No room can have more than N of these.
+	 */
+	public void makeRandomExternalExit() {
+		for(Room r: rooms){
+			r.attemptMakeExternalExit();
+		}
 	}
 }

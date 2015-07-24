@@ -1,0 +1,26 @@
+#
+# This file contains turtle strings for constructing furniture,
+# as referenced in rooms.yml. Each string defines the item as seen
+# from the centre of its back, facing towards the back. Some elements
+# are invisible and are just used for checking collisions.
+
+chair1: "Mjw.uBLBRRBLd.Mq.rbw.rrbbw.rb.tLTBLtbtRtRt"
+sofa1: "MjwRw.uBLBRRBRBLLd.Mq.rbbw.rrbbbw.rb.TBLTBLTBLTbtRtRtRt"
+shelves1: "MB.wuwdR.wuwd.bTBLTBbtRt"
+shelves2: "MB.wuwuwddR.wuwuwdd.bTBLTBbtRt"
+bed: "LTRRTLbLTRRTLf.MD0wbMD1w"
+column: "bTfLTRRTL.m1:uTw"
+shelfCol: "bTfLTRRTL.MB:uTw"
+loot: "Ccw"
+chest: "MCw"
+spawner: "Csw"
+brewingstand: "MSbw"
+
+# will be empty; Spigot/Bukkit can't fill flowerpots, it seems
+flowerPot: "Mww.uCpw"
+
+table: "MStw"
+cauldron: "MScw"
+furnace: "MSfw"
+anvil: "MSaw"
+

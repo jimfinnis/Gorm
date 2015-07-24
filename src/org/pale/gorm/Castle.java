@@ -12,11 +12,14 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Villager.Profession;
 import org.bukkit.material.Stairs;
 import org.bukkit.material.Torch;
 //SNARK import net.minecraft.server.v1_7_R3.TileEntity;
 //SNARK import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
+import org.pale.gorm.config.ConfigUtils;
+import org.pale.gorm.config.ConfigUtils.MissingAttributeException;
 
 /**
  * Singleton class for the whole castle.
@@ -85,7 +88,7 @@ public class Castle {
 				return r;
 			}
 		}
-	  return null;
+		return null;
 	}
 
 	/**
@@ -125,6 +128,19 @@ public class Castle {
 		}
 		return false;
 	}
+
+	public boolean contains(IntVector pos) {
+		int c = Extent.getChunkCode(pos.x, pos.z);
+		Collection<Building> list = buildingsByChunk.get(c);
+		if (list != null) {
+			for (Building b : list) {
+				if (b.getExtent().contains(pos))
+					return true;
+			}
+		}
+		return false;
+	}
+
 
 	public Collection<Building> getIntersectingBuildings(Extent e) {
 		Collection<Building> blist = new ArrayList<Building>();
@@ -186,7 +202,7 @@ public class Castle {
 
 	public void checkFill(Extent e, Material mat, int data) {
 		if (mat == Material.SMOOTH_BRICK && data == 0) {// if this is plain
-														// brick, flash it up!
+			// brick, flash it up!
 			fillBrickWithCracksAndMoss(e, true);
 		} else {
 			for (int x = e.minx; x <= e.maxx; x++) {
@@ -203,27 +219,27 @@ public class Castle {
 		}
 	}
 
-   public void addLightToWall(int x, int y, int z,BlockFace dir) {
-        World w = Castle.getInstance().getWorld();
-        Block b = w.getBlockAt(x, y, z);
+	public void addLightToWall(int x, int y, int z,BlockFace dir) {
+		World w = Castle.getInstance().getWorld();
+		Block b = w.getBlockAt(x, y, z);
 
-        // a hack. Creating a torch will cause it
-        // to drop, unless there's something under it.
-        // Even when it's attached to a wall.
-        // Madness.
+		// a hack. Creating a torch will cause it
+		// to drop, unless there's something under it.
+		// Even when it's attached to a wall.
+		// Madness.
 
-       Block bunder = w.getBlockAt(x, y-1, z);
-       if(canOverwrite(bunder) && canOverwrite(b)){
-           bunder.setType(Material.DIRT);
+		Block bunder = w.getBlockAt(x, y-1, z);
+		if(canOverwrite(bunder) && canOverwrite(b)){
+			bunder.setType(Material.DIRT);
 
-           Torch t = new Torch(Material.TORCH);
-           t.setFacingDirection(dir);
-           b.setType(Material.TORCH);
-           b.setData(t.getData());
+			Torch t = new Torch(Material.TORCH);
+			t.setFacingDirection(dir);
+			b.setType(Material.TORCH);
+			b.setData(t.getData());
 
-           bunder.setType(Material.AIR);
-       }
-    }
+			bunder.setType(Material.AIR);
+		}
+	}
 	public void checkFill(Extent e, MaterialDataPair mp) {
 		checkFill(e, mp.m, mp.d);
 	}
@@ -392,7 +408,7 @@ public class Castle {
 	 */
 	public void fill(Extent e, Material mat, int data) {
 		if (mat == Material.SMOOTH_BRICK && data == 0) // if this is plain
-														// brick, flash it up!
+			// brick, flash it up!
 			fillBrickWithCracksAndMoss(e, false);
 		else {
 			for (int x = e.minx; x <= e.maxx; x++) {
@@ -516,13 +532,13 @@ public class Castle {
 				|| m == Material.JUNGLE_WOOD_STAIRS || m == Material.SPRUCE_WOOD_STAIRS);
 	}
 
-    public void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
-        Block b = world.getBlockAt(x, y, z);
-        b.setType(mat);
-        Stairs matStairs = new Stairs(mat);
-        matStairs.setFacingDirection(dir);
-        b.setData(matStairs.getData());
-    }
+	public void setStairs(int x, int y, int z, BlockFace dir, Material mat) {
+		Block b = world.getBlockAt(x, y, z);
+		b.setType(mat);
+		Stairs matStairs = new Stairs(mat);
+		matStairs.setFacingDirection(dir);
+		b.setData(matStairs.getData());
+	}
 
 
 	@SuppressWarnings("unused")
@@ -642,6 +658,28 @@ public class Castle {
 
 		}
 	}
+
+	public void patternFloor(ConfigurationSection c, Extent floor, MaterialManager mgr) throws MissingAttributeException{
+		ConfigurationSection pf = c.getConfigurationSection("patternfloor");
+		if(pf==null)
+			throw new MissingAttributeException("patternfloor", c);
+		double chance = pf.getDouble("chance",1);
+
+		if(r.nextDouble()<chance){
+			int n = ConfigUtils.getRandomValueInRangeInt(pf, "count");
+			List<String> matnames = pf.getStringList("mats");
+			if(matnames==null)throw new MissingAttributeException("mats",pf);
+			MaterialDataPair mats[] = new MaterialDataPair[n];
+			for(int i=0;i<n;i++){
+				mats[i] = mgr.get(matnames.get(i));
+			}
+			patternFill(floor, mats, n, null);
+		} else {
+			MaterialDataPair ground = r.nextDouble()<0.2 ? mgr.getSupSecondary() : mgr.getGround();
+			fill(floor, ground);
+		}
+	}
+
 
 	public Map<Profession, Integer> getDenizenCounts() {
 		return denizenCounts;

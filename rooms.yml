@@ -121,6 +121,11 @@ smithy:
 spawner:
     <<: *INSIDEROOM
     haswindows: false
+    furnish:
+        amount: 0.01
+        list:
+            loot: 1
+            spawner: 0.5
 
 rooffarm:
     <<: *OUTSIDEROOM
@@ -136,6 +141,9 @@ roofgarden:
     tallneighbour: true
     build:
         - underfloor
-        - gardenfloor
+        - patternfloor
         - roofedge
         - flowers
+    patternfloor: 
+        count: [2,5]
+        mats: [ground,ground,secondary,supsecondary,supsecondary]

@@ -301,7 +301,7 @@ public class Room implements Comparable<Room> {
 		// so filled with columns.
 		GormPlugin.log("Can make columns? Columns="+c.getBoolean("columns",false)+", indoors="+indoors+
 				", so result="+c.getBoolean("columns",indoors));
-		return c.getBoolean("columns",indoors);
+		return c.getBoolean("columns",indoors) && !b.isDefaultOutside();
 	}
 
 	protected Room setOpenSide(Direction d) {
@@ -960,74 +960,80 @@ public class Room implements Comparable<Room> {
 		Extent floor = e.expand(-1, Extent.X|Extent.Z);
 		floor.maxy=floor.miny;
 
-		for(String ent: c.getStringList("build")){
-			String step;
-			double chance=0;
-			if(ent.contains("|")){
-				// the forms step|0.5, step|low, step|low+med1 are all valid
-				String[] a = ent.split("\\|");
-				step = a[0];
-				String chstr=a[1];
-				GormPlugin.log("Step "+step+" has chance "+chstr);
-				if(chstr.contains("low") && b.gradeInt()==1)chance=1;
-				if(chstr.contains("med1") && b.gradeInt()==2)chance=1;
-				if(chstr.contains("med2") && b.gradeInt()==3)chance=1;
-				if(chstr.contains("high") && b.gradeInt()==4)chance=1;
-				if(chance==0)
-					try{
-						chance = Double.parseDouble(chstr);
-					} catch(NumberFormatException e){}
-			} else {
-				step = ent;
-				chance = 1;
+		try {
+			for(String ent: c.getStringList("build")){
+				String step;
+				double chance=0;
+				if(ent.contains("|")){
+					// the forms step|0.5, step|low, step|low+med1 are all valid
+					String[] a = ent.split("\\|");
+					step = a[0];
+					String chstr=a[1];
+					GormPlugin.log("Step "+step+" has chance "+chstr);
+					if(chstr.contains("low") && b.gradeInt()==1)chance=1;
+					if(chstr.contains("med1") && b.gradeInt()==2)chance=1;
+					if(chstr.contains("med2") && b.gradeInt()==3)chance=1;
+					if(chstr.contains("high") && b.gradeInt()==4)chance=1;
+					if(chance==0)
+						try{
+							chance = Double.parseDouble(chstr);
+						} catch(NumberFormatException e){}
+				} else {
+					step = ent;
+					chance = 1;
+				}
+				if(cs.r.nextDouble() < chance){
+					if(step.equalsIgnoreCase("underfloor")){
+						if(!postHolePhase){
+							// note *not* floor, we're using the edges in xz too
+							Extent f = e.getWall(Direction.DOWN);
+							Material m = f.getCentre().getBlock().getType();
+							cs.fill(f.subvec(0,1,0), m,0); // underfloor
+							// this appears to fill the entire room extent with air. Not sure why.
+							cs.fill(e.expand(-1, Extent.ALL), Material.AIR,0);
+							// and then fills the (walls included) floor itself!
+							cs.checkFill(f,m,0);
+						}
+					}
+					else if(step.equalsIgnoreCase("patternfloor")){	
+						if(!postHolePhase){
+							cs.patternFloor(c, floor, mgr);
+						}
+					}
+					else if(step.equalsIgnoreCase("farmfloor")){
+						if(!postHolePhase)Gardener.makeFarm(floor);
+					}
+					else if(step.equalsIgnoreCase("floor")){
+						if(!postHolePhase)cs.fill(floor,mgr.getFloor());
+					}
+					else if(step.equalsIgnoreCase("roofedge")){
+						if(!postHolePhase)perimeter(mgr,cs);
+					}
+					else if(step.equalsIgnoreCase("carpet")){
+						if(postHolePhase){
+							int carpetcol = cs.r.nextInt(14);
+							GormPlugin.log("carpeting");
+							b.carpet(floor.addvec(0,1,0),carpetcol);
+						}
+					}
+					else if(step.equalsIgnoreCase("light")){
+						if(!postHolePhase){
+							Extent inner = e.expand(-1,Extent.ALL);
+							GormPlugin.log("lighting");
+							b.lightWalls(inner);
+							b.floorLights(inner);
+						}
+					}
+					else if(step.equalsIgnoreCase("stainedglasswall")){
+						if(!postHolePhase)WindowMaker.makeStainedGlassWall(mgr, this);
+					}
+					else if(step.equalsIgnoreCase("flowers")){
+						if(postHolePhase)Gardener.plant(mgr, floor);
+					}
+				}
 			}
-			if(cs.r.nextDouble() < chance){
-				if(step.equalsIgnoreCase("underfloor")){
-					if(!postHolePhase){
-						// note *not* floor, we're using the edges in xz too
-						Extent f = e.getWall(Direction.DOWN);
-						Material m = f.getCentre().getBlock().getType();
-						cs.fill(f.subvec(0,1,0), m,0); // underfloor
-						// this appears to fill the entire room extent with air. Not sure why.
-						cs.fill(e.expand(-1, Extent.ALL), Material.AIR,0);
-						// and then fills the (walls included) floor itself!
-						cs.checkFill(f,m,0);
-					}
-				}
-				else if(step.equalsIgnoreCase("gardenfloor")){	
-					if(!postHolePhase)cs.fill(floor, mgr.getGround());
-				}
-				else if(step.equalsIgnoreCase("farmfloor")){
-					if(!postHolePhase)Gardener.makeFarm(floor);
-				}
-				else if(step.equalsIgnoreCase("floor")){
-					if(!postHolePhase)cs.fill(floor,mgr.getFloor());
-				}
-				else if(step.equalsIgnoreCase("roofedge")){
-					if(!postHolePhase)perimeter(mgr,cs);
-				}
-				else if(step.equalsIgnoreCase("carpet")){
-					if(postHolePhase){
-						int carpetcol = cs.r.nextInt(14);
-						GormPlugin.log("carpeting");
-						b.carpet(floor.addvec(0,1,0),carpetcol);
-					}
-				}
-				else if(step.equalsIgnoreCase("light")){
-					if(!postHolePhase){
-						Extent inner = e.expand(-1,Extent.ALL);
-						GormPlugin.log("lighting");
-						b.lightWalls(inner);
-						b.floorLights(inner);
-					}
-				}
-				else if(step.equalsIgnoreCase("stainedglasswall")){
-					if(!postHolePhase)WindowMaker.makeStainedGlassWall(mgr, this);
-				}
-				else if(step.equalsIgnoreCase("flowers")){
-					if(postHolePhase)Gardener.plant(mgr, floor);
-				}
-			}
+		} catch(MissingAttributeException e){
+			throw new RuntimeException("missing attribute "+e.name+" in room "+type);
 		}
 
 		return modifiedBuildingExtent;
@@ -1107,6 +1113,64 @@ public class Room implements Comparable<Room> {
 		}
 	}
 
+	private List<IntVector>extExits=new ArrayList<IntVector>();
 
 
+
+	public void attemptMakeExternalExit() {
+		Castle cs = Castle.getInstance();
+		if(!indoors || extExits.size()>4)return; // too many
+
+		MaterialManager mgr = new MaterialManager(e.getCentre().getBlock()
+				.getBiome());
+
+		// try to find a spot around the perimeter which is at floor level and is outside
+		// the castle.
+		int minx = e.minx; int maxx = e.maxx;
+		int minz = e.minz; int maxz = e.maxz; 
+		int floorlevel = e.miny+1;
+		for(int x=minx+2;x<=maxx-2;x++){
+			if(okForExitBase(cs,x,minz-1,floorlevel)){
+				doCreateExternalExit(mgr,x,floorlevel,minz,Direction.NORTH);
+				return;
+			}
+			if(okForExitBase(cs,x,maxz+1,floorlevel)){
+				doCreateExternalExit(mgr,x,floorlevel,maxz,Direction.SOUTH);
+				return;
+			}
+		}
+		for(int z=minz+2;z<=maxz-2;z++){
+			if(okForExitBase(cs,minx-1,z,floorlevel)){
+				doCreateExternalExit(mgr,minx-1,floorlevel,z,Direction.WEST);
+				return;
+			}
+			if(okForExitBase(cs,maxx+1,z,floorlevel)){
+				doCreateExternalExit(mgr,maxx+1,floorlevel,z,Direction.EAST);
+				return;
+			}
+		}		
+	}
+
+
+	private void doCreateExternalExit(MaterialManager mgr,int x, int y, int z,Direction d){
+		if(extExits.size()>4)return;
+
+		// hack an exit structure
+		Exit exit = new Exit(new Extent(x,y,z),d,null,null);
+		ExitDecorator.decorate(mgr,exit);
+		extExits.add(new IntVector(x,y,z));
+	}
+
+
+	private boolean okForExitBase(Castle cs,int x,int z,int floorlevel) {
+		if(cs.getWorld().getHighestBlockYAt(x, z) == floorlevel && 
+				!cs.contains(new IntVector(x,floorlevel+1,z))){
+			Block bb = cs.getWorld().getBlockAt(x,floorlevel-1,z);
+			if(bb.isLiquid() || !bb.getType().isOccluding()){
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
 }

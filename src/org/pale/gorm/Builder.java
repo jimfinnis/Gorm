@@ -59,6 +59,7 @@ public class Builder {
 			b.update();
 			makeRandomExit();
 			makeRandomExit();
+			makeRandomExternalExit();
 		} else {
 			GormPlugin.log("Could not move building to a good place.");
 		}
@@ -84,6 +85,11 @@ public class Builder {
 			}
 		}
 		return false;
+	}
+	
+	private void makeRandomExternalExit(){
+		Building b = castle.getRandomBuilding();
+		b.makeRandomExternalExit();
 	}
 
 	/**

@@ -1,0 +1,30 @@
+buildings:
+    todo
+    
+
+rooms:
+    furnish:
+        amount: <chance of a floor square being furnished>
+        list:
+            <weighted map of items>
+    denizen:
+        chance: <chance of denizen 0-1>
+        list:
+            <weighted map of denizens>
+            
+    holeinfloor: true if can have one (i.e. be a gallery) (default=true)
+    belowgal: true if can have supporting columns (default=true)
+    outside: true if open to sky (default=false)
+    allsidesopen: true if all sides are large exits (default=false)
+    haswindows: default=true
+    tallneighbour: room is a top room which would like a tall neighbour
+                   (e.g roofgarden/farm) default=false
+
+    build: describes the build process.
+        - underfloor
+        - gardenfloor OR farmfloor OR floor
+        - roofedge
+        - carpet
+        - light
+        - stainedglasswall
+        - flowers
